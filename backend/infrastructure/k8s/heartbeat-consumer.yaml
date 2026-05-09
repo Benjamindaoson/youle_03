@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: heartbeat-consumer
+  namespace: youle
+  labels: { app: heartbeat-consumer }
+spec:
+  replicas: 1   # 单副本即可,XREADGROUP 只在内部记录状态
+  selector: { matchLabels: { app: heartbeat-consumer } }
+  template:
+    metadata: { labels: { app: heartbeat-consumer } }
+    spec:
+      containers:
+        - name: consumer
+          image: ghcr.io/your-org/youle-backend:0.1.0
+          command: ["python", "-m", "app.services.heartbeat_consumer"]
+          envFrom:
+            - configMapRef: { name: youle-config }
+            - secretRef:    { name: youle-secrets }
+          resources:
+            requests: { cpu: "50m", memory: "128Mi" }
+            limits:   { cpu: "300m", memory: "256Mi" }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reflexion-runner
+  namespace: youle
+  labels: { app: reflexion-runner }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: reflexion-runner } }
+  template:
+    metadata: { labels: { app: reflexion-runner } }
+    spec:
+      containers:
+        - name: runner
+          image: ghcr.io/your-org/youle-backend:0.1.0
+          command: ["python", "-m", "flywheel.reflexion.runner"]
+          envFrom:
+            - configMapRef: { name: youle-config }
+            - secretRef:    { name: youle-secrets }
+          resources:
+            requests: { cpu: "100m", memory: "256Mi" }
+            limits:   { cpu: "500m", memory: "512Mi" }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingestion-runner
+  namespace: youle
+  labels: { app: ingestion-runner }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: ingestion-runner } }
+  template:
+    metadata: { labels: { app: ingestion-runner } }
+    spec:
+      containers:
+        - name: runner
+          image: ghcr.io/your-org/youle-backend:0.1.0
+          command: ["python", "-m", "flywheel.ingestion.runner"]
+          envFrom:
+            - configMapRef: { name: youle-config }
+            - secretRef:    { name: youle-secrets }
+          resources:
+            requests: { cpu: "100m", memory: "256Mi" }
+            limits:   { cpu: "500m", memory: "512Mi" }

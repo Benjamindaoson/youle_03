@@ -1,0 +1,13 @@
+name: youle-dev
+
+services:
+  postgres:
+    ports: !override
+      - "15432:5432"
+
+  redis:
+    ports: !override
+      - "16379:6379"
+
+  litellm-mock:
+    command: ["mock", "-h", "0.0.0.0", "--multiprocess=false", "/api/openapi.yaml"]

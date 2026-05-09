@@ -1,0 +1,47 @@
+"""主编排子模块 5 — 任务编排器:Skill YAML → AgentTask 列表。"""
+
+from __future__ import annotations
+
+from uuid import uuid4
+
+from agents.orchestrator_agent.task_compiler import compile_task
+
+
+def test_compile_anti_fraud_skill() -> None:
+    skill_yaml = {
+        "skill_id": "anti_fraud_video",
+        "version": "1.0",
+        "workflow": [
+            {
+                "step_id": "research",
+                "agent": "agent_1",
+                "task_type": "web_search",
+                "timeout": 120,
+                "prompt_template": "搜索 {{年份}} 年的 {{骗局类型}} 案例",
+            },
+            {
+                "step_id": "script",
+                "agent": "agent_1",
+                "task_type": "long_writing",
+                "depends_on": ["research"],
+                "timeout": 60,
+            },
+            {
+                "step_id": "image_process",
+                "agent": "agent_3",
+                "task_type": "image_download",
+                "depends_on": ["research"],
+                "timeout": 120,
+            },
+        ],
+    }
+    task_id, steps, agent_tasks = compile_task(
+        skill_yaml=skill_yaml,
+        collected_fields={"年份": 2026, "骗局类型": "电信诈骗"},
+        user_id=uuid4(),
+        conversation_id=uuid4(),
+    )
+    assert len(steps) == 3
+    assert steps[0].step_id == "research"
+    assert steps[2].agent_id == "agent_3"  # ADR-001-rev:图 = Agent 3
+    assert agent_tasks[0].inputs["_prompt"] == "搜索 2026 年的 电信诈骗 案例"

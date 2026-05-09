@@ -1,0 +1,49 @@
+# MCP server 通用镜像(用 ARG MCP_KIND 选)
+# kinds: search / oss / image_tools / video_tools / audio_tools / document_tools / platform_publish
+ARG MCP_KIND=search
+
+FROM python:3.12-slim AS runtime
+ARG MCP_KIND
+
+WORKDIR /app
+
+# 共用 + 按 kind 装
+RUN pip install --no-cache-dir \
+    "fastapi>=0.115" "uvicorn[standard]>=0.32" "httpx>=0.27" "pydantic>=2.9" \
+    "structlog>=24.1" "pillow>=11.0" "boto3>=1.35"
+
+# tool-specific: only install what the selected server imports on its happy path.
+RUN if [ "$MCP_KIND" = "document_tools" ]; then \
+      pip install --no-cache-dir \
+        "python-pptx>=1.0" "openpyxl>=3.1" "python-docx>=1.1" \
+        "pdfplumber>=0.11" "pdf2image>=1.17" "pytesseract>=0.3"; \
+    fi
+
+COPY agents/mcp_servers /app/mcp_servers
+COPY agents/agents /app/agents
+
+ENV PYTHONPATH=/app PYTHONUNBUFFERED=1 MCP_KIND=${MCP_KIND}
+
+# entrypoint:按 kind 起 server
+COPY <<'EOF' /app/entrypoint.sh
+#!/bin/sh
+PORT="${PORT:-7000}"
+case "${MCP_KIND:-search}" in
+  search)            PORT=7001; module=mcp_servers.search.server ;;
+  image_tools)       PORT=7002; module=mcp_servers.image_tools.server ;;
+  video_tools)       PORT=7003; module=mcp_servers.video_tools.server ;;
+  audio_tools)       PORT=7004; module=mcp_servers.audio_tools.server ;;
+  document_tools)    PORT=7005; module=mcp_servers.document_tools.server ;;
+  oss)               PORT=7006; module=mcp_servers.oss.server ;;
+  platform_publish)  PORT=7007; module=mcp_servers.platform_publish.server ;;
+  *) echo "unknown MCP_KIND=${MCP_KIND}"; exit 1 ;;
+esac
+exec uvicorn "${module}:app" --host 0.0.0.0 --port "${PORT}"
+EOF
+RUN chmod +x /app/entrypoint.sh
+
+EXPOSE 7000-7099
+HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=3 \
+    CMD python -c "import os, urllib.request; ports={'search':'7001','image_tools':'7002','video_tools':'7003','audio_tools':'7004','document_tools':'7005','oss':'7006','platform_publish':'7007'}; port=os.getenv('PORT') or ports.get(os.getenv('MCP_KIND','search'),'7001'); urllib.request.urlopen(f'http://127.0.0.1:{port}/health', timeout=3)"
+
+CMD ["/app/entrypoint.sh"]

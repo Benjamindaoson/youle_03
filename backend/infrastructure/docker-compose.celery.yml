@@ -1,0 +1,252 @@
+# 把 celery worker 加进 dev 栈,跟主 docker-compose 一起起
+# 用法:
+#   mock LLM: docker compose -f docker-compose.yml -f docker-compose.mock.yml -f docker-compose.celery.yml up -d
+#   real LLM: docker compose -f docker-compose.yml -f docker-compose.celery.yml up -d
+
+name: youle-dev
+
+# 公共 agent 环境变量块（YAML anchor，各 agent 服务 <<: *agent-env 继承）
+x-agent-env: &agent-env
+  REDIS_URL: redis://redis:6379/0
+  LITELLM_URL: ${LITELLM_URL:-http://litellm-mock:4010}
+  LITELLM_API_KEY: ${LITELLM_API_KEY:-sk-mock-1234}
+  LITELLM_MOCK: ${LITELLM_MOCK:-true}
+  OPENROUTER_API_BASE: ${OPENROUTER_API_BASE:-https://openrouter.ai/api/v1}
+  OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+  DEEPSEEK_API_BASE: ${DEEPSEEK_API_BASE:-https://api.deepseek.com/v1}
+  DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+  SILICONFLOW_API_BASE: ${SILICONFLOW_API_BASE:-https://api.siliconflow.cn/v1}
+  SILICONFLOW_API_KEY: ${SILICONFLOW_API_KEY:-}
+  OSS_ENDPOINT: http://minio:9000
+  OSS_ACCESS_KEY: ${OSS_ACCESS_KEY:-minioadmin}
+  OSS_SECRET_KEY: ${OSS_SECRET_KEY:-minioadmin}
+  OSS_BUCKET: ${OSS_BUCKET:-youle-dev}
+  MCP_OSS_URL: http://mcp-oss:7006
+  MCP_SEARCH_URL: http://mcp-search:7001
+  MCP_IMAGE_TOOLS_URL: http://mcp-image-tools:7002
+  MCP_DOCUMENT_TOOLS_URL: http://mcp-document-tools:7005
+  MCP_AUDIO_TOOLS_URL: http://mcp-audio-tools:7004
+  MCP_VIDEO_TOOLS_URL: http://mcp-video-tools:7003
+  AGENT_MAX_RETRIES: "2"
+  AGENT_HEARTBEAT_INTERVAL: "20"
+
+services:
+  # ── Agent 1（文字师）— 消费 agent_tasks:text ──
+  agent-1:
+    build:
+      context: ../..
+      dockerfile: backend/infrastructure/Dockerfile.agent
+      args:
+        AGENT_KIND: text
+    image: youle-agent-text:latest
+    container_name: youle-agent-1
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      <<: *agent-env
+      AGENT_KIND: text
+
+  # ── Agent 2（文档师）— 消费 agent_tasks:document ──
+  agent-2:
+    build:
+      context: ../..
+      dockerfile: backend/infrastructure/Dockerfile.agent
+      args:
+        AGENT_KIND: document
+    image: youle-agent-document:latest
+    container_name: youle-agent-2
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      <<: *agent-env
+      AGENT_KIND: document
+
+  # ── Agent 3（设计师）— 消费 agent_tasks:image ──
+  agent-3:
+    build:
+      context: ../..
+      dockerfile: backend/infrastructure/Dockerfile.agent
+      args:
+        AGENT_KIND: image
+    image: youle-agent-image:latest
+    container_name: youle-agent-3
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      <<: *agent-env
+      AGENT_KIND: image
+
+  celery-worker-video:
+    build:
+      context: ../..
+      dockerfile: backend/infrastructure/Dockerfile.celery
+    image: youle-celery-worker:latest
+    container_name: youle-celery-worker-video
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      REDIS_URL: redis://redis:6379/0
+      OSS_ENDPOINT: http://minio:9000
+      OSS_ACCESS_KEY: ${OSS_ACCESS_KEY:-minioadmin}
+      OSS_SECRET_KEY: ${OSS_SECRET_KEY:-minioadmin}
+      OSS_BUCKET: ${OSS_BUCKET:-youle-dev}
+      MCP_AUDIO_TOOLS_URL: http://mcp-audio-tools:7004
+      MCP_VIDEO_TOOLS_URL: http://mcp-video-tools:7003
+    command: ["celery", "-A", "agents.av_agent.celery_tasks.video_workflow", "worker",
+              "--loglevel=info", "--queues=video", "--concurrency=2"]
+
+  # 可选:Flower 监控面板
+  flower:
+    image: mher/flower:2.0
+    container_name: youle-flower
+    restart: unless-stopped
+    depends_on:
+      - redis
+    environment:
+      CELERY_BROKER_URL: redis://redis:6379/1
+      FLOWER_PORT: "5555"
+    ports:
+      - "5555:5555"
+    command: ["celery", "--broker=redis://redis:6379/1", "flower",
+              "--port=5555", "--persistent=True"]
+
+  mcp-search:
+    build:
+      context: ../..
+      dockerfile: backend/infrastructure/Dockerfile.mcp
+      args:
+        MCP_KIND: search
+    image: youle-mcp-search:latest
+    container_name: youle-mcp-search
+    restart: unless-stopped
+    environment:
+      MCP_KIND: search
+      TAVILY_API_KEY: ${TAVILY_API_KEY:-}
+    ports:
+      - "7001:7001"
+
+  mcp-image-tools:
+    build:
+      context: ../..
+      dockerfile: backend/infrastructure/Dockerfile.mcp
+      args:
+        MCP_KIND: image_tools
+    image: youle-mcp-image-tools:latest
+    container_name: youle-mcp-image-tools
+    restart: unless-stopped
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MCP_KIND: image_tools
+      OSS_ENDPOINT: http://minio:9000
+      OSS_ACCESS_KEY: ${OSS_ACCESS_KEY:-minioadmin}
+      OSS_SECRET_KEY: ${OSS_SECRET_KEY:-minioadmin}
+      OSS_BUCKET: ${OSS_BUCKET:-youle-dev}
+    ports:
+      - "7002:7002"
+
+  mcp-document-tools:
+    build:
+      context: ../..
+      dockerfile: backend/infrastructure/Dockerfile.mcp
+      args:
+        MCP_KIND: document_tools
+    image: youle-mcp-document-tools:latest
+    container_name: youle-mcp-document-tools
+    restart: unless-stopped
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MCP_KIND: document_tools
+      OSS_ENDPOINT: http://minio:9000
+      OSS_ACCESS_KEY: ${OSS_ACCESS_KEY:-minioadmin}
+      OSS_SECRET_KEY: ${OSS_SECRET_KEY:-minioadmin}
+      OSS_BUCKET: ${OSS_BUCKET:-youle-dev}
+    ports:
+      - "7005:7005"
+
+  mcp-oss:
+    build:
+      context: ../..
+      dockerfile: backend/infrastructure/Dockerfile.mcp
+      args:
+        MCP_KIND: oss
+    image: youle-mcp-oss:latest
+    container_name: youle-mcp-oss
+    restart: unless-stopped
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MCP_KIND: oss
+      OSS_ENDPOINT: http://minio:9000
+      OSS_ACCESS_KEY: ${OSS_ACCESS_KEY:-minioadmin}
+      OSS_SECRET_KEY: ${OSS_SECRET_KEY:-minioadmin}
+      OSS_BUCKET: ${OSS_BUCKET:-youle-dev}
+    ports:
+      - "7006:7006"
+
+  # mcp-video-tools 也需要 ffmpeg/MoviePy(因为它执行真实 compose),所以也用 celery 镜像
+  mcp-video-tools:
+    image: youle-celery-worker:latest
+    container_name: youle-mcp-video-tools
+    restart: unless-stopped
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      OSS_ENDPOINT: http://minio:9000
+      OSS_ACCESS_KEY: ${OSS_ACCESS_KEY:-minioadmin}
+      OSS_SECRET_KEY: ${OSS_SECRET_KEY:-minioadmin}
+      OSS_BUCKET: ${OSS_BUCKET:-youle-dev}
+    ports:
+      - "7003:7003"
+    # 用 fastapi 而不是 celery worker
+    command: ["uvicorn", "mcp_servers.video_tools.server:app",
+              "--host", "0.0.0.0", "--port", "7003"]
+
+  mcp-audio-tools:
+    image: youle-celery-worker:latest
+    container_name: youle-mcp-audio-tools
+    restart: unless-stopped
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      OSS_ENDPOINT: http://minio:9000
+      OSS_ACCESS_KEY: ${OSS_ACCESS_KEY:-minioadmin}
+      OSS_SECRET_KEY: ${OSS_SECRET_KEY:-minioadmin}
+      OSS_BUCKET: ${OSS_BUCKET:-youle-dev}
+      LITELLM_URL: ${LITELLM_URL:-http://litellm-mock:4010}
+      LITELLM_API_KEY: ${LITELLM_API_KEY:-sk-mock-1234}
+      LITELLM_MOCK: ${LITELLM_MOCK:-true}
+      OPENROUTER_API_BASE: ${OPENROUTER_API_BASE:-https://openrouter.ai/api/v1}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      DEEPSEEK_API_BASE: ${DEEPSEEK_API_BASE:-https://api.deepseek.com/v1}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      SILICONFLOW_API_BASE: ${SILICONFLOW_API_BASE:-https://api.siliconflow.cn/v1}
+      SILICONFLOW_API_KEY: ${SILICONFLOW_API_KEY:-}
+    ports:
+      - "7004:7004"
+    command: ["uvicorn", "mcp_servers.audio_tools.server:app",
+              "--host", "0.0.0.0", "--port", "7004"]

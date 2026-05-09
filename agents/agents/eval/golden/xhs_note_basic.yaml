@@ -1,0 +1,20 @@
+case_id: xhs_note_basic
+description: 小红书笔记 happy path — 文 + 图卡片
+tags: [xhs, hero, content]
+input:
+  user_request: 帮我写一篇小红书种草笔记,推荐 3 个夏季效率神器
+  collected_fields:
+    主题: 夏季效率神器
+    风格: 种草
+    平台: 小红书
+expected:
+  must_have_steps: [plan, copy, image]
+  must_have_artifact_types: [text, image_collection]
+  primary_artifact_step: image
+  max_total_cost_usd: 3.0
+  max_p95_duration_s: 240
+  must_pass_critic: true
+  min_score: 0.7
+budget:
+  total_cost_usd: 2.5
+  total_duration_s: 180

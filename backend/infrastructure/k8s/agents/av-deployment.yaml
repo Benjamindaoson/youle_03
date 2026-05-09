@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-av
+  namespace: youle
+  labels: { app: agent-av, agent: av }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: agent-av } }
+  template:
+    metadata:
+      labels: { app: agent-av, agent: av }
+    spec:
+      serviceAccountName: youle-app
+      # Av 短任务在 agent 进程跑;长视频合成由 celery-worker-video 跑(下面单独 deployment)
+      containers:
+        - name: agent
+          image: ghcr.io/your-org/youle-agent:0.1.0
+          env:
+            - { name: AGENT_KIND, value: av }
+          envFrom:
+            - configMapRef: { name: youle-config }
+            - secretRef: { name: youle-secrets }
+          resources:
+            requests: { cpu: "200m", memory: "512Mi" }
+            limits:   { cpu: "1000m", memory: "1Gi" }
+      terminationGracePeriodSeconds: 60
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-worker-video
+  namespace: youle
+  labels: { app: celery-worker-video }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: celery-worker-video } }
+  template:
+    metadata:
+      labels: { app: celery-worker-video }
+    spec:
+      serviceAccountName: youle-app
+      containers:
+        - name: celery
+          image: ghcr.io/your-org/youle-celery-video:0.1.0
+          envFrom:
+            - configMapRef: { name: youle-config }
+            - secretRef: { name: youle-secrets }
+          resources:
+            requests:
+              cpu: "1000m"
+              memory: "2Gi"
+            limits:
+              cpu: "4000m"
+              memory: "6Gi"
+              # GPU 节点(可选):nvidia.com/gpu: 1
+      terminationGracePeriodSeconds: 120  # 视频合成可能跑久,等它完成
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: { name: agent-av-hpa, namespace: youle }
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: agent-av }
+  minReplicas: 1
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: 70 } }

@@ -1,0 +1,64 @@
+# L2 执行层路由(Agent 1-4 按 task_type 分发)
+# 详见 docs/4_附录/模型路由表.md
+# 这里只列 V1 必上的核心模型;完整请参考文档
+
+model_list:
+  # ---- Agent 1 文字 ----
+  - model_name: deepseek-v4-pro
+    litellm_params:
+      model: deepseek/deepseek-reasoner
+      api_key: os.environ/DEEPSEEK_API_KEY
+  - model_name: kimi-k2
+    litellm_params:
+      model: moonshot/moonshot-v1-128k
+      api_key: os.environ/MOONSHOT_API_KEY
+  - model_name: claude-sonnet-4-6
+    litellm_params:
+      model: anthropic/claude-sonnet-4-6-20250929
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  # ---- Agent 3 图像 ----
+  - model_name: gpt-image-2
+    litellm_params:
+      model: openai/gpt-image-2
+      api_key: os.environ/OPENAI_API_KEY
+  - model_name: seedream-3
+    litellm_params:
+      model: volcengine/seedream-3.0
+      api_key: os.environ/VOLCENGINE_API_KEY
+  - model_name: nano-banana-2
+    litellm_params:
+      model: openai/nano-banana-2
+      api_key: os.environ/OPENAI_API_KEY
+
+  # ---- Agent 4 视频 / 音频 ----
+  - model_name: veo-3
+    litellm_params:
+      model: gemini/veo-3
+      api_key: os.environ/GEMINI_API_KEY
+  - model_name: seedance-2
+    litellm_params:
+      model: volcengine/seedance-2.0
+      api_key: os.environ/VOLCENGINE_API_KEY
+  - model_name: kling-2
+    litellm_params:
+      model: kuaishou/kling-2.0
+      api_key: os.environ/KLING_API_KEY
+  - model_name: volcengine-tts
+    litellm_params:
+      model: volcengine/tts
+      api_key: os.environ/VOLCENGINE_TTS_TOKEN
+      app_id: os.environ/VOLCENGINE_TTS_APP_ID
+  - model_name: aliyun-tts
+    litellm_params:
+      model: aliyun/cosyvoice-v2
+      api_key: os.environ/ALIYUN_API_KEY
+
+router_settings:
+  routing_strategy: simple-shuffle
+  num_retries: 2
+  retry_after: 1
+
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+  database_url: os.environ/LITELLM_DATABASE_URL

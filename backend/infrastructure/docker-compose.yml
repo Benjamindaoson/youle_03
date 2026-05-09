@@ -1,0 +1,85 @@
+name: youle-dev
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: youle-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-youle}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-youle_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-youle}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-youle} -d ${POSTGRES_DB:-youle}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: youle-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: youle-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${OSS_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${OSS_SECRET_KEY:-minioadmin}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: youle-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      sh -c "
+        mc alias set local http://minio:9000 ${OSS_ACCESS_KEY:-minioadmin} ${OSS_SECRET_KEY:-minioadmin} &&
+        mc mb -p local/${OSS_BUCKET:-youle-dev} || true &&
+        mc anonymous set download local/${OSS_BUCKET:-youle-dev} || true &&
+        echo 'minio bucket ready'
+      "
+
+  qdrant:
+    image: qdrant/qdrant:v1.13.0
+    container_name: youle-qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  qdrant_data:

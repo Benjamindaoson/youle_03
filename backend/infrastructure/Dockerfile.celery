@@ -1,0 +1,36 @@
+# Celery worker for video composition(含 FFmpeg + MoviePy + CJK fonts for Pillow subtitles)
+FROM python:3.12-slim
+
+# MoviePy 通过 imageio-ffmpeg 使用随包 ffmpeg,避免 dev 构建依赖系统 apt 源。
+# 字幕使用 Pillow 生成透明图层,不依赖 ImageMagick。
+
+WORKDIR /app
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends fonts-noto-cjk \
+    && rm -rf /var/lib/apt/lists/*
+
+# 安装 Python 依赖
+RUN pip install --no-cache-dir \
+    celery>=5.4 \
+    redis>=5.0 \
+    fastapi>=0.115 \
+    "uvicorn[standard]>=0.32" \
+    httpx>=0.27 \
+    pydantic>=2.9 \
+    structlog>=24.1 \
+    "moviepy>=1.0.3,<2" \
+    pillow>=11.0 \
+    boto3>=1.35 \
+    "imageio>=2.36" \
+    "imageio-ffmpeg>=0.5.1"
+
+COPY agents/agents /app/agents
+COPY agents/mcp_servers /app/mcp_servers
+
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+
+# 启动 Celery worker(只消费 video 队列)
+CMD ["celery", "-A", "agents.av.celery_tasks.video_workflow", "worker", \
+     "--loglevel=info", "--queues=video", "--concurrency=2", "--pool=prefork"]

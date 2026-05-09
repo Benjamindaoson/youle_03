@@ -1,0 +1,52 @@
+# 4 个 Agent worker 共用镜像(消费 Redis Streams)
+# 构建上下文 = 仓库根目录
+ARG AGENT_KIND=text
+
+FROM python:3.12-slim AS builder
+WORKDIR /build
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential gcc curl \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=ghcr.io/astral-sh/uv:0.5.9 /uv /uvx /usr/local/bin/
+
+COPY agents/pyproject.toml agents/uv.lock ./
+RUN uv venv /opt/venv && \
+    UV_PROJECT_ENVIRONMENT=/opt/venv uv sync --frozen --no-dev --no-install-project
+
+FROM python:3.12-slim AS runtime
+ARG AGENT_KIND
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd -r app && useradd -r -g app -u 10001 app
+
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app \
+    AGENT_KIND=${AGENT_KIND}
+
+WORKDIR /app
+COPY agents/agents /app/agents
+
+COPY <<'EOF' /app/entrypoint.sh
+#!/bin/sh
+case "${AGENT_KIND:-text}" in
+  text)     exec python -m agents.text_agent.main ;;
+  document) exec python -m agents.document_agent.main ;;
+  image)    exec python -m agents.image_agent.main ;;
+  av)       exec python -m agents.av_agent.main ;;
+  *) echo "unknown AGENT_KIND=${AGENT_KIND}"; exit 1 ;;
+esac
+EOF
+
+RUN chmod +x /app/entrypoint.sh \
+    && chown -R app:app /app/agents /app/entrypoint.sh
+
+USER app
+
+HEALTHCHECK --interval=20s --timeout=5s --start-period=15s --retries=3 \
+    CMD python -c "import sys; sys.exit(0)" || exit 1
+
+CMD ["/app/entrypoint.sh"]

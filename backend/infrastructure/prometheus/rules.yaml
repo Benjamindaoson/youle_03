@@ -1,0 +1,54 @@
+groups:
+  - name: youle-slo
+    interval: 30s
+    rules:
+      # 意图理解延迟 SLO:p95 < 1.5s
+      - alert: YouleIntentLatencyHigh
+        expr: youle_intent_latency_seconds{quantile="0.95"} > 1.5
+        for: 5m
+        labels: { severity: warning, slo: intent_latency }
+        annotations:
+          summary: "意图理解 p95 延迟超过 1.5s({{ $value | printf \"%.2f\" }}s)"
+          runbook: "https://wiki.example.com/youle-runbook#intent-latency-high"
+
+      # Agent 队列积压 > 100
+      - alert: YouleAgentQueueBacklog
+        expr: youle_agent_queue_pending > 100
+        for: 3m
+        labels: { severity: warning, slo: queue }
+        annotations:
+          summary: "{{ $labels.agent }} 队列积压 {{ $value }} 条 — 需扩容"
+
+      # DLQ 出现新消息(2 分钟内增长)
+      - alert: YouleDLQGrowing
+        expr: increase(youle_dlq_total[2m]) > 0
+        for: 1m
+        labels: { severity: critical }
+        annotations:
+          summary: "{{ $labels.agent }} DLQ 新增消息 — 检查任务失败原因"
+
+      # 视频任务失败率 > 20%(24h)
+      - alert: YouleVideoFailureRateHigh
+        expr: |
+          youle_video_task_failed_total /
+          (youle_video_task_failed_total + youle_video_task_success_total) > 0.2
+        for: 10m
+        labels: { severity: critical, slo: video_success }
+        annotations:
+          summary: "视频任务 24h 失败率超 20%"
+
+      # Backend 不可用
+      - alert: YouleBackendDown
+        expr: up{job="youle-backend"} == 0
+        for: 2m
+        labels: { severity: critical }
+        annotations:
+          summary: "youle-backend instance {{ $labels.instance }} down"
+
+      # HITL gate 长时间未关闭(30 分钟)
+      - alert: YouleHITLStale
+        expr: youle_hitl_open_total > 5
+        for: 30m
+        labels: { severity: warning }
+        annotations:
+          summary: "HITL gate 积压 {{ $value }} 个超过 30 分钟未处理"

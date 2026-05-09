@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: litellm-config
+  namespace: youle
+data:
+  config.yaml: |
+    # 真实 prod 配置由 ops 维护;此处放安全默认骨架
+    model_list:
+      - model_name: deepseek-v4-flash
+        litellm_params:
+          model: deepseek/deepseek-chat
+          api_key: os.environ/DEEPSEEK_API_KEY
+      - model_name: claude-sonnet-4-6
+        litellm_params:
+          model: anthropic/claude-sonnet-4-5-20250929
+          api_key: os.environ/ANTHROPIC_API_KEY
+      - model_name: gpt-image-2
+        litellm_params:
+          model: openai/dall-e-3
+          api_key: os.environ/OPENAI_API_KEY
+    router_settings:
+      routing_strategy: simple-shuffle
+      num_retries: 2
+      timeout: 60
+    general_settings:
+      master_key: os.environ/LITELLM_MASTER_KEY
+      database_url: os.environ/LITELLM_DATABASE_URL
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: litellm-proxy
+  namespace: youle
+  labels: { app: litellm-proxy }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: litellm-proxy } }
+  template:
+    metadata: { labels: { app: litellm-proxy } }
+    spec:
+      containers:
+        - name: litellm
+          image: ghcr.io/berriai/litellm:main-stable
+          args: ["--config", "/app/config.yaml", "--port", "4000"]
+          ports: [{ containerPort: 4000 }]
+          env:
+            - name: LITELLM_MASTER_KEY
+              valueFrom: { secretKeyRef: { name: youle-secrets, key: LITELLM_MASTER_KEY } }
+          envFrom:
+            - secretRef: { name: youle-secrets }
+          volumeMounts:
+            - name: config
+              mountPath: /app/config.yaml
+              subPath: config.yaml
+          resources:
+            requests: { cpu: "200m", memory: "512Mi" }
+            limits:   { cpu: "1000m", memory: "1Gi" }
+          readinessProbe:
+            httpGet: { path: /health, port: 4000 }
+            initialDelaySeconds: 10
+      volumes:
+        - name: config
+          configMap: { name: litellm-config }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: litellm-proxy, namespace: youle }
+spec:
+  selector: { app: litellm-proxy }
+  ports: [{ port: 4000, targetPort: 4000 }]

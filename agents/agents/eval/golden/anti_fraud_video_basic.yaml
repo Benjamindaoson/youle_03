@@ -1,0 +1,21 @@
+case_id: anti_fraud_video_basic
+description: 反诈视频 happy path — 全字段填齐,期望 5 步 + 视频产物
+tags: [video, hero, anti_fraud]
+input:
+  user_request: 给我做一个反诈短视频
+  collected_fields:
+    年份: 2026
+    骗局类型: 电信诈骗
+    受众: 城市老人
+    时长: 60s
+expected:
+  must_have_steps: [research, script, image_process, bgm, video_compose]
+  must_have_artifact_types: [text, image_collection, video]
+  primary_artifact_step: video_compose
+  max_total_cost_usd: 10.0
+  max_p95_duration_s: 600
+  must_pass_critic: false
+  min_score: 0.7
+budget:
+  total_cost_usd: 8.0
+  total_duration_s: 480

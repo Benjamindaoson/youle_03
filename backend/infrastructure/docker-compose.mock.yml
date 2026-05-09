@@ -1,0 +1,12 @@
+name: youle-dev
+
+services:
+  litellm-mock:
+    image: stoplight/prism:5
+    container_name: youle-litellm-mock
+    restart: unless-stopped
+    ports:
+      - "4000:4010"
+    volumes:
+      - ./litellm/mock_openapi.yaml:/api/openapi.yaml:ro
+    command: ["mock", "-h", "0.0.0.0", "/api/openapi.yaml"]

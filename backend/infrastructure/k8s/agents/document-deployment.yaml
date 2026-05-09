@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agent-document
+  namespace: youle
+  labels: { app: agent-document, agent: document }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: agent-document } }
+  template:
+    metadata:
+      labels: { app: agent-document, agent: document }
+    spec:
+      serviceAccountName: youle-app
+      containers:
+        - name: agent
+          image: ghcr.io/your-org/youle-agent:0.1.0
+          env:
+            - { name: AGENT_KIND, value: document }
+          envFrom:
+            - configMapRef: { name: youle-config }
+            - secretRef: { name: youle-secrets }
+          resources:
+            requests: { cpu: "200m", memory: "512Mi" }
+            limits:   { cpu: "1500m", memory: "1Gi" }
+      terminationGracePeriodSeconds: 60
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: { name: agent-document-hpa, namespace: youle }
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: agent-document }
+  minReplicas: 1
+  maxReplicas: 4
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: 70 } }

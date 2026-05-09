@@ -1,0 +1,15 @@
+{
+  "anti_fraud_video": {
+    "include_domains": ["gov.cn", "people.com.cn"],
+    "exclude_domains": [
+      "x.com",
+      "twitter.com",
+      "tiktok.com",
+      "instagram.com",
+      "scribd.com",
+      "huggingface.co",
+      "zenodo.org",
+      "github.com"
+    ]
+  }
+}

@@ -1,0 +1,193 @@
+skill_id: short_video
+name: 短视频制作
+version: "0.5"   # V1.5 标记 — 与 anti_fraud_video v1.0 共享 video_compose 引擎
+description: 通用短视频制作 — 给定主题、风格、平台,自动生产 30-90 秒短视频
+domain: video
+scenario: short_video
+creator: platform
+visibility: subscribed   # V1.5 默认订阅可见(铁律 16:V1 hero 不含通用短视频)
+created_at: 2026-05-05
+updated_at: 2026-05-05
+
+# ─── 与 anti_fraud_video 共享同一条流水线和 video_compose 引擎 ───
+# 区别:1) 主题更通用(不限于反诈),2) 风格选项面向多平台,3) 终审动作丰富
+
+keywords:
+  - 短视频
+  - 抖音视频
+  - 视频制作
+  - short_video
+  - douyin
+anti_signals:
+  - 反诈                # 反诈走 anti_fraud_video.yaml,优先级更高
+  - 直播
+  - 长视频
+  - 真人出镜
+
+inputs_schema:
+  - name: 主题
+    type: text
+    required: true
+    description: "想表达的核心主题"
+
+  - name: 风格
+    type: enum
+    required: true
+    options: [科普向, 故事向, 段子向, 治愈向, 励志向, 资讯向]
+    default: 科普向
+    clarification_form: single_select
+
+  - name: 受众
+    type: enum
+    required: true
+    options: [Z 世代, 都市白领, 城市妈妈, 银发族, 都覆盖]
+    default: 都覆盖
+    clarification_form: single_select
+
+  - name: 时长
+    type: enum
+    required: false
+    options: [30s, 60s, 90s]
+    default: 60s
+    clarification_form: single_select
+
+  - name: 平台
+    type: enum
+    required: false
+    options: [抖音, 视频号, 小红书, B 站, 多平台]
+    default: 多平台
+    clarification_form: single_select
+
+  - name: 开头钩子
+    type: text
+    required: false
+    clarification_form: version_compare
+    generate_count: 3
+
+workflow:
+  # 第 1 步:背景调研 / 素材搜集
+  - step_id: research
+    agent: agent_1            # 文字
+    task_type: web_search
+    timeout: 120
+    mcp_tools:
+      - mcp://search/web_search
+      - mcp://search/web_fetch
+    prompt_template: |
+      围绕主题「{{主题}}」搜集 8-10 条相关素材或案例,
+      面向 {{受众}} 受众,适配 {{平台}} 平台。
+      每条要包含:标题、摘要、来源、可用图片 URL(若有)。
+      标题语气贴合「{{风格}}」风格。
+    output_format:
+      type: structured
+      schema:
+        columns: [标题, 摘要, 来源URL, 图片URL]
+    routing_hints:
+      primary: claude-sonnet-4-6
+      fallback: [deepseek-v4-pro]
+
+  # 第 2 步:脚本生成 + 用户审脚本
+  - step_id: script
+    agent: agent_1
+    task_type: short_video_script
+    depends_on: [research]
+    timeout: 60
+    prompt_template: |
+      基于 {{research.output}} 撰写一段 {{时长}} 的短视频脚本。
+      风格:{{风格}}
+      受众:{{受众}}
+      平台:{{平台}}
+      开头钩子参考:{{开头钩子 | default("自然吸引")}}
+
+      要求:
+      - 开头 2 秒抓眼球
+      - 中间结构清晰、有节奏
+      - 结尾有记忆点 / 互动钩子
+      - 适配 {{平台}} 平台口语化、节奏化的表达
+    output_format:
+      type: text
+    routing_hints:
+      primary: deepseek-v4-pro
+      fallback: [kimi-k2, claude-sonnet-4-6]
+    hitl_gate:
+      type: version_select
+      timeout_seconds: 600
+
+  # 第 3 步:配图(取 research 提供的图 URL,下载 + 质检)
+  - step_id: image_process
+    agent: agent_3            # 设计师
+    task_type: image_download
+    depends_on: [research]
+    timeout: 120
+    parameters:
+      check_quality: true
+      min_resolution: 1080p
+    prompt_template: |
+      从 {{research.output.图片URL}} 下载图片,
+      过滤无效与低质,保留 ≥ 5 张作为视频画面素材。
+    output_format:
+      type: image_collection
+    hitl_gate:
+      type: quality_review
+      actions: [approve, regenerate_single, replace_with_upload]
+
+  # 第 4 步:配乐(从素材库匹配 mood,无 LLM)
+  - step_id: bgm
+    agent: agent_4            # 影音师
+    task_type: bgm_select
+    depends_on: [script]
+    timeout: 5
+    parameters:
+      # mood 由风格映射:科普 → neutral / 故事 → emotional / 段子 → cheerful / 治愈 → hopeful / 励志 → urgent / 资讯 → serious
+      mood_from_field: 风格
+      duration_field: 时长
+    output_format:
+      type: audio
+
+  # 第 5 步:视频合成(Celery → MoviePy 真合成)+ 终审
+  - step_id: video_compose
+    agent: agent_4
+    task_type: video_compose
+    depends_on: [script, image_process, bgm]
+    timeout: 900
+    inputs:
+      script: "{{script.output}}"
+      images: "{{image_process.output}}"
+      bgm: "{{bgm.output}}"
+    parameters:
+      voice: female_warm
+      duration_field: 时长
+      resolution: [1080, 1920]
+    output_format:
+      type: video
+    quality_check:
+      min_resolution: 1080p
+      max_silence_seconds: 2
+    hitl_gate:
+      type: final_approval
+      timeout_seconds: 1800
+      # V1 终审:接受 / 微调 / 取消(无回滚 — 中断 C 是 V2)
+      actions:
+        - {label: "接受,发布", action: approve, default: true}
+        - {label: "调字幕样式", action: modify, target_step: video_compose}
+        - {label: "换 BGM", action: modify, target_step: bgm}
+        - {label: "重写脚本", action: modify, target_step: script}
+
+failure_handling:
+  research:
+    on_timeout: retry_once
+    on_failure: ask_user_to_provide_topic_or_links
+  script:
+    on_timeout: switch_to_fallback_model
+    on_failure: ask_user_to_simplify
+  video_compose:
+    on_timeout: notify_user_long_running
+    on_failure: ask_user_to_retry
+
+delivery:
+  primary_artifact: video_compose
+  bundled_artifacts: [research, script, image_process, bgm]
+  user_message_template: |
+    ✅ 短视频已就绪!共耗时 {{duration}}。
+    主成品:{{时长}} {{风格}}风格 {{平台}} 适配 mp4
+    附带:调研 / 脚本 / 配图 / 配乐

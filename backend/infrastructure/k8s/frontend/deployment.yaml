@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: youle
+  labels: { app: frontend }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: frontend } }
+  template:
+    metadata:
+      labels: { app: frontend }
+    spec:
+      containers:
+        - name: frontend
+          image: ghcr.io/your-org/youle-frontend:0.1.0
+          ports: [{ containerPort: 3000 }]
+          env:
+            - { name: NEXT_PUBLIC_API_URL, value: "https://youle.example.com/api" }
+            - { name: NEXT_PUBLIC_WS_URL, value: "wss://youle.example.com/ws" }
+            - { name: NEXT_PUBLIC_USE_MOCK, value: "false" }
+          resources:
+            requests: { cpu: "100m", memory: "256Mi" }
+            limits:   { cpu: "1000m", memory: "768Mi" }
+          readinessProbe:
+            httpGet: { path: /api/health, port: 3000 }
+            initialDelaySeconds: 10
+          livenessProbe:
+            httpGet: { path: /api/health, port: 3000 }
+            periodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata: { name: frontend, namespace: youle }
+spec:
+  selector: { app: frontend }
+  ports: [{ port: 80, targetPort: 3000 }]
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata: { name: frontend-hpa, namespace: youle }
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: frontend }
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource: { name: cpu, target: { type: Utilization, averageUtilization: 70 } }

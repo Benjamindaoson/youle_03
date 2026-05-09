@@ -1,0 +1,204 @@
+skill_id: xhs_article
+name: 小红书图文笔记
+version: "1.0"
+description: 一句话产出可发布的小红书种草笔记 — 自动调研同主题爆款 → 生成标题/正文/Hashtag(流式) → 渲染3:4图片卡片
+domain: content
+scenario: xhs_note
+creator: platform
+visibility: public
+created_at: 2026-05-08
+updated_at: 2026-05-08
+
+md_knowledge_refs:
+  - xhs-note-creator
+
+# 三层 Skill 匹配 L1 关键词层
+keywords:
+  - 小红书
+  - xhs
+  - redbook
+  - 种草
+  - 笔记
+  - 笔记文案
+  - 小红书种草
+  - 图文笔记
+
+# anti_signals: 这些词出现说明用户要的不是 xhs 静态图文,匹配应跳过
+anti_signals:
+  - 视频
+  - 直播
+  - 真人出镜
+  - 公众号
+  - 长文
+
+# 输入 schema — 三层匹配 needs_clarification 时由 clarification 子模块逐字段问
+inputs_schema:
+  - name: 主题
+    type: text
+    required: true
+    description: 笔记主题或产品(例:Aesop 大马士革玫瑰香水)
+    clarification_form: text_input
+
+  - name: 受众
+    type: enum
+    required: true
+    options: [都市白领女性, 学生党, 宝妈, 男士, 通用]
+    default: 都市白领女性
+    clarification_form: single_select
+
+  - name: 风格基调
+    type: enum
+    required: false
+    options: [种草, 测评, 教程, 体验分享]
+    default: 种草
+    clarification_form: single_select
+
+  - name: 字数
+    type: enum
+    required: false
+    options: ["短(300-500字)", "中(800-1200字)", "长(1500-2000字)"]
+    default: "中(800-1200字)"
+    clarification_form: single_select
+
+# ───────────────────────────────────────────────────────────────────────────────
+# Workflow — 3 个串行步骤。LangGraph 会自动按 depends_on 编译 DAG。
+# ───────────────────────────────────────────────────────────────────────────────
+workflow:
+  # ━━━ 第 1 步:同主题爆款调研 ━━━
+  - step_id: research
+    agent: agent_1                       # 文字 (ADR-001-rev)
+    task_type: web_search
+    timeout: 60
+    mcp_tools:
+      - mcp://search/web_search
+    prompt_template: |
+      搜索小红书近期关于「{{主题}}」的爆款笔记,产出 JSON:
+      {
+        "hot_titles": [5 个热门标题,带钩子结构],
+        "selling_points": [3-5 个共性卖点,来自评论区高赞],
+        "trending_hashtags": [5-8 个高频小红书 hashtag],
+        "tone_examples": [2-3 段范文片段,展示语气节奏]
+      }
+      要求:中文输出;hashtag 不带 # 号;hot_titles ≤ 20 字;tone_examples ≤ 80 字。
+    output_format:
+      type: structured
+      schema:
+        keys: [hot_titles, selling_points, trending_hashtags, tone_examples]
+    routing_hints:
+      primary: deepseek/deepseek-chat
+      fallback: [anthropic/claude-sonnet-4.6]
+    parameters:
+      source_profile: xhs_research
+      max_results: 10
+
+  # ━━━ 第 2 步:小红书风格文案生成(流式)━━━
+  - step_id: copywriting
+    agent: agent_1
+    task_type: long_writing
+    depends_on: [research]
+    timeout: 120
+    prompt_template: |
+      基于以下调研材料,撰写一篇小红书 {{风格基调}} 笔记:
+
+      ## 调研
+      {{research.output}}
+
+      ## 任务
+      主题:{{主题}}
+      受众:{{受众}}
+      字数:{{字数}}
+
+      ## 输出格式(严格 JSON)
+      {
+        "title": "≤20 字带钩子的标题(数字/疑问/感叹增强吸引力)",
+        "body": "正文,段落清晰,每段 1-2 emoji,简短句子",
+        "hashtags": ["5-10 个 SEO 友好 hashtag,不带 # 号"],
+        "card_cover": {
+          "emoji": "封面装饰 emoji 一个",
+          "title": "封面大字 ≤15 字",
+          "subtitle": "封面副文 ≤15 字"
+        }
+      }
+
+      ## 风格要求
+      - 钩子第一行必须抓人(参考 research.output.hot_titles)
+      - 正文用调研里的 selling_points,但用户口语化表达
+      - 不要"作为AI助手"这种官方腔
+      - hashtag 混合主题词 + 受众标签 + 场景标签
+    output_format:
+      type: structured
+      schema:
+        keys: [title, body, hashtags, card_cover]
+    parameters:
+      style_hint: xhs                    # 触发 long_writing 内的 xhs 分支 prompt(T4 实现)
+      stream: true                       # 启用流式 chunk 推送,前端逐字显示
+    routing_hints:
+      primary: anthropic/claude-sonnet-4.6   # 写文案质量优先
+      fallback: [deepseek/deepseek-chat]
+
+  # ━━━ 第 3 步:渲染封面卡片(3:4 比例)+ 终审 ━━━
+  - step_id: render_cards
+    agent: agent_3                       # 设计师 (ADR-001-rev)
+    task_type: image_compose
+    depends_on: [copywriting]
+    timeout: 30
+    inputs:
+      base_image_size: [1080, 1440]     # 3:4 比例,小红书标准
+      background_color: "#FFE7E7"       # V1 单主题:浅粉
+      layers:
+        - type: text
+          text: "{{copywriting.output.card_cover.emoji}}"
+          font_size: 200
+          color: "#333333"
+          position: top-center
+        - type: text
+          text: "{{copywriting.output.card_cover.title}}"
+          font_size: 80
+          color: "#1a1a1a"
+          position: center
+          weight: bold
+        - type: text
+          text: "{{copywriting.output.card_cover.subtitle}}"
+          font_size: 40
+          color: "#666666"
+          position: bottom-center
+        - type: watermark
+          text: "由 youle 生成"
+          font_size: 24
+          color: "#cccccc"
+          position: bottom-right
+    output_format:
+      type: image
+    hitl_gate:
+      type: final_approval
+      timeout_seconds: 600
+      actions:
+        - {label: "接受,导出", action: approve, default: true}
+        - {label: "改文案", action: modify, target_step: copywriting}
+        - {label: "重渲染", action: modify, target_step: render_cards}
+
+# ───────────────────────────────────────────────────────────────────────────────
+# 失败兜底 — V1 哲学:任何一步可降级,正文不阻塞图片
+# ───────────────────────────────────────────────────────────────────────────────
+failure_handling:
+  research:
+    on_timeout: skip                     # 没研究也能写,只是质量打折
+    on_failure: skip
+  copywriting:
+    on_timeout: switch_to_fallback_model
+    on_failure: ask_user_to_simplify
+  render_cards:
+    on_timeout: skip                     # 卡片渲染失败时,文案依旧可用
+    on_failure: skip                     # PIL 不可用 / 字体缺失 时透传
+
+# ───────────────────────────────────────────────────────────────────────────────
+# 交付 — primary 是文案(用户主诉求),卡片是 bundled
+# ───────────────────────────────────────────────────────────────────────────────
+delivery:
+  primary_artifact: copywriting
+  bundled_artifacts: [research, copywriting, render_cards]
+  user_message_template: |
+    ✅ 小红书笔记完成!
+    📝 标题 + 正文 + Hashtag(已附复制按钮)
+    🖼 封面卡片(3:4)— 直接保存上传
+    💡 调研材料(参考用,不发布)

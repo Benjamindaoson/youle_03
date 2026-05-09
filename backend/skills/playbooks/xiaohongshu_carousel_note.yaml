@@ -1,0 +1,134 @@
+skill_id: xiaohongshu_carousel_note
+name: 小红书图文笔记（有了）
+version: "1.0"
+description: |
+  垂类 Skill：生成可发小红书的多页图文骨架。
+  意图澄清、会话状态、终审汇报由主编排 Agent 承担；
+  此处编排「策划(JSON) → 封面 → 多张内页(JSON 密文) → 交付摘要」。
+domain: social
+scenario: xiaohongshu图文
+creator: platform
+visibility: internal
+
+# 执行时把 SKILL_xhs-note-creator.md 正文注入各步 LLM user 前缀,见 ADR-022
+md_knowledge_refs:
+  - xhs-note-creator
+
+keywords:
+  - 小红书
+  - 图文
+anti_signals:
+  - 短视频-only
+
+inputs_schema:
+  - name: 主题
+    type: text
+    required: true
+
+  - name: 受众
+    type: text
+    required: false
+
+  - name: 页数
+    type: enum
+    required: false
+    options: [3, 4, 5]
+    clarification_form: single_select
+
+  - name: 风格关键词
+    type: text
+    required: false
+
+workflow:
+  - step_id: carousel_plan
+    agent: agent_1
+    task_type: xhs_carousel_plan
+    timeout: 120
+    prompt_template: |
+      为背景「 {{主题}}」、受众「{{受众|default('18-35 一二线城市女性')}}」
+      设计一套小红书图文 Carousel,内页数约 {{页数|default(4)}}。
+      风格提示: {{风格关键词|default('清新、可信、信息密度高')}}
+      每张需:中文标题钩子、正文 bullet、以及给设计用的画面描述 image_prompt(中英混合短句)。
+    routing_hints:
+      primary: deepseek-v4-pro
+      fallback: [kimi-k2, deepseek-v4-flash]
+    parameters:
+      schema:
+        type: object
+        properties:
+          title:
+            type: string
+          cover_hook:
+            type: string
+          slides:
+            type: array
+            items:
+              type: object
+              properties:
+                title: {type: string}
+                body: {type: string}
+                image_prompt: {type: string}
+        required: [title, cover_hook, slides]
+      max_tokens: 2500
+    output_format:
+      type: json
+
+  - step_id: gen_cover
+    agent: agent_3
+    task_type: xhs_cover_image
+    depends_on: [carousel_plan]
+    timeout: 180
+    prompt_template: |
+      小红书封面竖版 1080×1350。主视觉为超大号中文标题,可读性第一。
+      主题: {{主题}}。请结合 carousel_plan 步骤产出的策划 JSON 中的 cover_hook、title 构思画面。
+    output_format:
+      type: image
+
+  - step_id: gen_carousel_images
+    agent: agent_3
+    task_type: batch_generate
+    depends_on: [carousel_plan, gen_cover]
+    timeout: 360
+    parameters:
+      image_set_type: default
+      image_specs:
+        - prompt: >-
+            小红书内页文案图 #1 — 竖版1080×1350,密集中文小字排版清晰可辨。
+            主题「{{主题}}」,第1页信息层:先抓眼球标题再列3条bullet。
+          xhs_visual_kind: slide_text
+        - prompt: >-
+            小红书内页文案图 #2 — 同上版式约束;展开卖点与使用场景叙事。
+            主题「{{主题}}」。
+          xhs_visual_kind: slide_text
+        - prompt: >-
+            小红书内页文案图 #3 — 同上;加入对比/清单/数字增强信任感。
+            主题「{{主题}}」。
+          xhs_visual_kind: slide_text
+    prompt_template: |
+      与封面图风格统一,色调一致。请参考 carousel_plan 一步的策划产物与主题「{{主题}}」。
+    output_format:
+      type: image_collection
+
+  - step_id: delivery_summary
+    agent: agent_1
+    task_type: xhs_delivery_summary
+    depends_on: [carousel_plan, gen_cover, gen_carousel_images]
+    timeout: 90
+    prompt_template: |
+      写「发布说明」给用户:发布顺序、封面/内页尺寸提醒、3-6个小红书话题标签(#...)、合规提示(无医疗绝对化承诺等)。
+      策划: {{ carousel_plan.output }}
+      封面: {{ gen_cover.output }}
+      内页 manifest: {{ gen_carousel_images.output }}
+    routing_hints:
+      primary: deepseek-v4-pro
+      fallback: [deepseek-v4-flash]
+    parameters:
+      max_tokens: 1800
+    output_format:
+      type: text
+
+failure_handling:
+  gen_cover:
+    on_failure: retry_with_different_anchor
+  gen_carousel_images:
+    on_failure: retry_with_different_anchor

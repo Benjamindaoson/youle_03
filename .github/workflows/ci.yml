@@ -1,0 +1,207 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev, "sprint/**", "feat/**"]
+  pull_request:
+    branches: [main, dev]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ────────────────────────────────────────────────────────────
+  # Backend — ruff lint + 全 unit / smoke 测试 + 黑名单 grep
+  # ────────────────────────────────────────────────────────────
+  backend:
+    name: backend (ruff + pytest)
+    runs-on: ubuntu-latest
+    services:
+      # Phase-1:plain Postgres(无 pgvector;ADR per 4d0cbaf)
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: youle
+          POSTGRES_PASSWORD: youle_dev
+          POSTGRES_DB: youle
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7.2-alpine
+        ports: ["6379:6379"]
+        options: --health-cmd "redis-cli ping" --health-interval 5s
+    env:
+      DATABASE_URL: postgresql+asyncpg://youle:youle_dev@localhost:5432/youle
+      REDIS_URL: redis://localhost:6379/0
+      LITELLM_MOCK: "true"
+      ENV: dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: latest
+          enable-cache: true
+
+      - name: Install backend deps
+        working-directory: backend
+        run: uv sync --extra dev
+
+      - name: Ruff lint
+        working-directory: backend
+        run: uv run ruff check .
+
+      - name: Alembic migrate
+        working-directory: backend
+        run: uv run alembic upgrade head
+
+      - name: Pytest unit + smoke
+        working-directory: backend
+        run: uv run pytest tests/unit tests/smoke -q
+
+  # ────────────────────────────────────────────────────────────
+  # Agents — ruff(暂不强制 pytest:agents 用 mock 跑,backend 套件已覆盖关键路径)
+  # ────────────────────────────────────────────────────────────
+  agents:
+    name: agents (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: astral-sh/setup-uv@v3
+        with:
+          version: latest
+          enable-cache: true
+
+      - name: Install agents deps
+        working-directory: agents
+        run: uv sync --extra dev || uv sync
+
+      - name: Ruff lint
+        working-directory: agents
+        run: uv run ruff check .
+
+  # ────────────────────────────────────────────────────────────
+  # Frontend — 条件触发:仅当 frontend/package.json 存在才跑
+  # 复活 frontend 前 (PR #N restoration scaffolding) 此 job 自动 skip。
+  # ────────────────────────────────────────────────────────────
+  frontend:
+    name: frontend (typecheck + lint)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect frontend
+        id: detect
+        run: |
+          if [ -f frontend/package.json ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "::notice::frontend/package.json 不存在,frontend job 跳过(等代码入仓后自动启用)"
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.detect.outputs.exists == 'true'
+        with:
+          node-version: "20"
+
+      - uses: pnpm/action-setup@v4
+        if: steps.detect.outputs.exists == 'true'
+        with:
+          version: 9
+          run_install: false
+
+      - name: pnpm install
+        if: steps.detect.outputs.exists == 'true'
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile || pnpm install
+
+      - name: typecheck (tsc --noEmit)
+        if: steps.detect.outputs.exists == 'true'
+        working-directory: frontend
+        # package.json 必须有 "typecheck": "tsc --noEmit" 脚本;否则回退到 npx tsc
+        run: pnpm typecheck || npx --yes tsc --noEmit -p tsconfig.json
+
+      - name: lint
+        if: steps.detect.outputs.exists == 'true'
+        working-directory: frontend
+        run: pnpm lint || echo "::warning::pnpm lint 未配置,跳过(后续补)"
+
+  # ────────────────────────────────────────────────────────────
+  # Schema 同步 — backend Pydantic schemas 改了 → frontend 类型必须重生成
+  # 防止跨语言契约漂移(对齐 CLAUDE.md §9)
+  # ────────────────────────────────────────────────────────────
+  schema-sync:
+    name: schema sync (backend ↔ frontend)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check schema/types diff parity
+        run: |
+          # 拿 PR base 与 head 的 diff,检查 schemas/ 改了但 lib/api-types.ts 没改
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
+          SCHEMA_CHANGED=$(git diff --name-only "$BASE" "$HEAD" | grep -E "^backend/app/schemas/" || true)
+          if [ -z "$SCHEMA_CHANGED" ]; then
+            echo "schemas/ 未改,skip"
+            exit 0
+          fi
+          if [ ! -f frontend/lib/api-types.ts ]; then
+            echo "::notice::frontend 未入仓,schema-sync 暂跳过"
+            exit 0
+          fi
+          TYPES_CHANGED=$(git diff --name-only "$BASE" "$HEAD" | grep -E "^frontend/lib/api-types\.ts$" || true)
+          if [ -z "$TYPES_CHANGED" ]; then
+            echo "::error::修改了 backend/app/schemas/ 但未重新生成 frontend/lib/api-types.ts。"
+            echo "::error::请跑 bash backend/scripts/gen-frontend-types.sh 并 commit 生成产物。"
+            exit 1
+          fi
+          echo "schemas/ + types 同步 OK"
+
+  # ────────────────────────────────────────────────────────────
+  # 代码模式黑名单(铁律 §3) — 命中即 fail
+  # ────────────────────────────────────────────────────────────
+  blacklist:
+    name: blacklist (CLAUDE.md §3)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Forbid direct LLM SDK imports
+        run: |
+          ! grep -RnE "^\s*(import openai|from openai|import anthropic|from anthropic)\b" \
+              --include='*.py' backend/app agents
+
+      - name: Forbid cross-agent direct calls
+        # ADR-002:cross_call.call_other_agent 的"定义"本身是抛 NotImplementedError 的
+        # 防御,不算违规;只 flag 实际"调用"。所以 grep 排除 `def call_other_agent`。
+        run: |
+          ! grep -RnE "call_other_agent\(" \
+              --include='*.py' backend/app agents \
+              | grep -v "def call_other_agent"
+
+      - name: "Forbid bare except: pass"
+        run: |
+          ! grep -RnE "^\s*except\s*:\s*$" \
+              --include='*.py' backend/app agents
+
+      - name: Forbid print() in production code
+        run: |
+          # tests / scripts 允许 print
+          ! grep -RnE "^\s*print\(" \
+              --include='*.py' backend/app agents

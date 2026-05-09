@@ -1,0 +1,47 @@
+# Backend(主编排 + REST/WS API)— 不含 GPU,生产镜像
+# 构建: 仓库根目录下 docker build -f backend/infrastructure/Dockerfile.backend .
+
+FROM python:3.12-slim AS builder
+
+WORKDIR /build
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential gcc curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# 装 uv 用于 lock 安装(比 pip 快 ~10x)
+COPY --from=ghcr.io/astral-sh/uv:0.5.9 /uv /uvx /usr/local/bin/
+
+COPY backend/pyproject.toml backend/uv.lock ./
+RUN uv venv /opt/venv && \
+    UV_PROJECT_ENVIRONMENT=/opt/venv uv sync --frozen --no-dev --no-install-project
+
+# ── 运行时镜像 ──
+FROM python:3.12-slim AS runtime
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd -r app && useradd -r -g app -u 10001 app
+
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app-agents-root:/app
+
+WORKDIR /app
+COPY --chown=app:app backend/app /app/app
+COPY --chown=app:app agents/agents /app-agents-root/agents
+COPY --chown=app:app backend/alembic /app/alembic
+COPY --chown=app:app backend/alembic.ini /app/alembic.ini
+COPY --chown=app:app backend/skills /app/skills
+COPY --chown=app:app backend/flywheel /app/flywheel
+
+USER app
+EXPOSE 8000
+
+HEALTHCHECK --interval=10s --timeout=5s --start-period=20s --retries=3 \
+    CMD curl -fsS http://127.0.0.1:8000/health || exit 1
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", \
+     "--workers", "2", "--access-log", "--proxy-headers"]

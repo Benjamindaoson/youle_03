@@ -1,0 +1,87 @@
+openapi: 3.0.0
+info:
+  title: LiteLLM Mock
+  version: 1.0.0
+servers:
+  - url: http://localhost:4000
+paths:
+  /chat/completions:
+    post:
+      operationId: createChatCompletion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                default:
+                  value:
+                    id: chatcmpl-mock-001
+                    object: chat.completion
+                    created: 1730000000
+                    model: deepseek-v4-flash
+                    choices:
+                      - index: 0
+                        message:
+                          role: assistant
+                          content: "这是 mock 模型返回的固定文本。task_type=mock"
+                        finish_reason: stop
+                    usage:
+                      prompt_tokens: 10
+                      completion_tokens: 20
+                      total_tokens: 30
+  /v1/chat/completions:
+    post:
+      operationId: createChatCompletionV1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                default:
+                  value:
+                    id: chatcmpl-mock-002
+                    object: chat.completion
+                    created: 1730000000
+                    model: deepseek-v4-flash
+                    choices:
+                      - index: 0
+                        message:
+                          role: assistant
+                          content: "{\"intent_type\":\"chitchat\"}"
+                        finish_reason: stop
+                    usage:
+                      prompt_tokens: 10
+                      completion_tokens: 20
+                      total_tokens: 30
+  /health:
+    get:
+      operationId: healthCheck
+      responses:
+        "200":
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                default:
+                  value:
+                    status: ok

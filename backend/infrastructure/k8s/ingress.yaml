@@ -1,0 +1,52 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: youle-ingress
+  namespace: youle
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-body-size: "20m"      # 上传图/视频
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"   # 长任务
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_set_header X-Real-IP $remote_addr;
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  tls:
+    - hosts: ["youle.example.com"]
+      secretName: youle-tls
+  rules:
+    - host: youle.example.com
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend: { service: { name: backend, port: { number: 80 } } }
+          - path: /ws
+            pathType: Prefix
+            backend: { service: { name: backend, port: { number: 80 } } }
+          - path: /health
+            pathType: Prefix
+            backend: { service: { name: backend, port: { number: 80 } } }
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: frontend, port: { number: 80 } } }
+---
+# NetworkPolicy:限制 Agent / MCP server 只允许同 ns 流量
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-external-from-agents
+  namespace: youle
+spec:
+  podSelector:
+    matchExpressions:
+      - { key: agent, operator: Exists }
+  policyTypes: ["Egress"]
+  egress:
+    - to:
+        - namespaceSelector: { matchLabels: { name: youle } }
+    - to:    # DNS
+        - namespaceSelector: { matchLabels: { name: kube-system } }
+      ports: [{ protocol: UDP, port: 53 }]
