@@ -53,7 +53,17 @@ def _cache_key(server: str, tool: str, arguments: dict[str, Any]) -> str:
 
 class AgentMCPClient:
     def __init__(self) -> None:
-        self._http = httpx.AsyncClient(timeout=httpx.Timeout(120.0, connect=5.0))
+        # MCP sidecars 在内网;allow_internal=True 只拦截 cloud metadata 等
+        # 永久黑名单(防 prompt injection 把请求带去 169.254.169.254 等)。
+        try:
+            from app.utils.httpx_safe import safe_async_client_kwargs
+            extra = safe_async_client_kwargs(allow_internal=True)
+        except Exception:
+            extra = {}
+        self._http = httpx.AsyncClient(
+            timeout=httpx.Timeout(120.0, connect=5.0),
+            **extra,
+        )
         self._redis: Any = None  # aioredis.Redis | False | None
 
     async def _get_redis(self) -> Any:

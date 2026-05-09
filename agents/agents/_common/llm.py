@@ -2,10 +2,20 @@
 
 backend.app.router 是后端用的;Agent 进程独立,这里复制最小必要逻辑(同样行为)。
 两边路由策略由 LiteLLM Proxy 集中管理;客户端只是 HTTP 包装。
+
+集成的工程化能力:
+  - **error_classifier**:HTTPStatusError → 结构化重试/换 key/降级/压缩决策
+  - **retry_utils.jittered_backoff**:解相关重试,避免雪崩
+  - **prompt_caching**:Anthropic 家族自动注入 ``cache_control``(省 ~75% 输入 token)
+  - **think_scrubber**:流式输出剥离 ``<think>`` 等推理标签,跨 delta 状态机
+
+详见 backend/app/utils/{error_classifier,retry_utils,prompt_caching}.py 与
+agents/agents/_common/think_scrubber.py。
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import uuid
@@ -23,8 +33,36 @@ from agents._common.llm_routing_tables import (
     XHS_NANO_BANANA_MODEL,
     XHS_SEEDREAM_MODEL,
 )
+from agents._common.think_scrubber import StreamingThinkScrubber
 
 log = structlog.get_logger(__name__)
+
+
+# ── error_classifier / retry_utils / prompt_caching: lazy import ─────
+# 这些 utils 在 backend.app.utils 下;agents 进程在打包时也能 import 到
+# (conftest 把仓库根加进 sys.path)。lazy import 避免在 mock 环境无相关
+# 依赖时阻塞 module 加载。
+
+def _classify(exc: Exception, *, model: str) -> Any:
+    from app.utils.error_classifier import classify_api_error
+    return classify_api_error(exc, model=model)
+
+
+def _backoff(attempt: int) -> float:
+    from app.utils.retry_utils import jittered_backoff
+    return jittered_backoff(attempt, base_delay=1.0, max_delay=30.0, jitter_ratio=0.5)
+
+
+def _maybe_cache_anthropic(model: str, messages: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """对 Anthropic 家族注入 prompt cache breakpoints — 其他模型原样返回。"""
+    m = model.lower()
+    if "claude" not in m and not m.startswith("anthropic/"):
+        return messages
+    try:
+        from app.utils.prompt_caching import apply_anthropic_cache_control
+        return apply_anthropic_cache_control(messages)
+    except Exception:
+        return messages
 
 LITELLM_URL = os.getenv("LITELLM_URL", "http://litellm-proxy:4000")
 LITELLM_API_KEY = os.getenv("LITELLM_API_KEY", "sk-mock-1234")
@@ -98,10 +136,19 @@ def _resolve_model(model: str) -> str:
 def _client(base_url: str, api_key: str) -> httpx.AsyncClient:
     key = (base_url.rstrip("/"), api_key)
     if key not in _http_clients:
+        # LiteLLM Proxy / DeepSeek / SiliconFlow 都是内网或受信公网;
+        # allow_internal=True 既不挡内网 service name,又对 cloud metadata
+        # 等永远阻断(防被诱导转走)。
+        try:
+            from app.utils.httpx_safe import safe_async_client_kwargs
+            extra = safe_async_client_kwargs(allow_internal=True)
+        except Exception:
+            extra = {}
         _http_clients[key] = httpx.AsyncClient(
             base_url=key[0],
             timeout=httpx.Timeout(120.0, connect=5.0),
             headers={"Authorization": f"Bearer {api_key}"},
+            **extra,
         )
     return _http_clients[key]
 
@@ -152,68 +199,130 @@ def _cognitive_model_chain(extra_routing_hints: dict[str, Any] | None) -> list[s
 
 
 def _llm_fallback_worthy(exc: BaseException) -> bool:
-    """判定是否应在主模型失败后尝试备选(网络错 / 限流 / 5xx)。
-
-    4xx 中 408/425/429 也允许换路(网关差异)。
-    """
+    """判定是否应在主模型失败后尝试备选(用于不可分类的兜底)。"""
     if isinstance(exc, httpx.RequestError):
         return True
     if isinstance(exc, httpx.HTTPStatusError):
         c = exc.response.status_code
-        if c >= 500:
-            return True
-        if c in {408, 425, 429}:
+        if c >= 500 or c in {408, 425, 429}:
             return True
         return False
     return False
 
 
+# 单个模型同址重试的次数(接 jittered_backoff)。失败超过后才切下一个备选。
+_MAX_RETRIES_PER_MODEL = int(os.getenv("LLM_MAX_RETRIES_PER_MODEL", "2"))
+
+
 async def _post_chat_json_with_fallback(
     models: list[str], payload_without_model: dict[str, Any]
 ) -> tuple[dict[str, Any], bool]:
-    """返回 (response_dict, fallback_used)。fallback_used=True 表示非首选模型响应。"""
-    # M-3: 每次调用生成唯一 request_id,各模型重试共享同一 ID 以便日志追踪
+    """返回 (response_dict, fallback_used)。
+
+    重试/降级决策由 ``app.utils.error_classifier`` 驱动:
+      - retryable=True → 留在当前模型,jittered backoff 后重试
+      - should_fallback=True → 立刻切下一个模型
+      - reason=context_overflow / payload_too_large → 直接抛(交给上层做压缩)
+      - 其他不可重试 → 抛
+    """
     request_id = str(uuid.uuid4())
     last: BaseException | None = None
+
     for ix, model in enumerate(models):
         body = dict(payload_without_model)
         body["model"] = model
+        # ── 关键:Anthropic 家族注入 prompt cache breakpoints ──
+        if "messages" in body and isinstance(body["messages"], list):
+            body["messages"] = _maybe_cache_anthropic(model, body["messages"])
         base_url, api_key = _provider_for_model(model)
-        try:
-            log.debug(
-                "agent.llm.chat_attempt",
-                model=model,
-                base_url=base_url,
-                attempt=ix + 1,
-                n_models=len(models),
-                request_id=request_id,
-            )
-            resp = await _client(base_url, api_key).post(
-                _chat_completions_path(base_url),
-                json=body,
-                headers={"X-Request-ID": request_id},
-            )
-            resp.raise_for_status()
-            fallback_used = ix > 0
-            if fallback_used:
-                log.warning(
-                    "agent.llm.fallback_succeeded",
-                    primary_model=models[0],
-                    actual_model=model,
-                    attempt=ix + 1,
+        path = _chat_completions_path(base_url)
+        client = _client(base_url, api_key)
+
+        for attempt in range(_MAX_RETRIES_PER_MODEL + 1):
+            try:
+                log.debug(
+                    "agent.llm.chat_attempt",
+                    model=model,
+                    base_url=base_url,
+                    model_ix=ix + 1,
+                    attempt=attempt + 1,
+                    n_models=len(models),
+                    request_id=request_id,
                 )
-            return resp.json(), fallback_used
-        except Exception as e:
-            last = e
-            if ix == len(models) - 1 or not _llm_fallback_worthy(e):
+                resp = await client.post(
+                    path, json=body, headers={"X-Request-ID": request_id},
+                )
+                resp.raise_for_status()
+                fallback_used = ix > 0
+                if fallback_used:
+                    log.warning(
+                        "agent.llm.fallback_succeeded",
+                        primary_model=models[0],
+                        actual_model=model,
+                        model_ix=ix + 1,
+                    )
+                return resp.json(), fallback_used
+            except Exception as e:
+                last = e
+                # 上下文 / payload 类错误必须在上层做压缩,这里直接抛。
+                try:
+                    classified = _classify(e, model=model)
+                except Exception:
+                    classified = None
+
+                cls_reason = getattr(classified, "reason", None)
+                cls_retryable = bool(getattr(classified, "retryable", False))
+                cls_fallback = bool(getattr(classified, "should_fallback", False))
+                cls_compress = bool(getattr(classified, "should_compress", False))
+
+                # 如果属于需要压缩的类(context_overflow / payload_too_large),
+                # 直接抛 — 调用层有责任压缩消息后重试。
+                if cls_compress:
+                    log.warning(
+                        "agent.llm.needs_compression",
+                        model=model,
+                        reason=str(cls_reason),
+                        attempt=attempt + 1,
+                    )
+                    raise
+
+                # 同模型内可重试:jittered backoff
+                if (
+                    cls_retryable
+                    and attempt < _MAX_RETRIES_PER_MODEL
+                    and not cls_fallback
+                ):
+                    delay = _backoff(attempt + 1)
+                    log.warning(
+                        "agent.llm.retry_same_model",
+                        model=model,
+                        reason=str(cls_reason) if cls_reason else None,
+                        attempt=attempt + 1,
+                        sleep_s=round(delay, 2),
+                        err_type=type(e).__name__,
+                    )
+                    await asyncio.sleep(delay)
+                    continue
+
+                # 切下一个 model(若有)。也兼顾 unclassified 兜底。
+                worth_fallback = cls_fallback or (
+                    classified is None and _llm_fallback_worthy(e)
+                ) or cls_retryable
+                if ix < len(models) - 1 and worth_fallback:
+                    log.warning(
+                        "agent.llm.fallback",
+                        from_model=model,
+                        reason=str(cls_reason) if cls_reason else None,
+                        attempt=attempt + 1,
+                        err_type=type(e).__name__,
+                        err=str(e)[:200],
+                    )
+                    break  # 跳出 attempt 循环,进入下一个 model
                 raise
-            log.warning(
-                "agent.llm.fallback",
-                from_model=model,
-                attempt=ix + 1,
-                err_type=type(e).__name__,
-                err=str(e)[:200],
-            )
+
+        # attempt 循环跑完没 return 也没 raise → 切下一 model
+        continue
+
     raise last  # pragma: no cover
 
 
@@ -405,12 +514,23 @@ async def stream(
     routing_hints: dict[str, Any] | None = None,
     temperature: float = 0.7,
 ):
-    """流式输出 — Agent 1 long_writing 用,逐 chunk yield。"""
+    """流式输出 — Agent 1 long_writing 用,逐 chunk yield。
+
+    每条 delta 经 ``StreamingThinkScrubber`` 跨 delta 状态机过滤掉
+    ``<think>`` / ``<reasoning>`` 等推理标签内容,下游消费者(WS / TTS /
+    持久化)统一不再泄露推理内容。
+    """
     models = _task_type_model_chain(task_type, routing_hints)
+    scrubber = StreamingThinkScrubber()
 
     if LITELLM_MOCK:
         for chunk in [f"[mock-{task_type}] ", "段一。", "段二。", "段三。"]:
-            yield chunk
+            visible = scrubber.feed(chunk)
+            if visible:
+                yield visible
+        tail = scrubber.flush()
+        if tail:
+            yield tail
         return
 
     last: BaseException | None = None
@@ -442,7 +562,9 @@ async def stream(
                         ).get("content", "")
                         if isinstance(delta, str) and delta:
                             bad_sse = 0
-                            yield delta
+                            visible = scrubber.feed(delta)
+                            if visible:
+                                yield visible
                     except Exception as e:
                         bad_sse += 1
                         log.warning(
@@ -464,6 +586,9 @@ async def stream(
                                 f"SSE parse failed {bad_sse} times consecutively for {task_type!r}; "
                                 "upstream format may be broken"
                             ) from e
+            tail = scrubber.flush()
+            if tail:
+                yield tail
             return
         except Exception as e:
             last = e

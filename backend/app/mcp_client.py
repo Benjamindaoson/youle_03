@@ -39,7 +39,13 @@ class MCPError(Exception):
 class MCPClient:
     def __init__(self, endpoints: dict[str, str] | None = None) -> None:
         self._endpoints = endpoints or MCP_ENDPOINTS
-        self._http = httpx.AsyncClient(timeout=httpx.Timeout(120.0, connect=5.0))
+        # MCP sidecars 通常在内网,allow_internal=True 只保留 cloud-metadata
+        # 黑名单(避免被 prompt-injection 转去 169.254.169.254)。
+        from app.utils.httpx_safe import safe_async_client_kwargs
+        self._http = httpx.AsyncClient(
+            timeout=httpx.Timeout(120.0, connect=5.0),
+            **safe_async_client_kwargs(allow_internal=True),
+        )
 
     async def call_tool(
         self,

@@ -1,6 +1,13 @@
 """structlog 配置 — 全局 JSON 日志,带 task_id / user_id。
 
 铁律:禁止 print / logging.info,统一用 structlog。
+
+脱敏分两层:
+  1. 字段级(structlog processor):识别敏感 key、把 phone 改 1xx****xxxx
+     —— 在结构化字段上工作,精度高、最优先。
+  2. 字符串级(`RedactingFormatter` + `_redact_full_event` processor):
+     把 `app.utils.redact` 的 30+ 厂商 API key / JWT / DB 连接串 / Bearer
+     等正则全打过去,作为最后一道兜底,捕获 value 中嵌入的密钥。
 """
 
 import logging
@@ -10,6 +17,7 @@ import sys
 import structlog
 
 from app.config import settings
+from app.utils.redact import RedactingFormatter, redact_sensitive_text
 
 
 _SENSITIVE_KEY_RE = re.compile(r"(password|secret|token|authorization|credential|jwt|sms_code)", re.I)
@@ -61,6 +69,28 @@ def _scrub_sensitive_values(
     return event_dict
 
 
+def _redact_full_event(
+    _: structlog.types.Processor,
+    __: str,
+    event_dict: structlog.types.EventDict,
+) -> structlog.types.EventDict:
+    """兜底层 — 把 30+ 厂商 API key / JWT / DB 连接串等正则打过整个 value。
+
+    放在 `_scrub_sensitive_values` 之后,只处理依然是字符串的字段;长度阈值
+    放宽到 8 以兼容 ``sk-xxxx``(前缀 3 + tail 5 即可触发某些短 token 规则)。
+
+    `force=True` 让该 processor 即便部署关闭了 ``YOULE_REDACT_SECRETS`` 也
+    保持工作 —— 日志是安全边界,绝不允许漏密钥。
+    """
+    for k, v in list(event_dict.items()):
+        if not isinstance(v, str) or len(v) < 8:
+            continue
+        v2 = redact_sensitive_text(v, force=True)
+        if v2 != v:
+            event_dict[k] = v2
+    return event_dict
+
+
 def configure_logging() -> None:
     log_level = getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO)
 
@@ -72,6 +102,7 @@ def configure_logging() -> None:
         structlog.processors.format_exc_info,
         _scrub_sensitive_keys,
         _scrub_sensitive_values,
+        _redact_full_event,
     ]
 
     if settings.is_dev:
@@ -87,7 +118,14 @@ def configure_logging() -> None:
         cache_logger_on_first_use=True,
     )
 
-    logging.basicConfig(level=log_level, stream=sys.stdout, format="%(message)s")
+    # stdlib logging 也走 RedactingFormatter — 第三方库(uvicorn / httpx /
+    # alembic 等)直接 logging.info 时,密钥不会漏到 stdout/Sentry。
+    root_handler = logging.StreamHandler(stream=sys.stdout)
+    root_handler.setFormatter(RedactingFormatter("%(message)s"))
+    root = logging.getLogger()
+    root.handlers.clear()
+    root.addHandler(root_handler)
+    root.setLevel(log_level)
 
 
 def get_logger(name: str = __name__) -> structlog.stdlib.BoundLogger:

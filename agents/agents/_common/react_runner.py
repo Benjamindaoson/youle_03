@@ -199,6 +199,16 @@ def _build_tools(
         openapi.append(wf)
 
     openapi.append(_finish_tool_schema())
+
+    # ── schema_sanitizer:把工具 schema 修平给严格 LLM 后端用 ──
+    # 一些后端(llama.cpp 的 GBNF 转换器、OpenAI 的 Codex backend)对
+    # ``{type: object}`` 缺 properties、``anyOf [..., null]`` 这类形状
+    # 直接 400。这一层是无副作用 deep-copy,正常云厂商也走得通。
+    try:
+        from app.utils.schema_sanitizer import sanitize_tool_schemas
+        openapi = sanitize_tool_schemas(openapi)
+    except Exception as exc:  # 防御性 — 兜底走原 schema
+        log.warning("react.schema_sanitize_skipped", err=str(exc))
     return openapi, name_map
 
 
@@ -236,6 +246,144 @@ def _truncate_tool_payload(payload: dict[str, Any], limit: int = 48_000) -> str:
     if len(s) <= limit:
         return s
     return s[:limit] + f'…(+{len(s) - limit} chars)'
+
+
+_REACT_CONTEXT_LENGTH = int(os.getenv("AGENT_REACT_CONTEXT_LENGTH", "200000"))
+
+
+async def _maybe_compress_messages(
+    messages: list[dict[str, Any]],
+    *,
+    task: AgentTask,
+    react_step: int,
+) -> list[dict[str, Any]]:
+    """ReAct loop pre-LLM 压缩 hook(走 cognitive 层做 summary)。
+
+    只在 messages 估算 token 超过 ``trigger_ratio * context_length`` 时触发。
+    其他时候原样返回 — 性能可忽略。
+    """
+    # 没有积累足够轮次时不需要 — 头两轮 messages 不可能溢出。
+    if react_step < 3 or len(messages) < 8:
+        return messages
+
+    try:
+        from app.utils.context_compressor import (
+            CompressorConfig,
+            compress_messages,
+            should_compress,
+        )
+    except Exception:
+        return messages
+
+    if not should_compress(messages, context_length=_REACT_CONTEXT_LENGTH):
+        return messages
+
+    # 走 cognitive 层做 summary — 用最强模型保证摘要质量,用量小,值得。
+    from agents._common.llm import complete_cognitive
+
+    async def _summarize(middle: list[dict[str, Any]], budget: int) -> str:
+        sys_prompt = (
+            "你是 ReAct 轨迹摘要助手。把下面这段对话(系统 / 用户 / 助手 / 工具结果)"
+            "压缩为一份**简洁**事实纪要,严格按照下列结构输出 Markdown:\n"
+            "## 已完成\n## 阻塞 / 失败\n## 关键事实(数字、URL、ID)\n## 当前任务\n## 剩余工作\n"
+            "不要重述工具调用细节,不要复述用户原话,只保留对继续执行有用的信息。"
+        )
+        user_blob = json.dumps(
+            [
+                {"role": m.get("role"), "content": m.get("content"), "tool_calls": m.get("tool_calls")}
+                for m in middle
+            ],
+            ensure_ascii=False,
+        )
+        # 大段 history 也可能超长 — 这里只截取后半段(最近的更可能含相关上下文)
+        if len(user_blob) > 80_000:
+            user_blob = "[…earlier turns elided…]\n" + user_blob[-80_000:]
+        resp = await complete_cognitive(
+            purpose=f"react_compaction:{task.task_type}",
+            messages=[
+                {"role": "system", "content": sys_prompt},
+                {"role": "user", "content": user_blob},
+            ],
+            temperature=0.2,
+            max_tokens=min(budget, 8000),
+        )
+        return resp.content
+
+    cfg = CompressorConfig(
+        head_keep=2,             # system + first user goal
+        tail_token_budget=30_000,  # 留约 30K 给最近的 ReAct 轮次
+    )
+    compressed = await compress_messages(
+        messages,
+        summarize_fn=_summarize,
+        context_length=_REACT_CONTEXT_LENGTH,
+        config=cfg,
+    )
+    if len(compressed) < len(messages):
+        log.info(
+            "react.compressed_history",
+            task_id=str(task.task_id),
+            step_id=task.step_id,
+            react_step=react_step,
+            before=len(messages),
+            after=len(compressed),
+        )
+    return compressed
+
+
+async def _persist_tool_payload_async(
+    payload: dict[str, Any],
+    *,
+    task_id: Any,
+    step_id: str,
+    tool_use_id: str,
+    limit: int = 48_000,
+) -> str:
+    """大 MCP 结果先落 OSS,context 里只留 ``<persisted-output>`` 预览。
+
+    `_truncate_tool_payload` 是同步 fallback(LITELLM_MOCK / 写 OSS 失败时
+    不阻塞 ReAct 循环)。在线路径优先走这个 async 版本 — 实际仍然用
+    `app.utils.tool_result_storage.maybe_persist_tool_result`,只是把 OSS
+    写注入成 `oss_writer.put_text`。
+    """
+    s = json.dumps(payload, ensure_ascii=False)
+    if len(s) <= limit:
+        return s
+
+    try:
+        from app.utils.tool_result_storage import (
+            BudgetConfig,
+            maybe_persist_tool_result,
+        )
+        from agents._common.oss_writer import put_text
+
+        async def _persist(key: str, body: bytes) -> str:
+            # put_text 已经把字符串编 UTF-8,直接 decode 一次再写
+            return await put_text(
+                key=key,
+                content=body.decode("utf-8", errors="replace"),
+                content_type="application/json",
+            )
+
+        cfg = BudgetConfig(
+            per_tool_threshold=limit,
+            object_prefix=f"agent-spill/{task_id}/{step_id}",
+        )
+        return await maybe_persist_tool_result(
+            content=s,
+            tool_name="mcp",
+            tool_use_id=tool_use_id,
+            persist_fn=_persist,
+            config=cfg,
+        )
+    except Exception as exc:
+        # OSS 写失败不能阻塞 ReAct 主循环 — 退回 inline 截断
+        log.warning(
+            "react.tool_result_spill_failed",
+            err_type=type(exc).__name__,
+            err=str(exc)[:200],
+        )
+        return s[:limit] + f"…(+{len(s) - limit} chars; spill failed)"
 
 
 async def _agent_finish_to_result(task: AgentTask, args: dict[str, Any]) -> AgentResult:
@@ -429,6 +577,23 @@ async def run_react_agent_task(task: AgentTask, persona: ReactPersona) -> AgentR
     last_model: str | None = None
 
     for step_ix in range(_MAX_REACT_STEPS):
+        # ── context_compressor 预压缩 ──
+        # ReAct 循环跑深以后,messages 会含大量 tool 输出。每轮 LLM 调用前
+        # 评估一下,超过阈值就把中段 history 摘要成一条 user 消息;头(system+
+        # 任务指令)和尾(最近 N 轮)保留,行为上对 LLM 透明。
+        try:
+            messages = await _maybe_compress_messages(
+                messages,
+                task=task,
+                react_step=step_ix,
+            )
+        except Exception as exc:  # 防御性,绝不阻塞 ReAct
+            log.warning(
+                "react.compression_skipped",
+                err_type=type(exc).__name__,
+                err=str(exc)[:200],
+            )
+
         raw = await complete_chat(
             task_type=task.task_type,
             messages=messages,
@@ -514,10 +679,28 @@ async def run_react_agent_task(task: AgentTask, persona: ReactPersona) -> AgentR
                     cost_usd=raw_cost_accum,
                     model_used=last_model,
                 )
-                messages.append({"role": "tool", "tool_call_id": cid, "content": _truncate_tool_payload(out_mcp)})
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": cid,
+                    "content": await _persist_tool_payload_async(
+                        out_mcp,
+                        task_id=task.task_id,
+                        step_id=task.step_id,
+                        tool_use_id=cid,
+                    ),
+                })
                 break
 
-            messages.append({"role": "tool", "tool_call_id": cid, "content": _truncate_tool_payload(out_mcp)})
+            messages.append({
+                "role": "tool",
+                "tool_call_id": cid,
+                "content": await _persist_tool_payload_async(
+                    out_mcp,
+                    task_id=task.task_id,
+                    step_id=task.step_id,
+                    tool_use_id=cid,
+                ),
+            })
 
         if finished is not None:
             finished.cost_usd = finished.cost_usd if finished.cost_usd is not None else raw_cost_accum
