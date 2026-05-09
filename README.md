@@ -10,7 +10,7 @@
 | MCP | **7** 个独立服务（检索、图、音视频、文档、OSS、分发等） |
 | 前端 | Next.js 15（`frontend/youle_mas_frontend-main/`），`pnpm` |
 
-**篇幅较长时的阅读顺序：** [仓库布局](#仓库布局) → [架构摘要](#架构摘要) → [前后端工程视角](#fe-be-guide) → [Agents 九维度](#agents-模块能力剖面代码对照) → [快速开始](#快速开始最短) · 其余见文末 [文档索引](#文档索引)。
+**篇幅较长时的阅读顺序：** [仓库布局](#仓库布局) → [架构摘要](#架构摘要) → **[亮点总览](#highlights)** → [前后端工程视角](#fe-be-guide) → [Agents 九维度](#agents-模块能力剖面代码对照) → [快速开始](#快速开始最短) · 其余见文末 [文档索引](#文档索引)。
 
 ---
 
@@ -403,11 +403,126 @@ Actions：backend pytest + ruff；agents ruff；**黑名单 grep**。**`frontend
 
 ---
 
+<a id="highlights"></a>
+
+## 有了 · 多智能体亮点总览（对外介绍 / BP / PPT）
+
+> 下列按 **产品话术 + 系统设计** 归纳本仓库已实现或明确规划的能力，便于路演、方案和培训。细化实现见前文 [Agents 模块能力剖面](#agents-模块能力剖面代码对照) 与 [前后端工程视角](#fe-be-guide)。
+
+### 1. 产品定位与市场叙事
+
+| 亮点 | 说明 |
+|------|------|
+| **「一队人」而非「一个大模型」** | 产品有 **总裁助理（主编排）+ 四名分工 Agent + HR + 财务** 等角色感；背后是 **确定性编排 + 工单队列**，不是单靠一段 prompt 即兴发挥 |
+| **从聊天到交付** | 会话可升级为 **结构化 Task**，产出可走 **OSS 产物链路**（视频、组图、脚本、文档） |
+| **Plan / Ask / Auto 同屏** | **工作模式**可切换：**先想清再干**（Plan）、**多问少动**（Ask）、**少说多做**（Auto）；与 **intent + mode_manager**、配额策略绑定 |
+| **零门槛体验** | 本地 **`LITELLM_MOCK`** 可走通链路与 Demo，便于 PoC |
+
+### 2. 多智能体组织与服务形态
+
+| 亮点 | 说明 |
+|------|------|
+| **单一调度者（铁律）** | **用户 → 主编排**，**不允许 Agent ↔ Agent** 私自互调；降低循环依赖与责任不清 |
+| **1 + 4 工程拓扑** | **主编排在 backend 内**（LangGraph）；**四名 Worker** 独立进程、k8s 友好：**文字 / 文档 / 图像 / 影音**（`agent_1…4`，队列 **`agent_tasks:{text,document,image,av}`**） |
+| **稳定 agent_id** | **`agent_N` 编号**固定，利于监控、计费、告警与 SLA 分拆 |
+| **群 / 私聊 / 主会话** | **`main_session`、`group`、`private_chat`**：**@ 短路**定向某角色私信式回复（**不改变「总调度」原则**）；**专属私聊会话**挂载 `private_chat_agent_id` |
+| **支持 Agent 短路** | 主会话下 **HR / 财务经理** 可按意图 **直达对话**，不强行走长篇任务图（`support_agent`/`route_support_agent`） |
+
+### 3. 理解用户与降低摩擦
+
+| 亮点 | 说明 |
+|------|------|
+| **结构化意图** | `Intent`：**task / chitchat / clarification_answer / interrupt / …** + **entities**，便于产品与下游分支 |
+| **记忆增强理解** | **ContextPack**（Brief digest、滚动摘要、偏好、近期任务、**产物关键字召回**）拼装后 **再截断** 喂意图，避免「失忆」又不会爆上下文 |
+| **Skill 智能匹配** | **关键词 + embedding 风格逻辑 + LLM rerank**（`skill_match.py`）：先粗筛再精排，兼顾速度与准度 |
+| **入参澄清** | **必填项校验**合并 Brief / UserPreference（高置信）；**选择题式澄清**、`MAX_CLARIFICATION_ROUNDS` 封顶，产品有「不会超过 N 轮」的可预期性 |
+| **会话级 Brief 防抖** | Plan 模式下 **brief_debouncer** 合并碎碎念，沉淀为可用的 **`brief`** 字段 |
+
+### 4. 人机协同（HITL）与控制权
+
+| 亮点 | 说明 |
+|------|------|
+| **两步 HITL** | **YAML 约定门闩**（半成品审阅：`quality_review` / `final_approval` 等）+ LangGraph **`interrupt`**；**resume** 续跑 |
+| **对话型中断taxonomy** | **A/B/E/F/G/H/I** 分类（补充、微调、暂停、取消、闲聊、反馈、切模式）；**C/D** 明确表示 **v2**，产品话术可承诺边界 |
+| **自动过审 Demo** | **`YOULE_AUTO_APPROVE_HITL`** 一键跑 **反诈等长链路 demo**，售前友好 |
+| **回滚半步（B类）** | 开放 **`HITLGate`** + **`runner.rollback_to_step`**：**改一句再渲**等产品叙事可落地 |
+
+### 5. 编排引擎与韧性
+
+| 亮点 | 说明 |
+|------|------|
+| **Skill = 一等契约** | **YAML workflow**：版本、输入 schema、delivery、failure_handling、**并行 Send**、`hitl_gate`；产品可参与评审「流程图」而非黑盒代码 |
+| **LangGraph + Postgres checkpoint** | **可暂停、可恢复**、有利审计；为 **time-travel / V2 C-D** 类能力留接口 |
+| **DAG 校验** | **环检测 / 缺失依赖**，编译期发现问题而非运行中随机炸 |
+| **节点级 RetryPolicy** | 网络抖动等 **自动退避重试**，减少人肉补跑 |
+| **Planner 后路** | 无现成 Skill 时 **Planner 产 Plan JSON**，**Replanner** 失败修复；ADR-019 起与 **episode 检索**、`md_skill` 对齐 |
+| **分阶段 subgraph** | **phased** 编译路径，适配「大块阶段」产品与观测 |
+| **动态编译缓存** | 按 **`(skill_id, version)`** 缓存编译图，**冷启动加速** |
+
+### 6. Worker 执行力与工具策略
+
+| 亮点 | 说明 |
+|------|------|
+| **ReAct + MCP** |  Worker 在未注册 handler 可走 **人格化 ReAct**；工具 **HTTP MCP**，**替换供应商不传 app** |
+| **工具白名单** | YAML / Planner **`mcp_tools` URI** + **step persona ADR-021** 可做 allow/deny 模式：**安全与可调戏性**兼得 |
+| **专用 handler + Celery** | 重型音视频等可走 **短路 handler**（如 `video_compose`）、**与实际生产链路一致**，不强行一切 ReAct |
+| **边界断言** | **`boundary.SUPPORTED_TASK_TYPES`**：**文档工不接视频单**，减少错派与工单污染 |
+| **消费者韧性** | **重试、DLQ、`MAX_TASK_TIMEOUT`、心跳、`idempotency_key`**：大厂叙事里的 **SLO / 救火**有据可查 |
+
+### 7. 模型与网关
+
+| 亮点 | 说明 |
+|------|------|
+| **LiteLLM 网关** | **多厂商归一**、**路由表**、`task_type` 级选型、**SSE/熔断与可观测**，避免锁死 OpenAI |
+| **仓库铁律：禁直引 SDK** | CI **黑名单**：**不直 import openai / anthropic**，强制走统一通道，合规与密钥管理集中 |
+
+### 8. 知识、记忆与飞轮
+
+| 亮点 | 说明 |
+|------|------|
+| **YAML + MD 双轨 ADR-022** | **playbook（可执行）** + **`md_skills`（可读知识）** + **`md_knowledge_refs`** 注入步前 `_md_skill_knowledge`；产品与教研可并行维护 Markdown |
+| **滚动摘要 LM 重写** | 每 **N 条消息**触发 **LLM 压缩**写回 **`Conversation.memory_rolling_summary`**，长线对话不降智 |
+| **任务记忆卡** | **`task.memory_card` + hooks** 写入与会话摘要 **merge**：从「单次 chat」升级到「项目档案」 |
+| **飞轮偏好Redis** | **风格、mood、prefs** consumer 可读；**signals** stream 接住反馈链路 |
+| **产物侧召回** | **Artifact.summary/tags + keyword rank** → 组装进意图 ContextPack：**越用越贴用户语境** |
+
+### 9. 上下文与成本控制
+
+| 亮点 | 说明 |
+|------|------|
+| **多级预算** | 意图记忆 cap、**`SKILL_MD_INJECT_MAX_CHARS`**、**hydrate ORCH_* 字节预算 + 单步 excerpt**、`max_tokens`，**钱花在该花的一步** |
+| **显式 `content_truncated` 标记** | 模板与调试可见「是否节选」，便于运营解释「为啥没读到全文」 |
+
+### 10. 质量进阶与路线图（ADR 可查）
+
+| 亮点 | ADR / 文档 |
+|------|-----------|
+| **Critic 创作后评审** | ADR-020 |
+| **Step Persona（人格×工具矩阵）** | ADR-021 |
+| **Episode 相似案例召回Planner** | ADR-019 / ADR-022 |
+| **Critique → Reflexion → 飞轮** | ADR-023 |
+| **Sandbox/Browser/Code MCP Eval** | ADR-025–027 |
+
+### 11. 工程交付与团队协作
+
+| 亮点 | 说明 |
+|------|------|
+| **会话管线代码化顺序** | **`dispatch_send_message`** 分支顺序 **固定、可查、易 code review**：减少「 orally 口述 PRD」与实际行为漂移 |
+| **Monorepo 一键 `make`** | **setup/up/demo/test**，**honcho Procfile**：新人 **5 分钟**故事成立 |
+| **OpenAPI ↔ TS 契约** | **schema-sync CI**：前后端契约 **强约束** |
+| **skills 镜像** | `backend/skills` + `agents/skills` 双副本策略——**开发与运行时各取一端**，需有意识同步 |
+
+### 一句话收束（可放 PPT 尾页）
+
+**有了**不是「接一个聊天模型」，而是用 **编排图 + 四类专职工人 + MCP 工具 + 人审关 + 记忆与配额** 做成的 **「可交付的多智能体操作系统」**：**能说清、能做实、能停能改、能量化能扩。**
+
+---
+
 ## 文档索引
 
 | 文档 | 说明 |
 |------|------|
-| **本 README（全文）** | 仓库首页 + **编排·存储·选型·Agents 白话/代码（合并版）** |
+| **本 README** | 含 **[亮点总览](#highlights)**（对外 BP/PPT）、工程视角、Agents 九维度 |
 | [GETTING_STARTED.md](./GETTING_STARTED.md) | 环境与排错 |
 | [backend/README.md](./backend/README.md) | Backend 开发与测试命令 |
 | [backend/docs/ARCHITECTURE.md](./backend/docs/ARCHITECTURE.md) | ADR 与深度架构 |
