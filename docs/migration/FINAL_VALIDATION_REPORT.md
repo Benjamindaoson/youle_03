@@ -1,7 +1,7 @@
 # youle-mas 最终验证报告
 
-验证日期：2026-07-21  
-分支：`codex/youle-mas-consolidation`  
+验证日期：2026-07-21
+分支：`codex/youle-mas-consolidation`
 基线：`youle_03@14815ee`
 
 ## 验证结论

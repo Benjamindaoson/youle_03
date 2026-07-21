@@ -1,7 +1,7 @@
 # youle-mas 整合报告
 
-日期：2026-07-21  
-整合分支：`codex/youle-mas-consolidation`  
+日期：2026-07-21
+整合分支：`codex/youle-mas-consolidation`
 唯一主干：`Benjamindaoson/youle_03@14815ee`
 
 ## 结论
