@@ -34,7 +34,7 @@
 
 ## 5. Canonical frontend
 
-- [ ] 5.1 Copy the `oye-mas` Next.js frontend into root `frontend/`, remove legacy/mock-only duplicates, normalize package scripts, and prove frozen install plus build before feature edits.
+- [x] 5.1 Copy the `oye-mas` Next.js frontend into root `frontend/`, remove legacy/mock-only duplicates, normalize package scripts, and prove frozen install plus build before feature edits.
 - [ ] 5.2 Add a typed API client with JWT handling, error normalization, explicit `NEXT_PUBLIC_MOCK_MODE`, and generated backend types.
 - [ ] 5.3 Add failing frontend tests for login, conversation loading, group messages, private messages, API errors, and shared message state.
 - [ ] 5.4 Connect login, conversation list, group chat, private Agent chat, Agent/task status, and @Agent UI to canonical backend APIs.

@@ -63,7 +63,11 @@ async def _stream_user_events(
         await bus.unsubscribe(user_id, queue)
 
 
-@router.get("/{conversation_id}/events")
+@router.get(
+    "/{conversation_id}/events",
+    response_model=UserEvent,
+    response_class=StreamingResponse,
+)
 async def conversation_events(
     conversation_id: UUID,
     request: Request,
