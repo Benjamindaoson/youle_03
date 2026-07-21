@@ -8,7 +8,7 @@
 
 代码、无外部依赖测试、前端生产构建、真实 Chrome 浏览器场景、跨语言契约和静态基础设施配置已验证。后端 297 个测试通过、Agent/handler 219 个测试通过、前端 16 个单元测试通过；启用的 4 个 Playwright 场景通过，真实反诈视频长链路场景保持显式跳过。
 
-本机 Docker Desktop Linux daemon 不可用，因此无法在本机证明空 PostgreSQL 实际升级、readiness 依赖和完整 5 容器/12 Python 进程联调。相关命令已执行并记录为环境阻塞；GitHub Actions 使用 PostgreSQL/Redis service 执行 migration 和后端测试。
+本机 Docker Desktop Linux daemon 不可用，因此无法在本机证明空 PostgreSQL 实际升级、readiness 依赖和完整 5 容器/12 Python 进程联调。相关命令已执行并记录为环境阻塞；Draft PR 的 [CI run 29856012696](https://github.com/Benjamindaoson/youle_03/actions/runs/29856012696) 已在 PostgreSQL 16/Redis 7.2 service 上通过 migration、Skill bootstrap、后端、Agent、前端、Playwright 和契约检查，[Security run 29856013088](https://github.com/Benjamindaoson/youle_03/actions/runs/29856013088) 也已通过。
 
 ## 最终检查结果
 
@@ -33,6 +33,7 @@
 | Python dependency audit | `pip-audit` | 通过，无已知漏洞 |
 | Node dependency audit | `pnpm audit --audit-level high` | 通过，无 high/critical 漏洞；剩余 1 条 Babel low 公告暂无兼容的 7.x 修复版本 |
 | Secret contract | `backend/scripts/check-secrets.py` | 通过 |
+| Remote blocking CI | GitHub Actions on `680a9b4` | backend、agents、frontend、contract、security 全部通过 |
 
 ## 无密钥 E2E
 
@@ -79,7 +80,7 @@ alembic current / alembic upgrade head
 → PostgreSQL localhost:5432 connection refused (WinError 1225)
 ```
 
-分类：本机环境阻塞，不是测试通过。CI 的 `backend-ci` 配置 PostgreSQL 16 和 Redis 7.2 service，运行 `alembic upgrade head` 后执行 `bootstrap-skills.py` 并核对 Skill 行数；必须以 Draft PR 的远程 CI 结果作为空库最终证据。
+分类：本机环境阻塞，不是本地测试通过。Draft PR 的远程 `backend-ci` 已在 PostgreSQL 16 和 Redis 7.2 service 上运行 `alembic upgrade head`，随后执行 `bootstrap-skills.py`、核对 Skill 行数并通过后端测试，构成空库最终证据。
 
 ## 未验证
 
@@ -100,11 +101,11 @@ alembic current / alembic upgrade head
 | OTP 增强 | Done | 原子一次性消费、TTL、delivery cleanup |
 | 阻断 CI/安全 | Done | backend/agents/frontend/contract/security |
 | 无密钥 E2E | Done | Python 跨模块 + Chrome UI 两层 |
-| 空库实际升级 | Blocked locally | Docker daemon 不可用；等待远程 CI |
+| 空库实际升级 | Done remotely | GitHub Actions 的 PostgreSQL 16 空库 migration 与 Skill bootstrap 已通过；本机仍受 Docker daemon 阻塞 |
 | 全栈本地启动 | Blocked locally | 同上 |
 | 真实外部供应商 | Not done | 缺少测试凭据，按要求明确未验证 |
 | 第三方归属 | Done | notices 已添加；项目 LICENSE 由所有者决定 |
 
 ## 交付门槛
 
-代码可以作为 Draft PR 提交，不应自动合并。合并前至少要求 GitHub Actions 的 backend、agents、frontend、contract 和 security jobs 全绿，尤其要确认 Linux/PostgreSQL 上的 `alembic upgrade head` 与 Playwright Chromium 安装执行成功。
+Draft PR [#1](https://github.com/Benjamindaoson/youle_03/pull/1) 已创建且未合并。提交 `680a9b4` 的 GitHub Actions backend、agents、frontend、contract 和 security jobs 已全部通过，包括 Linux/PostgreSQL 的 `alembic upgrade head`、Skill bootstrap 与 Playwright Chromium；PR 继续保持 Draft，等待所有者处理剩余未验证项和许可证决定。

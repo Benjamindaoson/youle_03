@@ -91,7 +91,7 @@
    - 规范 `user_skill_visibility.relationship` 为安装/启停关系。
    - 增加约束与迁移兼容逻辑，不修改旧 revision。
 
-Alembic history 静态链为 `0001 → … → 0006 (head)`。本机 Docker Desktop daemon 不可用，因此空 PostgreSQL 的实际 `upgrade head/current` 留给 GitHub Actions 的 PostgreSQL service 验证，并在最终报告列为本地未验证。
+Alembic history 静态链为 `0001 → … → 0006 (head)`。本机 Docker Desktop daemon 不可用，因此本地空 PostgreSQL 的实际 `upgrade head/current` 仍未验证；Draft PR 的 GitHub Actions 已在 PostgreSQL 16/Redis 7.2 service 上成功执行 `alembic upgrade head`、Skill bootstrap 和后端测试。
 
 ## API 与事件变化
 
@@ -140,8 +140,7 @@ CI 分为：
 
 ## 风险与下一阶段
 
-1. 让 Draft PR 的 GitHub Actions 在 Linux/PostgreSQL/Redis 上完成空库 migration 与全部阻断门禁。
-2. 在可用 Docker Desktop/Linux 主机运行 Compose 全栈、health/readiness、Worker heartbeat、MCP 和真实 SSE。
-3. 用隔离测试账号验证阿里云短信和真实模型 smoke，保持不进入普通 PR 强制 CI。
-4. 为 Pydantic v2 旧 `Config` 警告和真实长视频 Playwright 场景建立后续任务。
-5. 由仓库所有者确定项目许可证后添加根 `LICENSE`。
+1. 在可用 Docker Desktop/Linux 主机运行 Compose 全栈、health/readiness、Worker heartbeat、MCP 和真实 SSE。
+2. 用隔离测试账号验证阿里云短信和真实模型 smoke，保持不进入普通 PR 强制 CI。
+3. 为 Pydantic v2 旧 `Config` 警告和真实长视频 Playwright 场景建立后续任务。
+4. 由仓库所有者确定项目许可证后添加根 `LICENSE`。
