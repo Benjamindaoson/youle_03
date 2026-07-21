@@ -19,8 +19,9 @@ Header schema (12 headers):
 from __future__ import annotations
 
 import time
+from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any, Mapping, Optional
+from typing import Any
 
 
 @dataclass
@@ -87,7 +88,7 @@ def _safe_float(value: Any, default: float = 0.0) -> float:
 def parse_rate_limit_headers(
     headers: Mapping[str, str],
     provider: str = "",
-) -> Optional[RateLimitState]:
+) -> RateLimitState | None:
     """Parse ``x-ratelimit-*`` headers; return None if no relevant headers."""
     lowered = {k.lower(): v for k, v in headers.items()}
     if not any(k.startswith("x-ratelimit-") for k in lowered):

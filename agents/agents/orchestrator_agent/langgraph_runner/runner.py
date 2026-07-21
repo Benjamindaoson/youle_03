@@ -41,7 +41,6 @@ from agents.orchestrator_agent.langgraph_runner.result_waiter import (
 )
 from agents.orchestrator_agent.langgraph_runner.runner_checkpointer import (
     get_checkpointer,
-    init_checkpointer,
 )
 from agents.orchestrator_agent.langgraph_runner.runner_compiled_cache import (
     COMPILED_GRAPH_CACHE,
@@ -75,6 +74,8 @@ GRAPH_RECURSION_LIMIT = 50  # 防 V1.5 嵌套撞默认 25
 # 兼容 backend 单测: `runner._cache_key` / `runner._COMPILED_CACHE`
 _cache_key = skill_yaml_cache_key
 _COMPILED_CACHE = COMPILED_GRAPH_CACHE
+
+__all__ = ["LangGraphTaskRunner", "clear_compiled_cache"]
 
 
 # ─────────────────────────────────────────────────────────────────

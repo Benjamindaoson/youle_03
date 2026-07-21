@@ -37,6 +37,11 @@ _load_env_file(AGENTS_ROOT / ".env")
 os.environ["DEBUG"] = "true"
 os.environ["LITELLM_MOCK"] = "true"
 
+pytestmark = pytest.mark.skipif(
+    os.getenv("YOULE_RUN_LIVE_TESTS") != "1",
+    reason="requires explicit YOULE_RUN_LIVE_TESTS=1 with PostgreSQL and Redis",
+)
+
 
 @pytest.mark.asyncio
 async def test_message_prompt_starts_anti_fraud_video_workflow(monkeypatch):

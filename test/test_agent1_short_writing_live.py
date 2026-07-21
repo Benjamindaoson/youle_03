@@ -29,6 +29,11 @@ _load_env_file(ROOT / ".env")
 _load_env_file(AGENTS_ROOT / ".env")
 os.environ["LITELLM_MOCK"] = "false"
 
+pytestmark = pytest.mark.skipif(
+    os.getenv("YOULE_RUN_LIVE_TESTS") != "1",
+    reason="requires explicit YOULE_RUN_LIVE_TESTS=1 and a live LLM endpoint",
+)
+
 
 @pytest.mark.asyncio
 async def test_agent1_short_writing_live_api(monkeypatch):

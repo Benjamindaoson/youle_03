@@ -10,7 +10,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
 
 from agents._common.skill_registry import SkillRegistry
 from agents.orchestrator_agent.planner.planner_agent import (

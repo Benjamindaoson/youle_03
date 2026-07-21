@@ -37,6 +37,13 @@ from agents._common.think_scrubber import StreamingThinkScrubber
 
 log = structlog.get_logger(__name__)
 
+__all__ = [
+    "IMAGE_GENERATION_MODEL",
+    "XHS_GPT_IMAGE_MODEL",
+    "XHS_NANO_BANANA_MODEL",
+    "XHS_SEEDREAM_MODEL",
+]
+
 
 # ── error_classifier / retry_utils / prompt_caching: lazy import ─────
 # 这些 utils 在 backend.app.utils 下;agents 进程在打包时也能 import 到
@@ -618,6 +625,20 @@ def _mock_response(task_type: str, model: str) -> dict[str, Any]:
         body = '[{"label":"主标题","content":"..."},{"label":"段二","content":"..."}]'
     elif task_type == "image_quality_check":
         body = '{"score": 0.85, "issues": [], "suggestion": ""}'
+    elif task_type == "style_extract":
+        body = json.dumps(
+            {
+                "palette": ["#111827", "#F9FAFB"],
+                "composition": "balanced",
+                "typography": "clean sans-serif",
+                "mood": ["calm", "professional"],
+                "lighting": "soft",
+                "do": ["keep high contrast"],
+                "dont": ["avoid visual clutter"],
+                "prompt_inject": "clean professional composition, soft light",
+            },
+            ensure_ascii=False,
+        )
     else:
         body = f"[mock-{task_type}] result"
     return {

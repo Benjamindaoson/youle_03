@@ -122,12 +122,11 @@ async def test_avatar_confirm_updates_current_user_avatar_url(
         yield fake_session
 
     app.dependency_overrides[get_session] = override_session
-    monkeypatch.setattr(
-        upload.oss_service,
-        "build_public_url",
-        lambda object_key: f"https://cdn.example/{object_key}",
-        raising=False,
-    )
+    async def fake_object_url(object_key: str, expires_in: int) -> str:
+        assert expires_in == 7 * 86400
+        return f"https://cdn.example/{object_key}"
+
+    monkeypatch.setattr(upload.oss_service, "get_object_url", fake_object_url)
 
     async def fake_metadata(_: str) -> dict[str, object]:
         return {"content_type": "image/png", "size_bytes": 1024}
@@ -143,7 +142,7 @@ async def test_avatar_confirm_updates_current_user_avatar_url(
 
     assert response.status_code == 200
     assert response.json()["avatar_url"] == f"https://cdn.example/{object_key}"
-    assert user.avatar_url == f"https://cdn.example/{object_key}"
+    assert user.avatar_url == object_key
     assert fake_session.committed is True
 
 
@@ -164,12 +163,11 @@ async def test_avatar_confirm_accepts_extensionless_upload_when_metadata_is_imag
         yield fake_session
 
     app.dependency_overrides[get_session] = override_session
-    monkeypatch.setattr(
-        upload.oss_service,
-        "build_public_url",
-        lambda object_key: f"https://cdn.example/{object_key}",
-        raising=False,
-    )
+    async def fake_object_url(object_key: str, expires_in: int) -> str:
+        assert expires_in == 7 * 86400
+        return f"https://cdn.example/{object_key}"
+
+    monkeypatch.setattr(upload.oss_service, "get_object_url", fake_object_url)
 
     async def fake_metadata(_: str) -> dict[str, object]:
         return {"content_type": "image/png", "size_bytes": 1024}
@@ -185,7 +183,7 @@ async def test_avatar_confirm_accepts_extensionless_upload_when_metadata_is_imag
 
     assert response.status_code == 200
     assert response.json()["avatar_url"] == f"https://cdn.example/{object_key}"
-    assert user.avatar_url == f"https://cdn.example/{object_key}"
+    assert user.avatar_url == object_key
 
 
 @pytest.mark.asyncio

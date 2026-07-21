@@ -38,6 +38,11 @@ os.environ["LITELLM_MOCK"] = "false"
 os.environ["DEBUG"] = "true"
 os.environ.setdefault("AGENT_HEARTBEAT_INTERVAL", "60")
 
+pytestmark = pytest.mark.skipif(
+    os.getenv("YOULE_RUN_LIVE_TESTS") != "1",
+    reason="requires explicit YOULE_RUN_LIVE_TESTS=1, Redis, and live provider APIs",
+)
+
 
 @dataclass(frozen=True)
 class FlowCase:

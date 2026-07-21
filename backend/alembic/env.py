@@ -5,15 +5,16 @@ from __future__ import annotations
 import asyncio
 from logging.config import fileConfig
 
-from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
+from alembic import context
+from app import models  # noqa: F401  确保所有 model 注册
+
 # 必须先 import 才能让 metadata 收集到全部表
 from app.config import settings
 from app.db import Base
-from app import models  # noqa: F401  确保所有 model 注册
 
 config = context.config
 if config.config_file_name is not None:

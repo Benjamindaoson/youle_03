@@ -30,6 +30,11 @@ _load_env_file(ROOT / ".env")
 _load_env_file(AGENTS_ROOT / ".env")
 os.environ["LITELLM_MOCK"] = "false"
 
+pytestmark = pytest.mark.skipif(
+    os.getenv("YOULE_RUN_LIVE_TESTS") != "1",
+    reason="requires explicit YOULE_RUN_LIVE_TESTS=1 and live provider APIs",
+)
+
 
 @pytest.fixture(autouse=True)
 def _patch_external_io(monkeypatch):

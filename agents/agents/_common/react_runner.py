@@ -604,8 +604,6 @@ async def run_react_agent_task(task: AgentTask, persona: ReactPersona) -> AgentR
             max_tokens=persona_max_tokens,
         )
         last_model = raw.get("model") or last_model
-        usage = raw.get("usage") or {}
-        tok = usage.get("total_tokens")
         rc = raw.get("response_cost")
         if isinstance(rc, (int, float)):
             raw_cost_accum += float(rc)

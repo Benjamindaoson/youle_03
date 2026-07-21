@@ -6,6 +6,11 @@ from typing import Any
 from uuid import UUID
 
 import structlog
+from agents.orchestrator_agent.interrupt import (
+    V1_CLASSES,
+    InterruptClassification,
+    handle_interrupt,
+)
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,11 +20,6 @@ from app.db import get_session
 from app.models.task import Task
 from app.schemas.agent import AgentResult, AgentStatus, ArtifactRef
 from app.services.agent_result_stream import publish_agent_result_to_stream
-from agents.orchestrator_agent.interrupt import (
-    V1_CLASSES,
-    InterruptClassification,
-    handle_interrupt,
-)
 
 log = structlog.get_logger(__name__)
 

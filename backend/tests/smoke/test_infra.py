@@ -30,7 +30,6 @@ async def test_router_mock_returns_fixed_text() -> None:
 @pytest.mark.asyncio
 async def test_sms_dev_mode() -> None:
     """SMS_DEV_MODE=True:发短信不应抛错。"""
-    from app.api.auth import sms_send
     from app.api.auth import SmsSendRequest
 
     # 仅校验函数能跑 — Redis 在测试环境用 fakeredis 之类的 fixture 替换
@@ -42,5 +41,5 @@ async def test_sms_dev_mode() -> None:
 async def test_settings_loaded() -> None:
     from app.config import settings
 
-    assert settings.ENV in {"dev", "staging", "prod"}
+    assert settings.ENV in {"dev", "test", "staging", "prod"}
     assert settings.cors_origins_list  # 至少 1 个

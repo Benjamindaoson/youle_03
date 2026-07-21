@@ -14,6 +14,7 @@ from slowapi.middleware import SlowAPIMiddleware
 from app.api import (
     auth,
     conversations,
+    events,
     flywheel,
     hitl,
     library,
@@ -31,9 +32,11 @@ from app.config import settings
 from app.db import SessionLocal
 from app.logging import configure_logging
 from app.mcp_client import close_mcp_client
-from app.redis_client import close_redis, get_redis
 from app.rate_limit import limiter
+from app.redis_client import close_redis, get_redis
 from app.router import close as close_llm
+from app.services.event_bus import event_bus
+from app.services.event_publisher import event_publisher
 
 configure_logging()
 log = structlog.get_logger(__name__)
@@ -78,6 +81,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         settings.LANGGRAPH_CHECKPOINT_URL or settings.DATABASE_URL
     )
     init_checkpointer(saver)
+    from app.services.skill_loader import sync_builtin_skills
+
+    async with SessionLocal() as session:
+        skill_count = await sync_builtin_skills(session)
+    log.info("skills.canonical_synced", count=skill_count)
+    await event_bus.start()
+    event_publisher.start()
     yield
     log.info("youle.shutdown")
     from agents.orchestrator_agent.langgraph_runner.checkpointer import (
@@ -85,6 +95,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     )
 
     await close_postgres_checkpointer()
+    event_publisher.stop()
+    await event_bus.stop()
     await close_llm()
     await close_mcp_client()
     await close_redis()
@@ -178,6 +190,7 @@ async def metrics() -> Response:
 # ── REST 路由 ──
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(conversations.router, prefix="/api/conversations", tags=["conversations"])
+app.include_router(events.router, prefix="/api/conversations", tags=["events"])
 app.include_router(memory.router, prefix="/api/conversations", tags=["memory"])
 app.include_router(messages.router, prefix="/api", tags=["messages"])
 app.include_router(tasks.router, prefix="/api/tasks", tags=["tasks"])

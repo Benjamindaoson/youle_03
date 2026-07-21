@@ -14,23 +14,55 @@ from uuid import UUID
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import get_current_user_id
 from app.db import SessionLocal, get_session
 from app.models.conversation import Conversation
+from app.models.message import Message
 from app.models.user import User
+from app.schemas.message import Message as MessageOut
 from app.schemas.send_message import SendMessageRequest, SendMessageResponse
+from app.services.brief_builder import brief_debouncer
 from app.services.conversation import append_message
 from app.services.quota_enforce import QuotaExceeded, enforce_plan_turn
 from app.services.send_message_handlers import _parse_mentions, dispatch_send_message
-from app.services.brief_builder import brief_debouncer
 
 router = APIRouter()
 log = structlog.get_logger(__name__)
 
+
+@router.get(
+    "/conversations/{conversation_id}/messages",
+    response_model=list[MessageOut],
+)
+async def list_messages(
+    conversation_id: UUID,
+    user_id: UUID = Depends(get_current_user_id),
+    session: AsyncSession = Depends(get_session),
+) -> list[Message]:
+    conversation = await session.get(Conversation, conversation_id)
+    if conversation is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "会话不存在")
+    if conversation.user_id != user_id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "无权访问该会话")
+    rows = await session.execute(
+        select(Message)
+        .where(Message.conversation_id == conversation_id)
+        .order_by(Message.created_at.asc())
+    )
+    return list(rows.scalars().all())
+
 # 兼容单测：`test_mention_routing` 从本模块导入
-__all__ = ["router", "SendMessageRequest", "SendMessageResponse", "_parse_mentions", "send_message"]
+__all__ = [
+    "router",
+    "SendMessageRequest",
+    "SendMessageResponse",
+    "_parse_mentions",
+    "list_messages",
+    "send_message",
+]
 
 
 async def _maybe_refresh_memory_fire_and_forget(conversation_id: UUID) -> None:

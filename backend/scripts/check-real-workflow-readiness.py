@@ -34,7 +34,6 @@ os.environ.setdefault("no_proxy", "localhost,127.0.0.1,::1")
 
 from app.db import SessionLocal, engine  # noqa: E402
 
-
 REQUIRED_KEYS = [
     "OPENROUTER_API_KEY",
     "DEEPSEEK_API_KEY",

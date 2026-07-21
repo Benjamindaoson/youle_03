@@ -9,8 +9,9 @@ import pytest
 @pytest.mark.asyncio
 async def test_checkpointer_inmemory_setting_skips_postgres_import(monkeypatch: pytest.MonkeyPatch) -> None:
     """LANGGRAPH_CHECKPOINT_INMEMORY from settings should avoid any Postgres connection path."""
-    from app.config import settings
     from agents.orchestrator_agent.langgraph_runner import checkpointer
+
+    from app.config import settings
 
     monkeypatch.setattr(checkpointer, "_saver", None)
     monkeypatch.setattr(checkpointer, "_psyco_pool", None)

@@ -15,7 +15,6 @@
 
 from __future__ import annotations
 
-import pytest
 
 from agents.orchestrator_agent.langgraph_runner.critique_signal import (
     SIGNAL_SOURCE_CRITIC_LOW_SCORE,

@@ -24,7 +24,6 @@ from pydantic import ValidationError as PydanticValidationError
 
 from agents._common.llm import COGNITIVE_TIER, LITELLM_MOCK, complete_cognitive
 from agents._common.skill_registry import (
-    PlaybookIndex,
     SkillRegistry,
     get_default_registry,
 )

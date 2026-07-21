@@ -323,7 +323,7 @@ def make_step_node(
                 inputs.get("_prompt") if isinstance(inputs.get("_prompt"), str) else ""
             ) or prompt_template
             critic_attempt = 0
-            while critic_attempt < max_critic_retries:
+            while critic_attempt <= max_critic_retries:
                 # 取产物文本(只对文本类有效;图像/视频会在 evaluate 内被跳过)
                 artifact_text_for_critic = ""
                 artifact_type_for_critic = (
@@ -364,6 +364,8 @@ def make_step_node(
                 )
 
                 if critique.passed() or not critique.should_retry:
+                    break
+                if critic_attempt >= max_critic_retries:
                     break
 
                 # 评审未过且建议重试 → 改写 prompt + 带反馈重派

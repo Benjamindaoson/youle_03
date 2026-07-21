@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     )
 
     # ── 环境 ──
-    ENV: Literal["dev", "staging", "prod"] = "dev"
+    ENV: Literal["dev", "test", "staging", "prod"] = "dev"
     LOG_LEVEL: str = "INFO"
     DEBUG: bool = True
 
@@ -52,6 +52,8 @@ class Settings(BaseSettings):
     TAVILY_API_KEY: str = ""
     ALIYUN_ACCESS_KEY: str = ""
     ALIYUN_SECRET_KEY: str = ""
+    ALIYUN_SMS_SIGN_NAME: str = ""
+    ALIYUN_SMS_TEMPLATE_CODE: str = ""
     VOLCENGINE_TTS_APP_ID: str = ""
     VOLCENGINE_TTS_TOKEN: str = ""
 
@@ -60,10 +62,12 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_HOURS: int = 72
     SMS_DEV_MODE: bool = True
+    SMS_OTP_TTL_SECONDS: int = 300
 
     # ── CORS / WS ──
     CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
     WS_HEARTBEAT_SECONDS: int = 30
+    SSE_HEARTBEAT_SECONDS: float = 15.0
 
     # ── 监控 ──
     SENTRY_DSN: str = ""
@@ -80,7 +84,7 @@ class Settings(BaseSettings):
 
     @property
     def is_dev(self) -> bool:
-        return self.ENV == "dev"
+        return self.ENV in {"dev", "test"}
 
     @property
     def is_prod(self) -> bool:
@@ -89,8 +93,8 @@ class Settings(BaseSettings):
     _JWT_PLACEHOLDER = "change_me_to_a_long_random_string_in_prod"
 
     @model_validator(mode="after")
-    def _enforce_strong_jwt_outside_dev(self) -> Self:
-        """staging / prod 禁止使用默认或弱 JWT_SECRET。"""
+    def _enforce_secrets_outside_dev(self) -> Self:
+        """staging / prod 禁止弱鉴权或开发短信旁路。"""
         if self.is_dev:
             return self
         if self.JWT_SECRET == self._JWT_PLACEHOLDER or len(self.JWT_SECRET) < 24:
@@ -98,7 +102,20 @@ class Settings(BaseSettings):
                 "非 dev 环境必须设置 JWT_SECRET(长度>=24且非占位默认值)，"
                 "见 settings.JWT_SECRET / 运维密钥管理。"
             )
+        if self.SMS_DEV_MODE:
+            raise ValueError("非 dev 环境必须设置 SMS_DEV_MODE=false，禁止通用验证码")
+        sms_fields = {
+            "ALIYUN_ACCESS_KEY": self.ALIYUN_ACCESS_KEY,
+            "ALIYUN_SECRET_KEY": self.ALIYUN_SECRET_KEY,
+            "ALIYUN_SMS_SIGN_NAME": self.ALIYUN_SMS_SIGN_NAME,
+            "ALIYUN_SMS_TEMPLATE_CODE": self.ALIYUN_SMS_TEMPLATE_CODE,
+        }
+        missing = [name for name, value in sms_fields.items() if not value.strip()]
+        if missing:
+            raise ValueError(
+                "非 dev 环境必须配置短信供应商凭据: " + ", ".join(missing)
+            )
         return self
 
 
-settings = Settings()  # type: ignore[call-arg]
+settings = Settings()

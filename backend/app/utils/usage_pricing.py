@@ -21,9 +21,9 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, Literal, Optional, Tuple
+from typing import Any, Literal
 
 _ZERO = Decimal("0")
 _ONE_MILLION = Decimal("1000000")
@@ -49,7 +49,7 @@ class CanonicalUsage:
     cache_write_tokens: int = 0
     reasoning_tokens: int = 0
     request_count: int = 1
-    raw_usage: Optional[dict[str, Any]] = None
+    raw_usage: dict[str, Any] | None = None
 
     @property
     def prompt_tokens(self) -> int:
@@ -62,31 +62,31 @@ class CanonicalUsage:
 
 @dataclass(frozen=True)
 class PricingEntry:
-    input_cost_per_million: Optional[Decimal] = None
-    output_cost_per_million: Optional[Decimal] = None
-    cache_read_cost_per_million: Optional[Decimal] = None
-    cache_write_cost_per_million: Optional[Decimal] = None
-    request_cost: Optional[Decimal] = None
+    input_cost_per_million: Decimal | None = None
+    output_cost_per_million: Decimal | None = None
+    cache_read_cost_per_million: Decimal | None = None
+    cache_write_cost_per_million: Decimal | None = None
+    request_cost: Decimal | None = None
     source: CostSource = "none"
-    source_url: Optional[str] = None
-    pricing_version: Optional[str] = None
-    fetched_at: Optional[datetime] = None
+    source_url: str | None = None
+    pricing_version: str | None = None
+    fetched_at: datetime | None = None
 
 
 @dataclass(frozen=True)
 class CostResult:
-    amount_usd: Optional[Decimal]
+    amount_usd: Decimal | None
     status: CostStatus
     source: CostSource
     label: str
-    fetched_at: Optional[datetime] = None
-    pricing_version: Optional[str] = None
+    fetched_at: datetime | None = None
+    pricing_version: str | None = None
     notes: tuple[str, ...] = ()
 
 
 # ── Pricing snapshot (2026-05) ────────────────────────────────────────
 
-_OFFICIAL_DOCS_PRICING: Dict[Tuple[str, str], PricingEntry] = {
+_OFFICIAL_DOCS_PRICING: dict[tuple[str, str], PricingEntry] = {
     # ── Anthropic ─────────────────────────────────────────────────────
     ("anthropic", "claude-opus-4-7"): PricingEntry(
         input_cost_per_million=Decimal("5.00"),
@@ -242,7 +242,7 @@ _OFFICIAL_DOCS_PRICING: Dict[Tuple[str, str], PricingEntry] = {
 # ── Helpers ──────────────────────────────────────────────────────────
 
 
-def _to_decimal(value: Any) -> Optional[Decimal]:
+def _to_decimal(value: Any) -> Decimal | None:
     if value is None:
         return None
     try:
@@ -270,7 +270,7 @@ def _normalize_anthropic_model_name(model: str) -> str:
     return name
 
 
-def lookup_pricing(provider: str, model: str) -> Optional[PricingEntry]:
+def lookup_pricing(provider: str, model: str) -> PricingEntry | None:
     """Look up a static pricing entry for ``(provider, model)``.
 
     Returns None when the pair isn't in the snapshot — caller may fall
@@ -294,8 +294,8 @@ def lookup_pricing(provider: str, model: str) -> Optional[PricingEntry]:
 def normalize_usage(
     response_usage: Any,
     *,
-    provider: Optional[str] = None,
-    api_mode: Optional[str] = None,
+    provider: str | None = None,
+    api_mode: str | None = None,
 ) -> CanonicalUsage:
     """Normalize raw response usage into canonical token buckets.
 

@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
-
 from agents.orchestrator_agent.interaction import (
     MAX_HANDOFFS_PER_TASK,
     emit_and_persist_handoff,

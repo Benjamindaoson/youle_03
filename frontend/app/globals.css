@@ -1,0 +1,108 @@
+@import 'tailwindcss';
+
+/* === 设计变量(对齐 frontend_001 视觉)========================== */
+@theme {
+  --color-wechat-green: #07c160;
+  --color-wechat-green-soft: #e8f6ee;
+  --color-wechat-bubble-user: #95ec69;
+  --color-wechat-bg: #f5f5f5;
+  --color-wechat-line: #e5e5e5;
+  --color-wechat-sub: #999999;
+  --color-wechat-mute: #bbbbbb;
+  --color-wechat-fg: #191919;
+
+  --color-role-ceo: #f4c95d;
+  --color-role-agent1: #e8a47e;
+  --color-role-agent2: #5b9dd9;
+  --color-role-agent3: #a07bc8;
+  --color-role-agent4: #7eb872;
+  --color-role-hr: #5b9dd9;
+  --color-role-finance: #e8755a;
+  --color-role-user: #e8755a;
+
+  --color-discuss-blue: #e3f2fd;
+  --color-work-green: #e8f5e9;
+
+  --font-wechat: 'PingFang SC', 'Microsoft YaHei', ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+/* === Keyframes ================================================== */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes fade-up {
+  0% { opacity: 0; transform: translateY(6px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@theme {
+  --animate-fade-up: fade-up 240ms ease-out both;
+  --animate-blink: blink 1.06s steps(1, end) infinite;
+  --animate-slide-in-left: slide-in-left 220ms ease-out both;
+  --animate-slide-in-right: slide-in-right 220ms ease-out both;
+}
+
+@keyframes slide-in-left {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+/* === Base ======================================================= */
+:root {
+  --foreground: 25 25 25;
+  --background: 245 245 245;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  color: rgb(var(--foreground));
+  background: rgb(var(--background));
+  font-family: var(--font-wechat);
+  font-size: 13px;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* === Components ================================================= */
+@layer components {
+  .nav-item {
+    @apply flex items-center gap-2 rounded-md px-3 py-2 text-[13px] text-neutral-600 transition-colors hover:bg-neutral-200/70;
+  }
+  .nav-item.active {
+    @apply bg-wechat-green-soft text-wechat-green;
+  }
+  .pill {
+    @apply inline-flex items-center rounded-sm bg-wechat-green-soft px-1.5 py-[2px] text-[10px] font-medium text-wechat-green;
+  }
+  .role-badge {
+    @apply inline-flex items-center rounded-sm bg-wechat-green-soft px-[7px] py-[2px] text-[11px] font-semibold text-wechat-green;
+  }
+  .toolbar-btn {
+    @apply flex h-[30px] w-[30px] cursor-pointer items-center justify-center rounded text-neutral-500 transition-colors hover:bg-neutral-200/60;
+  }
+}
+
+/* 通用滚动条 */
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}

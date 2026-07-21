@@ -14,10 +14,7 @@ def merge_rolling_summary(
     if not line:
         return (existing or "").strip()
     base = (existing or "").strip()
-    if not base:
-        merged = line
-    else:
-        merged = f"{base.rstrip()}{separator}{line}"
+    merged = line if not base else f"{base.rstrip()}{separator}{line}"
     if len(merged) <= max_chars:
         return merged
     return merged[-max_chars:]

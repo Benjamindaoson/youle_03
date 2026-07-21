@@ -21,7 +21,7 @@ def reset_sandbox(monkeypatch, tmp_path):
 
     reset_default_manager()
 
-    import agents.mcp_servers.code_executor.server as srv  # noqa: E402
+    import mcp_servers.code_executor.server as srv  # noqa: E402
 
     srv._sandbox = None  # type: ignore[attr-defined]
     yield
@@ -30,7 +30,7 @@ def reset_sandbox(monkeypatch, tmp_path):
 
 
 async def test_python_exec_smoke() -> None:
-    from agents.mcp_servers.code_executor.server import python_exec
+    from mcp_servers.code_executor.server import python_exec
 
     r = await python_exec({"code": "print(2 + 2)"})
     if r.get("error"):
@@ -40,7 +40,7 @@ async def test_python_exec_smoke() -> None:
 
 
 async def test_python_exec_missing_code() -> None:
-    from agents.mcp_servers.code_executor.server import python_exec
+    from mcp_servers.code_executor.server import python_exec
 
     r = await python_exec({})
     assert "error" in r
@@ -48,9 +48,8 @@ async def test_python_exec_missing_code() -> None:
 
 
 async def test_shell_exec_smoke() -> None:
-    from agents.mcp_servers.code_executor.server import shell_exec
+    from mcp_servers.code_executor.server import shell_exec
 
-    import sys
 
     cmd = "echo hello-world"
     r = await shell_exec({"cmd": cmd, "timeout_s": 5})
@@ -60,7 +59,7 @@ async def test_shell_exec_smoke() -> None:
 
 
 async def test_write_then_read_text() -> None:
-    from agents.mcp_servers.code_executor.server import read_file, write_file
+    from mcp_servers.code_executor.server import read_file, write_file
 
     w = await write_file({"path": "x.txt", "content": "你好 world"})
     assert w == {"written": True, "path": "x.txt"}
@@ -70,7 +69,7 @@ async def test_write_then_read_text() -> None:
 
 
 async def test_write_then_read_base64() -> None:
-    from agents.mcp_servers.code_executor.server import read_file, write_file
+    from mcp_servers.code_executor.server import read_file, write_file
 
     payload = b"\x00\x01\x02\x03"
     w = await write_file(
@@ -87,7 +86,7 @@ async def test_write_then_read_base64() -> None:
 
 
 async def test_read_missing_returns_error() -> None:
-    from agents.mcp_servers.code_executor.server import read_file
+    from mcp_servers.code_executor.server import read_file
 
     r = await read_file({"path": "no-such.txt"})
     assert "error" in r
@@ -95,7 +94,7 @@ async def test_read_missing_returns_error() -> None:
 
 
 async def test_list_dir() -> None:
-    from agents.mcp_servers.code_executor.server import list_dir, write_file
+    from mcp_servers.code_executor.server import list_dir, write_file
 
     await write_file({"path": "a.txt", "content": "1"})
     await write_file({"path": "b.txt", "content": "2"})
@@ -106,7 +105,7 @@ async def test_list_dir() -> None:
 
 
 async def test_install_disabled_by_default() -> None:
-    from agents.mcp_servers.code_executor.server import install_package
+    from mcp_servers.code_executor.server import install_package
 
     r = await install_package({"name": "pandas"})
     assert "error" in r
@@ -118,7 +117,7 @@ async def test_install_whitelist_enforced(monkeypatch) -> None:
     # 重新 import 让 module-level 常量重读
     import importlib
 
-    import agents.mcp_servers.code_executor.server as srv
+    import mcp_servers.code_executor.server as srv
 
     importlib.reload(srv)
 

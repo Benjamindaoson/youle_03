@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 from uuid import UUID
 
+from agents.orchestrator_agent.runner_factory import make_runner
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -14,7 +15,6 @@ from app.api.auth import get_current_user_id
 from app.db import get_session
 from app.models.hitl_gate import HITLGate
 from app.models.task import Task
-from agents.orchestrator_agent.runner_factory import make_runner
 
 router = APIRouter()
 

@@ -30,7 +30,6 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Optional, Tuple
 
 
 class OperationType(Enum):
@@ -50,8 +49,8 @@ class HunkLine:
 @dataclass
 class Hunk:
     """A group of changes within a file."""
-    context_hint: Optional[str] = None
-    lines: List[HunkLine] = field(default_factory=list)
+    context_hint: str | None = None
+    lines: list[HunkLine] = field(default_factory=list)
 
 
 @dataclass
@@ -59,14 +58,14 @@ class PatchOperation:
     """A single operation in a V4A patch."""
     operation: OperationType
     file_path: str
-    new_path: Optional[str] = None  # MOVE only
-    hunks: List[Hunk] = field(default_factory=list)
-    content: Optional[str] = None  # reserved for ADD content (unused — hunks suffice)
+    new_path: str | None = None  # MOVE only
+    hunks: list[Hunk] = field(default_factory=list)
+    content: str | None = None  # reserved for ADD content (unused — hunks suffice)
 
 
 def parse_v4a_patch(
     patch_content: str,
-) -> Tuple[List[PatchOperation], Optional[str]]:
+) -> tuple[list[PatchOperation], str | None]:
     """Parse a V4A-format patch.
 
     Returns:
@@ -77,8 +76,8 @@ def parse_v4a_patch(
     """
     lines = patch_content.split('\n')
 
-    start_idx: Optional[int] = None
-    end_idx: Optional[int] = None
+    start_idx: int | None = None
+    end_idx: int | None = None
     for i, line in enumerate(lines):
         if '*** Begin Patch' in line or '***Begin Patch' in line:
             start_idx = i
@@ -91,10 +90,10 @@ def parse_v4a_patch(
     if end_idx is None:
         end_idx = len(lines)
 
-    operations: List[PatchOperation] = []
+    operations: list[PatchOperation] = []
     i = start_idx + 1
-    current_op: Optional[PatchOperation] = None
-    current_hunk: Optional[Hunk] = None
+    current_op: PatchOperation | None = None
+    current_hunk: Hunk | None = None
 
     while i < end_idx:
         line = lines[i]
@@ -186,7 +185,7 @@ def parse_v4a_patch(
     if not operations:
         return operations, None
 
-    parse_errors: List[str] = []
+    parse_errors: list[str] = []
     for op in operations:
         if not op.file_path:
             parse_errors.append("Operation with empty file path")

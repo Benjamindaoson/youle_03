@@ -17,7 +17,7 @@ dependencies = [
     # audio_tools: faster-whisper
     # document_tools: python-pptx, openpyxl, python-docx, pdfplumber, reportlab, pytesseract
     # oss: boto3, oss2
-    "pillow>=11.0",
+    "pillow>=12.3",
     "boto3>=1.35",
 ]
 

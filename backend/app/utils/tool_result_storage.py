@@ -23,8 +23,8 @@ Three layers of context-overflow defence:
 from __future__ import annotations
 
 import logging
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Awaitable, Callable, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +105,7 @@ async def maybe_persist_tool_result(
     tool_use_id: str,
     persist_fn: PersistFn,
     config: BudgetConfig = DEFAULT_BUDGET,
-    threshold: Optional[int] = None,
+    threshold: int | None = None,
 ) -> str:
     """Spill *content* to OSS when it exceeds the threshold; else passthrough.
 

@@ -174,7 +174,10 @@ def parse_md_skill_from_text(*, text: str, source_path: Path | None = None) -> M
     fm, _body = _split_frontmatter(text)
     if fm is None:
         raise SkillLoadError("no YAML frontmatter")
-    meta = yaml.safe_load(fm) or {}
+    try:
+        meta = yaml.safe_load(fm) or {}
+    except yaml.YAMLError as e:
+        raise SkillLoadError(f"invalid frontmatter YAML: {e}") from e
     if not isinstance(meta, dict):
         raise SkillLoadError("frontmatter must be a mapping")
     name = str(meta.get("name") or "").strip()

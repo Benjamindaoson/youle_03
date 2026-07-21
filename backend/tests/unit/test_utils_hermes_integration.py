@@ -31,7 +31,6 @@ from app.utils.prompt_caching import apply_anthropic_cache_control
 from app.utils.redact import RedactingFormatter
 from app.utils.schema_sanitizer import sanitize_tool_schemas
 
-
 # ── RedactingFormatter (stdlib logging) ─────────────────────────────
 
 

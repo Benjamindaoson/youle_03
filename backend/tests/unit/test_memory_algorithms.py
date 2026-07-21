@@ -7,7 +7,10 @@ from app.models.task import Task
 from app.services.memory.algorithms.artifact_profile import derive_artifact_profile
 from app.services.memory.algorithms.recall_keywords import rank_artifacts_keyword
 from app.services.memory.algorithms.rolling_summary import merge_rolling_summary
-from app.services.memory.algorithms.task_card import build_task_memory_card, format_task_card_log_line
+from app.services.memory.algorithms.task_card import (
+    build_task_memory_card,
+    format_task_card_log_line,
+)
 
 
 def test_merge_rolling_summary_appends() -> None:
@@ -55,7 +58,7 @@ def test_task_memory_card_completed() -> None:
     card = build_task_memory_card(task=task, state=state)
     assert card["final_status"] == "completed"
     assert "one_liner" in card
-    assert "oss://x" == card["primary_artifact_ref"]
+    assert card["primary_artifact_ref"] == "oss://x"
     line = format_task_card_log_line(card)
     assert "completed" in line
 

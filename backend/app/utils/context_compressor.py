@@ -27,8 +27,8 @@ should still see the full original list.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
-from typing import Awaitable, Callable, List, Optional
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ SUMMARY_PREFIX = (
 )
 
 #: Async ``(messages_to_summarize, max_output_tokens) -> summary_text``.
-SummarizeFn = Callable[[List[dict], int], Awaitable[str]]
+SummarizeFn = Callable[[list[dict], int], Awaitable[str]]
 
 
 @dataclass
@@ -70,7 +70,7 @@ class CompressorConfig:
     summary_ratio: float = 0.20
 
 
-def estimate_messages_tokens(messages: List[dict]) -> int:
+def estimate_messages_tokens(messages: list[dict]) -> int:
     """Rough token estimate (chars/4) for a list of chat messages.
 
     Pure heuristic — replace with the provider's tokenizer when accuracy
@@ -95,7 +95,7 @@ def estimate_messages_tokens(messages: List[dict]) -> int:
 
 
 def should_compress(
-    messages: List[dict],
+    messages: list[dict],
     *,
     context_length: int,
     config: CompressorConfig = CompressorConfig(),
@@ -107,17 +107,17 @@ def should_compress(
 
 
 def _split_head_middle_tail(
-    messages: List[dict],
+    messages: list[dict],
     *,
     config: CompressorConfig,
-) -> tuple[List[dict], List[dict], List[dict]]:
+) -> tuple[list[dict], list[dict], list[dict]]:
     """Partition messages into (head, middle, tail) per the config."""
     head_keep = max(0, min(config.head_keep, len(messages)))
     head = messages[:head_keep]
     rest = messages[head_keep:]
 
     # Tail: walk from the end, accumulating until the budget is hit.
-    tail_rev: List[dict] = []
+    tail_rev: list[dict] = []
     tail_chars = 0
     char_budget = config.tail_token_budget * 4
     for msg in reversed(rest):
@@ -139,7 +139,7 @@ def _split_head_middle_tail(
 
 
 def _summary_token_budget(
-    middle_messages: List[dict],
+    middle_messages: list[dict],
     config: CompressorConfig,
 ) -> int:
     """Allocate summary token budget proportional to compressed content."""
@@ -149,12 +149,12 @@ def _summary_token_budget(
 
 
 async def compress_messages(
-    messages: List[dict],
+    messages: list[dict],
     *,
     summarize_fn: SummarizeFn,
     context_length: int,
     config: CompressorConfig = CompressorConfig(),
-) -> List[dict]:
+) -> list[dict]:
     """Compress *messages* if they exceed the trigger threshold.
 
     Returns:

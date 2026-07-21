@@ -16,7 +16,7 @@ Env vars:
 from __future__ import annotations
 
 import os
-from typing import Any, Dict
+from typing import Any
 
 DEFAULT_MAX_BYTES = 50_000
 DEFAULT_MAX_LINES = 2_000
@@ -34,7 +34,7 @@ def _coerce_positive_int(value: Any, default: int) -> int:
     return iv
 
 
-def get_tool_output_limits() -> Dict[str, int]:
+def get_tool_output_limits() -> dict[str, int]:
     """Return resolved tool-output limits.
 
     Keys: ``max_bytes``, ``max_lines``, ``max_line_length``.  Missing or

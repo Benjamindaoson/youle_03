@@ -58,50 +58,38 @@ async def test_ask_mode_does_not_consume_quota(monkeypatch) -> None:
 
 @pytest.mark.asyncio
 async def test_auto_mode_does_consume_quota(monkeypatch) -> None:
-    """对照组:Auto 模式必须扣配额(_consumed + consume 都被调用)。"""
-
-    async def _consumed_stub(session, user_id, quota_type, period):
-        return 0
-
-    monkeypatch.setattr("app.services.quota_enforce._consumed", _consumed_stub)
-    consume = AsyncMock()
-    monkeypatch.setattr("app.services.quota.QuotaService.consume", consume)
+    """对照组:Auto 模式必须原子检查并扣减配额。"""
+    try_consume = AsyncMock(return_value=True)
+    monkeypatch.setattr("app.services.quota.QuotaService.try_consume", try_consume)
 
     fake_session = MagicMock()
     user = _StubUser()
     await enforce_task_creation(
         fake_session, user=user, work_mode="auto", task_kind="text"
     )
-    consume.assert_awaited()  # Auto 模式扣了
+    try_consume.assert_awaited_once()
 
 
 @pytest.mark.asyncio
 async def test_auto_video_consumes_double(monkeypatch) -> None:
-    """Auto 模式下视频任务额外扣 video_tasks_daily(共 2 次 consume)。"""
-
-    async def _consumed_stub(session, user_id, quota_type, period):
-        return 0
-
-    monkeypatch.setattr("app.services.quota_enforce._consumed", _consumed_stub)
-    consume = AsyncMock()
-    monkeypatch.setattr("app.services.quota.QuotaService.consume", consume)
+    """Auto 模式下视频任务额外扣 video_tasks_daily。"""
+    try_consume = AsyncMock(return_value=True)
+    monkeypatch.setattr("app.services.quota.QuotaService.try_consume", try_consume)
 
     fake_session = MagicMock()
     user = _StubUser(plan="personal")
     await enforce_task_creation(
         fake_session, user=user, work_mode="auto", task_kind="video"
     )
-    assert consume.await_count == 2
+    assert try_consume.await_count == 2
 
 
 @pytest.mark.asyncio
 async def test_auto_quota_exhausted_raises(monkeypatch) -> None:
     """Auto 模式下达到日限额 → 抛 QuotaExceeded。"""
 
-    async def _consumed_stub(session, user_id, quota_type, period):
-        return 99999  # 远超
-
-    monkeypatch.setattr("app.services.quota_enforce._consumed", _consumed_stub)
+    try_consume = AsyncMock(return_value=False)
+    monkeypatch.setattr("app.services.quota.QuotaService.try_consume", try_consume)
 
     fake_session = MagicMock()
     user = _StubUser()

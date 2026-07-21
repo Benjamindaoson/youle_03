@@ -26,17 +26,21 @@ from uuid import UUID, uuid4
 
 import structlog
 import yaml as _yaml_module
+from agents.orchestrator_agent.clarification import MAX_CLARIFICATION_ROUNDS, generate_clarification
+from agents.orchestrator_agent.input_validator import validate_inputs
+from agents.orchestrator_agent.intent import understand_intent
+from agents.orchestrator_agent.interrupt import (
+    InterruptClassification,
+    classify_interrupt,
+    handle_interrupt,
+)
+from agents.orchestrator_agent.mode_manager import consumes_task_quota, detect_mode_switch
+from agents.orchestrator_agent.runner_factory import make_runner
+from agents.orchestrator_agent.skill_match import match_skill
 from fastapi import HTTPException, status
 from sqlalchemy import select as _sel_task
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from agents.orchestrator_agent.clarification import MAX_CLARIFICATION_ROUNDS, generate_clarification
-from agents.orchestrator_agent.input_validator import validate_inputs
-from agents.orchestrator_agent.intent import understand_intent
-from agents.orchestrator_agent.interrupt import InterruptClassification, classify_interrupt, handle_interrupt
-from agents.orchestrator_agent.mode_manager import consumes_task_quota, detect_mode_switch
-from agents.orchestrator_agent.runner_factory import make_runner
-from agents.orchestrator_agent.skill_match import match_skill
 from app.config.prompts import PLAN_MODE_DISCUSSION_PROMPT
 from app.db import SessionLocal
 from app.models.conversation import Conversation
@@ -668,6 +672,7 @@ async def dispatch_send_message(
         user_message=body.content,
         intent=intent.model_dump(),
         memory_context=memory_ctx,
+        user_id=conv.user_id,
     )
     if skill is None:
         return SendMessageResponse(

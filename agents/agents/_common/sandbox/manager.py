@@ -21,7 +21,6 @@ import structlog
 from agents._common.sandbox.provider import (
     Sandbox,
     SandboxProvider,
-    SandboxUnavailable,
 )
 
 log = structlog.get_logger(__name__)

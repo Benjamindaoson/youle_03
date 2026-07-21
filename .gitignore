@@ -18,6 +18,8 @@ htmlcov/
 # ── Node / Next.js ──
 node_modules/
 .next/
+frontend/test-results/
+frontend/playwright-report/
 out/
 dist/
 build/

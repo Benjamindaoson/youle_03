@@ -4,7 +4,15 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import ARRAY, ForeignKey, PrimaryKeyConstraint, String, Text, func
+from sqlalchemy import (
+    ARRAY,
+    CheckConstraint,
+    ForeignKey,
+    PrimaryKeyConstraint,
+    String,
+    Text,
+    func,
+)
 from sqlalchemy.dialects.postgresql import JSONB, TIMESTAMP
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -53,5 +61,14 @@ class UserSkillVisibility(Base):
     skill_id: Mapped[UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("skills.id"))
     relationship: Mapped[str] = mapped_column(String(20), nullable=False)
     created_at: Mapped[datetime] = mapped_column(TIMESTAMP(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(
+        TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
-    __table_args__ = (PrimaryKeyConstraint("user_id", "skill_id"),)
+    __table_args__ = (
+        PrimaryKeyConstraint("user_id", "skill_id"),
+        CheckConstraint(
+            "relationship IN ('installed_enabled','installed_disabled')",
+            name="user_skill_relationship_chk",
+        ),
+    )
