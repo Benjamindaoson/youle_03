@@ -15,13 +15,13 @@
 
 ## 3. Unified event delivery
 
-- [ ] 3.1 Write failing unit tests for single/multiple EventBus subscribers, full-queue oldest eviction, unsubscribe, JSON-safe payloads, and Redis-unavailable local fallback.
-- [ ] 3.2 Implement the minimal bounded EventBus and lifecycle using the existing Redis client.
-- [ ] 3.3 Write failing model/repository tests for stable event IDs, user/conversation ownership, ordered replay, and `Last-Event-ID` cursor behavior.
-- [ ] 3.4 Add the `user_events` SQLAlchemy model and append-only Alembic migration, then implement the repository.
-- [ ] 3.5 Write failing SSE tests for Bearer authentication, 403 ownership, heartbeat, replay, live delivery, and client disconnect cleanup.
-- [ ] 3.6 Implement the conversation SSE route and unified `UserEvent` Pydantic schema.
-- [ ] 3.7 Route existing `ws_manager.publish` through the unified publisher and make WebSocket consume the same local EventBus without a second Redis channel.
+- [x] 3.1 Write failing unit tests for single/multiple EventBus subscribers, full-queue oldest eviction, unsubscribe, JSON-safe payloads, and Redis-unavailable local fallback.
+- [x] 3.2 Implement the minimal bounded EventBus and lifecycle using the existing Redis client.
+- [x] 3.3 Write failing model/repository tests for stable event IDs, user/conversation ownership, ordered replay, and `Last-Event-ID` cursor behavior.
+- [x] 3.4 Add the `user_events` SQLAlchemy model and append-only Alembic migration, then implement the repository.
+- [x] 3.5 Write failing SSE tests for Bearer authentication, 403 ownership, heartbeat, replay, live delivery, and client disconnect cleanup.
+- [x] 3.6 Implement the conversation SSE route and unified `UserEvent` Pydantic schema.
+- [x] 3.7 Route existing `ws_manager.publish` through the unified publisher and make WebSocket consume the same local EventBus without a second Redis channel.
 - [ ] 3.8 Generate/check frontend TypeScript event types and run event/backend regression tests.
 
 ## 4. OTP and Skill lifecycle

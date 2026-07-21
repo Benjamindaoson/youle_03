@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     )
 
     # ── 环境 ──
-    ENV: Literal["dev", "staging", "prod"] = "dev"
+    ENV: Literal["dev", "test", "staging", "prod"] = "dev"
     LOG_LEVEL: str = "INFO"
     DEBUG: bool = True
 
@@ -64,6 +64,7 @@ class Settings(BaseSettings):
     # ── CORS / WS ──
     CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
     WS_HEARTBEAT_SECONDS: int = 30
+    SSE_HEARTBEAT_SECONDS: float = 15.0
 
     # ── 监控 ──
     SENTRY_DSN: str = ""
@@ -80,7 +81,7 @@ class Settings(BaseSettings):
 
     @property
     def is_dev(self) -> bool:
-        return self.ENV == "dev"
+        return self.ENV in {"dev", "test"}
 
     @property
     def is_prod(self) -> bool:

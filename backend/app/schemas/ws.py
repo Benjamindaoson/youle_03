@@ -9,31 +9,14 @@
 
 from __future__ import annotations
 
-from enum import StrEnum
 from typing import Any, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field
 
+from app.schemas.events import EventType
 
-class WSEventType(StrEnum):
-    CONVERSATION_CREATED = "conversation_created"
-    CONVERSATION_STATUS_CHANGED = "conversation_status_changed"
-    MESSAGE_ADDED = "message_added"
-    STEP_STARTED = "step_started"
-    STEP_COMPLETED = "step_completed"
-    STEP_STREAMING = "step_streaming"
-    TASK_COMPLETED = "task_completed"
-    TASK_FAILED = "task_failed"
-    CLARIFICATION_REQUIRED = "clarification_required"
-    MODE_CHOICE_REQUIRED = "mode_choice_required"
-    WORK_MODE_CHANGED = "work_mode_changed"
-    BRIEF_UPDATED = "brief_updated"
-    HITL_GATE_OPENED = "hitl_gate_opened"
-    HITL_GATE_CLOSED = "hitl_gate_closed"
-    QUOTA_WARNING = "quota_warning"
-    AGENT_STATUS_CHANGED = "agent_status_changed"
-    PONG = "pong"
+WSEventType = EventType
 
 
 class WSEventBase(BaseModel):

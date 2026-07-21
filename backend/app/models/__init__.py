@@ -15,6 +15,7 @@ from app.models.skill import Skill, SkillEmbedding, UserSkillVisibility
 from app.models.skill_draft import SkillDraft
 from app.models.task import Task, TaskStep
 from app.models.user import User
+from app.models.user_event import UserEventRecord
 from app.models.user_preference import UserPreference
 from app.models.workflow_trace import WorkflowTrace
 
@@ -37,6 +38,7 @@ __all__ = [
     "Task",
     "TaskStep",
     "User",
+    "UserEventRecord",
     "UserPreference",
     "UserSkillVisibility",
     "WorkflowTrace",
