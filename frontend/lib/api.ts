@@ -8,7 +8,6 @@ import {
   type UseQueryOptions,
 } from '@tanstack/react-query';
 import {
-  MOCK_CONVERSATIONS,
   MOCK_MEMBERS,
   MOCK_MESSAGES,
 } from '@/lib/mock-data';
@@ -21,6 +20,7 @@ import type {
 import {
   MOCK_MODE,
   apiRequest,
+  createConversation,
   fetchConversationMessages,
   fetchConversations,
   fetchSkillDetail,
@@ -32,6 +32,7 @@ import {
   type SkillDetail,
   type SkillLifecycleAction,
 } from '@/lib/client';
+import { applyUserEvent } from '@/lib/sse';
 
 export type { SkillCard, SkillDetail } from '@/lib/client';
 
@@ -49,7 +50,7 @@ async function safeRequest<T>(path: string, fallback: T, init?: RequestInit): Pr
 export function useConversations(opts?: Partial<UseQueryOptions<ConversationSummary[]>>) {
   return useQuery<ConversationSummary[]>({
     queryKey: ['conversations'],
-    queryFn: () => (USE_MOCK ? MOCK_CONVERSATIONS : fetchConversations()),
+    queryFn: () => (USE_MOCK ? [] : fetchConversations()),
     ...opts,
   });
 }
@@ -94,7 +95,27 @@ export function useSendMessage(conversationId: string | null) {
       return sendConversationMessage(conversationId, text);
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['messages', conversationId] });
+      if (USE_MOCK && conversationId) {
+        applyUserEvent({
+          id: crypto.randomUUID(),
+          type: 'task_completed',
+          user_id: '22222222-2222-4222-8222-222222222222',
+          conversation_id: conversationId,
+          task_id: crypto.randomUUID(),
+          agent_id: 'ceo_assistant',
+          payload: {
+            title: '无密钥任务已完成',
+            summary: 'mock AgentResult 已通过统一 UserEvent 进入消息流',
+            artifact: {
+              type: 'document',
+              reference: 'oss://mock/no-key-result.md',
+            },
+          },
+          created_at: new Date().toISOString(),
+        });
+      } else {
+        qc.invalidateQueries({ queryKey: ['messages', conversationId] });
+      }
     },
   });
 }
@@ -268,7 +289,34 @@ const MOCK_SKILLS: SkillCard[] = [
 export function useSkills(filters?: { q?: string; domain?: string }) {
   return useQuery<SkillCard[]>({
     queryKey: ['skills', filters ?? {}],
-    queryFn: () => USE_MOCK ? MOCK_SKILLS : fetchSkills(filters),
+    queryFn: () => {
+      if (!USE_MOCK) return fetchSkills(filters);
+      const query = filters?.q?.toLowerCase();
+      return MOCK_SKILLS.filter((skill) => {
+        if (filters?.domain && skill.domain !== filters.domain) return false;
+        if (!query) return true;
+        return [skill.name, skill.description ?? '', ...(skill.keywords ?? [])]
+          .some((value) => value.toLowerCase().includes(query));
+      });
+    },
+  });
+}
+
+export function useCreateConversation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (vars: { mode: 'main_session' | 'group'; work_mode: WorkMode; name: string }) => {
+      if (USE_MOCK) {
+        return {
+          id: vars.mode === 'main_session' ? 'main' : `group-${Date.now()}`,
+          name: vars.name,
+          kind: vars.mode,
+          work_mode: vars.work_mode,
+        } satisfies ConversationSummary;
+      }
+      return createConversation(vars);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['conversations'] }),
   });
 }
 

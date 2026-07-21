@@ -2,13 +2,11 @@
 
 // 消息流(微信式气泡 + TaskCard + 互动消息 + HITL 内嵌组件)
 import { useEffect, useRef } from 'react';
-import { useConversationStore } from '@/stores/conversation';
 import { MessageBubble } from '@/components/chat/MessageBubble';
+import { useMessages } from '@/lib/api';
 
 export function MessageList({ conversationId }: { conversationId: string }) {
-  const messages = useConversationStore(
-    (s) => s.messages[conversationId] ?? [],
-  );
+  const { data: messages = [] } = useMessages(conversationId);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

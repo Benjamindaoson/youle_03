@@ -11,6 +11,8 @@ import { useWsStore } from '@/stores/ws';
 import { useHitlStore } from '@/stores/hitl';
 import { useConversationStore } from '@/stores/conversation';
 import type { RoleKey, AgentStatus } from '@/lib/agents';
+import { appendCachedMessage } from '@/lib/query-client';
+import type { Message } from '@/stores/conversation';
 
 let socket: WebSocket | null = null;
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -171,9 +173,7 @@ function route(msg: { type: string; [k: string]: unknown }): void {
       hitl.push(msg.gate as never);
       break;
     case 'message_added':
-      conv.appendMessage(
-        msg.message as Parameters<typeof conv.appendMessage>[0],
-      );
+      appendCachedMessage(msg.message as Message);
       break;
     case 'agent_status_changed':
       conv.patchMemberStatus(

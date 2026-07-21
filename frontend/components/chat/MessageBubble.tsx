@@ -23,6 +23,7 @@ import { highlightMentions } from '@/lib/mention';
 import { useOpenPrivateChat } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { useConversationStore } from '@/stores/conversation';
+import { removeCachedMessage } from '@/lib/query-client';
 
 export function MessageBubble({ message }: { message: Message }) {
   const meta = ROLES[message.role];
@@ -36,7 +37,6 @@ export function MessageBubble({ message }: { message: Message }) {
   const router = useRouter();
   const setQuoted = useConversationStore((s) => s.setQuoted);
   const toggleStar = useConversationStore((s) => s.toggleStar);
-  const withdraw = useConversationStore((s) => s.withdrawMessage);
   const starred = useConversationStore((s) => s.starred.includes(message.id));
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
 
@@ -89,7 +89,9 @@ export function MessageBubble({ message }: { message: Message }) {
       alert('已复制为转发文本');
     },
     onStar: () => toggleStar(message.id),
-    onWithdraw: isUser ? () => withdraw(message.conversation_id, message.id) : undefined,
+    onWithdraw: isUser
+      ? () => removeCachedMessage(message.conversation_id, message.id)
+      : undefined,
     onLocate: () => {
       const el = document.getElementById(`msg-${message.id}`);
       el?.scrollIntoView({ behavior: 'smooth', block: 'center' });

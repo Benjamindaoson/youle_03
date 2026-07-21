@@ -63,6 +63,9 @@ jobs:
       - name: Upgrade a fresh database
         working-directory: backend
         run: ../.venv/bin/alembic upgrade head
+      - name: Bootstrap canonical Skills
+        working-directory: backend
+        run: ../.venv/bin/python scripts/bootstrap-skills.py
       - name: Run backend tests
         working-directory: backend
         run: ../.venv/bin/pytest tests -q
@@ -129,6 +132,12 @@ jobs:
       - name: Production build
         working-directory: frontend
         run: pnpm build
+      - name: Install Playwright Chromium
+        working-directory: frontend
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Browser end-to-end tests
+        working-directory: frontend
+        run: pnpm test:e2e
 
   contract-ci:
     name: Architecture and cross-language contracts

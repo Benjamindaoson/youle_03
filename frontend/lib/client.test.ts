@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   apiRequest,
+  createConversation,
   fetchConversations,
   fetchConversationMessages,
   loginWithSms,
@@ -120,6 +121,32 @@ describe('typed API client', () => {
     expect(fetchMock.mock.calls[0][1].body).toBe(JSON.stringify({ content: '你好' }));
     expect(fetchMock.mock.calls[1][0]).toMatch(/\/api\/conversations\/private-chat\/agent_1$/);
     expect(privateChat.kind).toBe('private_chat');
+  });
+
+  it('creates the first main conversation through the canonical API', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({
+        id: 'main-1',
+        name: '我的 AI 团队',
+        mode: 'main_session',
+        work_mode: 'auto',
+        status: 'active',
+      }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const conversation = await createConversation({
+      mode: 'main_session',
+      work_mode: 'auto',
+      name: '我的 AI 团队',
+    });
+
+    expect(conversation).toMatchObject({ id: 'main-1', kind: 'main_session', work_mode: 'auto' });
+    expect(fetchMock.mock.calls[0][0]).toMatch(/\/api\/conversations$/);
+    expect(fetchMock.mock.calls[0][1]).toMatchObject({
+      method: 'POST',
+      body: JSON.stringify({ mode: 'main_session', work_mode: 'auto', name: '我的 AI 团队' }),
+    });
   });
 
   it('surfaces structured API errors instead of returning mock data', async () => {

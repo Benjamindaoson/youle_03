@@ -10,7 +10,7 @@ import clsx from 'clsx';
 import { ROLES } from '@/lib/agents';
 import { useRouter } from 'next/navigation';
 import { useConversationStore, type WorkMode } from '@/stores/conversation';
-import { useSwitchWorkMode } from '@/lib/api';
+import { useCreateConversation } from '@/lib/api';
 
 type Step =
   | { kind: 'join'; role: 'ceo_assistant' | 'hr' | 'finance_manager'; time: string }
@@ -29,9 +29,8 @@ export function OnboardingFlow() {
   const [shown, setShown] = useState(0);
   const [showHint, setShowHint] = useState(false);
   const router = useRouter();
-  const patchMode = useConversationStore((s) => s.patchMode);
   const upsert = useConversationStore((s) => s.upsertConversation);
-  const switchMode = useSwitchWorkMode();
+  const createConversation = useCreateConversation();
 
   useEffect(() => {
     if (shown >= SCRIPT.length) return;
@@ -42,15 +41,16 @@ export function OnboardingFlow() {
   const finished = shown >= SCRIPT.length;
 
   function pickMode(target: WorkMode) {
-    upsert({
-      id: 'main',
-      name: '你的第 1 个专属 AI 团队',
-      kind: 'main_session',
+    createConversation.mutate({
+      mode: 'main_session',
       work_mode: target,
+      name: '你的第 1 个专属 AI 团队',
+    }, {
+      onSuccess: (conversation) => {
+        upsert(conversation);
+        router.push(`/chat/${conversation.id}`);
+      },
     });
-    patchMode('main', target);
-    switchMode.mutate({ conversationId: 'main', target });
-    router.push('/chat/main');
   }
 
   const visible = useMemo(() => SCRIPT.slice(0, shown), [shown]);

@@ -93,8 +93,8 @@ class Settings(BaseSettings):
     _JWT_PLACEHOLDER = "change_me_to_a_long_random_string_in_prod"
 
     @model_validator(mode="after")
-    def _enforce_strong_jwt_outside_dev(self) -> Self:
-        """staging / prod 禁止使用默认或弱 JWT_SECRET。"""
+    def _enforce_secrets_outside_dev(self) -> Self:
+        """staging / prod 禁止弱鉴权或开发短信旁路。"""
         if self.is_dev:
             return self
         if self.JWT_SECRET == self._JWT_PLACEHOLDER or len(self.JWT_SECRET) < 24:
@@ -102,7 +102,20 @@ class Settings(BaseSettings):
                 "非 dev 环境必须设置 JWT_SECRET(长度>=24且非占位默认值)，"
                 "见 settings.JWT_SECRET / 运维密钥管理。"
             )
+        if self.SMS_DEV_MODE:
+            raise ValueError("非 dev 环境必须设置 SMS_DEV_MODE=false，禁止通用验证码")
+        sms_fields = {
+            "ALIYUN_ACCESS_KEY": self.ALIYUN_ACCESS_KEY,
+            "ALIYUN_SECRET_KEY": self.ALIYUN_SECRET_KEY,
+            "ALIYUN_SMS_SIGN_NAME": self.ALIYUN_SMS_SIGN_NAME,
+            "ALIYUN_SMS_TEMPLATE_CODE": self.ALIYUN_SMS_TEMPLATE_CODE,
+        }
+        missing = [name for name, value in sms_fields.items() if not value.strip()]
+        if missing:
+            raise ValueError(
+                "非 dev 环境必须配置短信供应商凭据: " + ", ".join(missing)
+            )
         return self
 
 
-settings = Settings()  # type: ignore[call-arg]
+settings = Settings()

@@ -89,8 +89,9 @@ export default function LoginPage() {
 
         {step === 'phone' ? (
           <>
-            <label className="mb-1 block text-[12px] text-wechat-sub">手机号</label>
+            <label htmlFor="phone" className="mb-1 block text-[12px] text-wechat-sub">手机号</label>
             <input
+              id="phone"
               autoFocus
               value={phone}
               onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
@@ -109,10 +110,11 @@ export default function LoginPage() {
           </>
         ) : (
           <>
-            <label className="mb-1 block text-[12px] text-wechat-sub">
+            <label htmlFor="code" className="mb-1 block text-[12px] text-wechat-sub">
               验证码已发送至 {phone}
             </label>
             <input
+              id="code"
               autoFocus
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}

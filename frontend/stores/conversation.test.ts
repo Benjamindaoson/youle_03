@@ -1,16 +1,21 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { useConversationStore } from './conversation';
+import type { Message } from './conversation';
+import {
+  appendCachedMessage,
+  appendCachedMessageDelta,
+  messageQueryKey,
+  queryClient,
+} from '@/lib/query-client';
 
 
-describe('shared conversation message state', () => {
+describe('shared conversation message query', () => {
   beforeEach(() => {
-    useConversationStore.setState({ messages: {}, list: [], currentId: null });
+    queryClient.clear();
   });
 
   it('deduplicates an event replay and aggregates streamed deltas', () => {
-    const store = useConversationStore.getState();
-    const message = {
+    const message: Message = {
       id: 'message-1',
       conversation_id: 'conv-1',
       kind: 'agent_text' as const,
@@ -18,11 +23,11 @@ describe('shared conversation message state', () => {
       text: '你',
     };
 
-    store.appendMessage(message);
-    store.appendMessage(message);
-    useConversationStore.getState().appendMessageDelta('conv-1', 'message-1', '好');
+    appendCachedMessage(message);
+    appendCachedMessage(message);
+    appendCachedMessageDelta('conv-1', 'message-1', '好');
 
-    expect(useConversationStore.getState().messages['conv-1']).toEqual([
+    expect(queryClient.getQueryData(messageQueryKey('conv-1'))).toEqual([
       { ...message, text: '你好' },
     ]);
   });

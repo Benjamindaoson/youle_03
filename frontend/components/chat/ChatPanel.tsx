@@ -10,29 +10,24 @@ import { Composer } from '@/components/chat/Composer';
 import { ChatHeader } from '@/components/chat/ChatHeader';
 import { QuotaWidget } from '@/components/layout/QuotaWidget';
 import { useConversationStore } from '@/stores/conversation';
-import { useMessages, useMembers } from '@/lib/api';
+import { useMembers } from '@/lib/api';
 import { useConversationEvents } from '@/lib/sse';
 import { useUserStore } from '@/stores/user';
+import { MOCK_MODE } from '@/lib/client';
 
 export function ChatPanel({ conversationId }: { conversationId: string }) {
   const setCurrent = useConversationStore((s) => s.setCurrent);
-  const setMessages = useConversationStore((s) => s.setMessages);
   const setMembers = useConversationStore((s) => s.setMembers);
-  const { data: messages } = useMessages(conversationId);
   const { data: members } = useMembers(conversationId);
   const conv = useConversationStore((s) => s.list.find((c) => c.id === conversationId));
   const isMainSession = conv?.kind === 'main_session';
   const token = useUserStore((s) => s.token);
 
-  useConversationEvents(conversationId, token);
+  useConversationEvents(conversationId, MOCK_MODE ? null : token);
 
   useEffect(() => {
     setCurrent(conversationId);
   }, [conversationId, setCurrent]);
-
-  useEffect(() => {
-    if (messages) setMessages(conversationId, messages);
-  }, [messages, conversationId, setMessages]);
 
   useEffect(() => {
     if (members) setMembers(conversationId, members);

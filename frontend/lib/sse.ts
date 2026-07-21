@@ -11,6 +11,7 @@ import { useConversationStore } from '@/stores/conversation';
 import { useHitlStore } from '@/stores/hitl';
 import { useTaskStore } from '@/stores/task';
 import { useWsStore } from '@/stores/ws';
+import { appendCachedMessage, appendCachedMessageDelta } from '@/lib/query-client';
 
 export type SSEFrame = { id?: string; event?: string; data: string };
 
@@ -99,7 +100,7 @@ export function applyUserEvent(event: UserEvent, onArtifactAdded: () => void = (
       const raw = payload.message as Record<string, unknown> | undefined;
       if (!raw || !conversationId) break;
       const role = stringValue(raw.role) ?? event.agent_id ?? 'ceo_assistant';
-      conversation.appendMessage({
+      appendCachedMessage({
         id: stringValue(raw.id) ?? stringValue(payload.message_id) ?? event.id,
         conversation_id: conversationId,
         kind: role === 'user' ? 'user_text' : 'agent_text',
@@ -114,7 +115,7 @@ export function applyUserEvent(event: UserEvent, onArtifactAdded: () => void = (
       const messageId = stringValue(payload.message_id);
       const delta = stringValue(payload.delta) ?? stringValue(payload.chunk);
       if (messageId && delta) {
-        conversation.appendMessageDelta(conversationId, messageId, delta);
+        appendCachedMessageDelta(conversationId, messageId, delta);
       }
       if (event.type === 'step_streaming') {
         const stepId = stringValue(payload.step_id);
@@ -148,6 +149,31 @@ export function applyUserEvent(event: UserEvent, onArtifactAdded: () => void = (
     case 'artifact_added':
       onArtifactAdded();
       break;
+    case 'task_completed': {
+      if (!conversationId) break;
+      const artifact = payload.artifact as Record<string, unknown> | undefined;
+      appendCachedMessage({
+        id: `task-completed-${event.id}`,
+        conversation_id: conversationId,
+        kind: 'agent_card',
+        role: (event.agent_id ?? 'ceo_assistant') as RoleKey,
+        text: stringValue(payload.message) ?? '任务已完成',
+        card: {
+          icon: artifact?.type === 'video'
+            ? 'video'
+            : artifact?.type === 'image'
+              ? 'image'
+              : 'doc',
+          title: stringValue(payload.title) ?? '任务已完成',
+          tag: '已完成',
+          tag_status: 'done',
+          items: [stringValue(payload.summary) ?? '结果已生成并保存到成果库'],
+          footer: artifact?.reference ? String(artifact.reference) : undefined,
+        },
+      });
+      onArtifactAdded();
+      break;
+    }
     case 'agent_status_changed':
       if (conversationId && event.agent_id) {
         conversation.patchMemberStatus(

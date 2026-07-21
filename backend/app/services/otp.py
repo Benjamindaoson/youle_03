@@ -50,7 +50,8 @@ async def issue_sms_otp(
     try:
         await deliver(phone, code)
     except Exception:
-        await redis.delete(_key(phone))
+        # A slower failed delivery must not remove a newer concurrent resend.
+        await redis.eval(_CONSUME_IF_MATCHES, 1, _key(phone), code)
         raise
 
 

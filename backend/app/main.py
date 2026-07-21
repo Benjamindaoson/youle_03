@@ -81,6 +81,11 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         settings.LANGGRAPH_CHECKPOINT_URL or settings.DATABASE_URL
     )
     init_checkpointer(saver)
+    from app.services.skill_loader import sync_builtin_skills
+
+    async with SessionLocal() as session:
+        skill_count = await sync_builtin_skills(session)
+    log.info("skills.canonical_synced", count=skill_count)
     await event_bus.start()
     event_publisher.start()
     yield

@@ -34,6 +34,7 @@ async def _stream_user_events(
     *,
     request: Request | Any,
     user_id: str,
+    conversation_id: UUID,
     queue: asyncio.Queue[dict[str, Any]],
     replay: list[UserEvent],
     bus: EventBus,
@@ -55,6 +56,11 @@ async def _stream_user_events(
                 continue
 
             event = UserEvent.model_validate(raw)
+            # A user may subscribe to several conversations through one bus.
+            # Conversation streams accept only their own events plus explicit
+            # user-global events that have no conversation_id.
+            if event.conversation_id not in {None, conversation_id}:
+                continue
             if event.id in seen_ids:
                 continue
             seen_ids.add(event.id)
@@ -110,6 +116,7 @@ async def conversation_events(
         _stream_user_events(
             request=request,
             user_id=str(user_id),
+            conversation_id=conversation_id,
             queue=queue,
             replay=replay,
             bus=event_bus,

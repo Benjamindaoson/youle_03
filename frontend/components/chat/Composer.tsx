@@ -8,15 +8,14 @@ import {
   ChevronDown,
   Folder,
   Scissors,
-  Smile,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { useConversationStore } from '@/stores/conversation';
 import { useMaterials, usePrompts, useSendMessage } from '@/lib/api';
 import { ROLES } from '@/lib/agents';
 import { X } from 'lucide-react';
-import { EmojiPicker } from '@/components/chat/EmojiPicker';
 import { MentionPopover, type MentionItem } from '@/components/chat/MentionPopover';
+import { appendCachedMessage, removeCachedMessage } from '@/lib/query-client';
 
 interface MentionState {
   start: number;
@@ -25,10 +24,8 @@ interface MentionState {
 
 export function Composer({ conversationId }: { conversationId: string }) {
   const [text, setText] = useState('');
-  const [showEmoji, setShowEmoji] = useState(false);
   const [mention, setMention] = useState<MentionState | null>(null);
   const conv = useConversationStore((s) => s.list.find((c) => c.id === conversationId));
-  const appendMessage = useConversationStore((s) => s.appendMessage);
   const quoted = useConversationStore((s) => s.quoted[conversationId] ?? null);
   const setQuoted = useConversationStore((s) => s.setQuoted);
   const send = useSendMessage(conversationId);
@@ -58,14 +55,17 @@ export function Composer({ conversationId }: { conversationId: string }) {
     const finalText = quoted
       ? `> ${ROLES[quoted.role].name}:${quoted.preview}\n${trimmed}`
       : trimmed;
-    appendMessage({
-      id: `local-${Date.now()}`,
+    const optimisticId = `local-${Date.now()}`;
+    appendCachedMessage({
+      id: optimisticId,
       conversation_id: conversationId,
       kind: 'user_text',
       role: 'user',
       text: finalText,
     });
-    send.mutate(finalText);
+    send.mutate(finalText, {
+      onError: () => removeCachedMessage(conversationId, optimisticId),
+    });
     setText('');
     setMention(null);
     setQuoted(conversationId, null);
@@ -114,7 +114,6 @@ export function Composer({ conversationId }: { conversationId: string }) {
     }
   }
 
-  const seriousMode = conv?.serious_mode;
   const canSend = text.trim().length > 0;
 
   const popover = useMemo(() => {
@@ -204,28 +203,7 @@ export function Composer({ conversationId }: { conversationId: string }) {
         >
           <ChevronDown size={9} className="text-wechat-mute" />
         </button>
-        {!seriousMode && (
-          <button
-            type="button"
-            className="toolbar-btn"
-            title="表情"
-            onClick={() => setShowEmoji((v) => !v)}
-          >
-            <Smile size={18} strokeWidth={1.8} />
-          </button>
-        )}
       </div>
-
-      {/* placeholder element for the quoted icon - kept inline above */}
-      {showEmoji && !seriousMode && (
-        <EmojiPicker
-          onClose={() => setShowEmoji(false)}
-          onPick={(emoji) => {
-            setText((t) => t + emoji);
-            setShowEmoji(false);
-          }}
-        />
-      )}
     </div>
   );
 }

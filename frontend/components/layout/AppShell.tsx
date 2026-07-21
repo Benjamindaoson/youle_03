@@ -16,6 +16,7 @@ import { useUserStore } from '@/stores/user';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const token = useUserStore((s) => s.token);
+  const [authHydrated, setAuthHydrated] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const isPublic = pathname === '/login' || pathname === '/website';
@@ -29,6 +30,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [rightOpen, setRightOpen] = useState(false);
 
   useEffect(() => {
+    const persistence = useUserStore.persist;
+    if (!persistence || persistence.hasHydrated()) {
+      setAuthHydrated(true);
+      return;
+    }
+    return persistence.onFinishHydration(() => setAuthHydrated(true));
+  }, []);
+
+  useEffect(() => {
     if (conversations && conversations.length) setList(conversations);
   }, [conversations, setList]);
 
@@ -40,11 +50,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [list, currentId, setCurrent]);
 
   useEffect(() => {
-    if (!token && !isPublic) router.replace('/login');
-  }, [isPublic, router, token]);
+    if (authHydrated && !token && !isPublic) router.replace('/login');
+  }, [authHydrated, isPublic, router, token]);
 
   if (isPublic) return <>{children}</>;
-  if (!token) return null;
+  if (!authHydrated || !token) return null;
 
   const current = list.find((c) => c.id === currentId) ?? null;
   const showAgentPanel =

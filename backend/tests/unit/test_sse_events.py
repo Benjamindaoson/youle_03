@@ -95,6 +95,7 @@ async def test_sse_replays_events_in_order_with_stable_ids() -> None:
     stream = _stream_user_events(
         request=_DisconnectAfter(10),
         user_id=user_id,
+        conversation_id=replay[0].conversation_id,
         queue=queue,
         replay=replay,
         bus=bus,
@@ -119,6 +120,7 @@ async def test_sse_emits_heartbeat_while_idle() -> None:
     stream = _stream_user_events(
         request=_DisconnectAfter(10),
         user_id=user_id,
+        conversation_id=uuid4(),
         queue=queue,
         replay=[],
         bus=bus,
@@ -135,10 +137,12 @@ async def test_sse_emits_heartbeat_while_idle() -> None:
 async def test_sse_delivers_live_event_and_unsubscribes_on_close() -> None:
     bus = EventBus()
     user_id = str(uuid4())
+    conversation_id = uuid4()
     queue = await bus.subscribe(user_id)
     stream = _stream_user_events(
         request=_DisconnectAfter(10),
         user_id=user_id,
+        conversation_id=conversation_id,
         queue=queue,
         replay=[],
         bus=bus,
@@ -146,7 +150,12 @@ async def test_sse_delivers_live_event_and_unsubscribes_on_close() -> None:
     )
     next_frame = asyncio.create_task(anext(stream))
     await asyncio.sleep(0)
-    event = _event()
+    event = UserEvent(
+        type=EventType.MESSAGE_ADDED,
+        user_id=uuid4(),
+        conversation_id=conversation_id,
+        payload={"content": "hello"},
+    )
 
     await bus.publish_to_user(user_id, event.model_dump(mode="json"))
     frame = (await asyncio.wait_for(next_frame, 0.5)).decode()
@@ -155,3 +164,35 @@ async def test_sse_delivers_live_event_and_unsubscribes_on_close() -> None:
     assert f"id: {event.id}" in frame
     assert "event: message_added" in frame
     assert bus.subscriber_count(user_id) == 0
+
+
+@pytest.mark.asyncio
+async def test_sse_filters_live_events_from_other_conversations() -> None:
+    bus = EventBus()
+    user_id = str(uuid4())
+    conversation_id = uuid4()
+    queue = await bus.subscribe(user_id)
+    stream = _stream_user_events(
+        request=_DisconnectAfter(10),
+        user_id=user_id,
+        conversation_id=conversation_id,
+        queue=queue,
+        replay=[],
+        bus=bus,
+        heartbeat_seconds=30,
+    )
+    other = _event()
+    expected = UserEvent(
+        type=EventType.TASK_COMPLETED,
+        user_id=uuid4(),
+        conversation_id=conversation_id,
+        payload={"status": "completed"},
+    )
+
+    await bus.publish_to_user(user_id, other.model_dump(mode="json"))
+    await bus.publish_to_user(user_id, expected.model_dump(mode="json"))
+    frame = (await asyncio.wait_for(anext(stream), 0.5)).decode()
+    await stream.aclose()
+
+    assert str(expected.id) in frame
+    assert str(other.id) not in frame

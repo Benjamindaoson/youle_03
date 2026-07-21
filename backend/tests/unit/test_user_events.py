@@ -177,3 +177,31 @@ async def test_publisher_uses_same_event_id_for_storage_and_live_delivery(
     assert stored.id == event.id
     assert live["id"] == str(event.id)
     assert session.commits == 1
+
+
+@pytest.mark.asyncio
+async def test_publisher_does_not_deliver_an_event_that_failed_to_persist(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from app.services import event_bus as event_bus_module
+
+    class FailingSession(_FakeSession):
+        async def commit(self) -> None:
+            raise RuntimeError("database unavailable")
+
+    bus = EventBus()
+    user_id = uuid4()
+    queue = await bus.subscribe(str(user_id))
+    monkeypatch.setattr(
+        "app.services.event_publisher.SessionLocal", lambda: FailingSession()
+    )
+    monkeypatch.setattr(event_bus_module, "event_bus", bus)
+
+    with pytest.raises(RuntimeError, match="database unavailable"):
+        await EventPublisher().publish_user_event(
+            user_id=user_id,
+            event_type=EventType.TASK_COMPLETED,
+            conversation_id=uuid4(),
+        )
+
+    assert queue.empty()

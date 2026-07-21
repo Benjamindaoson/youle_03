@@ -44,12 +44,11 @@ setup-infra:  ## docker-compose up 起 5 个基础容器(postgres/redis/minio/qd
 	$(COMPOSE) ps; \
 	exit 1
 
-setup-deps:  ## uv sync backend + agents
-	cd $(BACKEND_DIR) && uv sync --extra dev
-	cd $(AGENTS_DIR)  && uv sync
+setup-deps:  ## 从根 uv.lock 安装 backend + agents + MCP workspace
+	uv sync --locked --all-packages --all-extras
 
-setup-db:  ## alembic upgrade head
-	cd $(BACKEND_DIR) && uv run alembic upgrade head
+setup-db:  ## alembic upgrade head + canonical Skill bootstrap
+	cd $(BACKEND_DIR) && uv run alembic upgrade head && uv run python scripts/bootstrap-skills.py
 
 # ────────────────────────────────────────────────────────────
 # 启停

@@ -12,6 +12,11 @@ import {
 import { useConversationStore } from '@/stores/conversation';
 import { useHitlStore } from '@/stores/hitl';
 import { useWsStore } from '@/stores/ws';
+import {
+  appendCachedMessage,
+  messageQueryKey,
+  queryClient,
+} from './query-client';
 
 
 function event(overrides: Partial<UserEvent> = {}): UserEvent {
@@ -31,7 +36,8 @@ function event(overrides: Partial<UserEvent> = {}): UserEvent {
 
 describe('conversation SSE', () => {
   beforeEach(() => {
-    useConversationStore.setState({ messages: {}, list: [], currentId: null });
+    useConversationStore.setState({ list: [], currentId: null });
+    queryClient.clear();
     useHitlStore.setState({ queue: [] });
     useWsStore.setState({ connected: false, lastEventId: null, error: null });
   });
@@ -54,7 +60,7 @@ describe('conversation SSE', () => {
   });
 
   it('aggregates message deltas into shared chat state', () => {
-    useConversationStore.getState().appendMessage({
+    appendCachedMessage({
       id: 'message-1',
       conversation_id: '33333333-3333-4333-8333-333333333333',
       kind: 'agent_text',
@@ -64,7 +70,9 @@ describe('conversation SSE', () => {
 
     applyUserEvent(event());
 
-    expect(useConversationStore.getState().messages[event().conversation_id!][0].text).toBe('你好');
+    expect(queryClient.getQueryData<{ text?: string }[]>(
+      messageQueryKey(event().conversation_id!),
+    )?.[0].text).toBe('你好');
   });
 
   it('sends Bearer auth and Last-Event-ID on reconnect', () => {
@@ -101,6 +109,23 @@ describe('conversation SSE', () => {
 
     const invalidateArtifacts = vi.fn();
     applyUserEvent(event({ type: 'artifact_added', payload: {} }), invalidateArtifacts);
+    expect(invalidateArtifacts).toHaveBeenCalledOnce();
+  });
+
+  it('renders a completed task artifact through the canonical event reducer', () => {
+    const invalidateArtifacts = vi.fn();
+    applyUserEvent(event({
+      type: 'task_completed',
+      payload: {
+        title: '无密钥任务已完成',
+        summary: 'mock AgentResult 已返回',
+        artifact: { type: 'document', reference: 'oss://mock/result.md' },
+      },
+    }), invalidateArtifacts);
+
+    expect(queryClient.getQueryData<{ card?: { title: string } }[]>(
+      messageQueryKey(event().conversation_id!),
+    )?.[0].card?.title).toBe('无密钥任务已完成');
     expect(invalidateArtifacts).toHaveBeenCalledOnce();
   });
 });

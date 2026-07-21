@@ -92,6 +92,25 @@ async def test_delivery_failure_removes_new_code() -> None:
 
 
 @pytest.mark.asyncio
+async def test_old_delivery_failure_does_not_delete_concurrent_new_code() -> None:
+    redis = _AtomicRedis()
+
+    async def fail_after_resend(_phone: str, _code: str) -> None:
+        await redis.setex("sms:13800138000", 300, "654321")
+        raise SmsError("provider unavailable")
+
+    with pytest.raises(SmsError):
+        await issue_sms_otp(
+            "13800138000",
+            redis=redis,
+            dev_mode=False,
+            deliver=fail_after_resend,
+        )
+
+    assert redis.values["sms:13800138000"] == "654321"
+
+
+@pytest.mark.asyncio
 async def test_wrong_or_expired_code_is_rejected_without_consuming_valid_code() -> None:
     redis = _AtomicRedis()
     await redis.setex("sms:13800138000", 300, "654321")

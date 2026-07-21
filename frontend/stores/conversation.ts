@@ -101,17 +101,12 @@ interface State {
   list: ConversationSummary[];
   currentId: string | null;
   members: Record<string, AgentMember[]>; // conversation_id → members
-  messages: Record<string, Message[]>;     // conversation_id → 历史
   quoted: Record<string, QuotedRef | null>; // conversation_id → 当前引用
   starred: string[];                        // 收藏的 message id
   setList: (list: ConversationSummary[]) => void;
   upsertConversation: (c: ConversationSummary) => void;
   setCurrent: (id: string) => void;
   setMembers: (id: string, members: AgentMember[]) => void;
-  setMessages: (id: string, messages: Message[]) => void;
-  appendMessage: (msg: Message) => void;
-  appendMessageDelta: (conversationId: string, messageId: string, delta: string) => void;
-  withdrawMessage: (conversationId: string, messageId: string) => void;
   patchMode: (id: string, mode: WorkMode) => void;
   patchMemberStatus: (id: string, role: RoleKey, status: AgentStatus) => void;
   togglePin: (id: string) => void;
@@ -125,7 +120,6 @@ export const useConversationStore = create<State>((set) => ({
   list: [],
   currentId: null,
   members: {},
-  messages: {},
   quoted: {},
   starred: [],
   setList: (list) => set({ list }),
@@ -140,30 +134,6 @@ export const useConversationStore = create<State>((set) => ({
   setCurrent: (id) => set({ currentId: id }),
   setMembers: (id, members) =>
     set((s) => ({ members: { ...s.members, [id]: members } })),
-  setMessages: (id, messages) =>
-    set((s) => ({ messages: { ...s.messages, [id]: messages } })),
-  appendMessage: (msg) =>
-    set((s) => {
-      const prev = s.messages[msg.conversation_id] ?? [];
-      if (prev.some((item) => item.id === msg.id)) return s;
-      return {
-        messages: {
-          ...s.messages,
-          [msg.conversation_id]: [...prev, msg],
-        },
-      };
-    }),
-  appendMessageDelta: (conversationId, messageId, delta) =>
-    set((s) => ({
-      messages: {
-        ...s.messages,
-        [conversationId]: (s.messages[conversationId] ?? []).map((message) =>
-          message.id === messageId
-            ? { ...message, text: `${message.text ?? ''}${delta}` }
-            : message,
-        ),
-      },
-    })),
   patchMode: (id, mode) =>
     set((s) => ({
       list: s.list.map((c) => (c.id === id ? { ...c, work_mode: mode } : c)),
@@ -194,13 +164,6 @@ export const useConversationStore = create<State>((set) => ({
   remove: (id) =>
     set((s) => ({
       list: s.list.filter((c) => c.id !== id || c.kind === 'main_session'),
-    })),
-  withdrawMessage: (conversationId, messageId) =>
-    set((s) => ({
-      messages: {
-        ...s.messages,
-        [conversationId]: (s.messages[conversationId] ?? []).filter((m) => m.id !== messageId),
-      },
     })),
   setQuoted: (conversationId, ref) =>
     set((s) => ({ quoted: { ...s.quoted, [conversationId]: ref } })),

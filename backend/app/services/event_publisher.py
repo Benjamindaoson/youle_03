@@ -84,7 +84,7 @@ class EventPublisher:
             async with SessionLocal() as session:
                 await UserEventRepository(session).append(event)
                 await session.commit()
-        except Exception as exc:  # noqa: BLE001 - live delivery must continue
+        except Exception as exc:  # noqa: BLE001 - log context, then fail closed
             log.error(
                 "user_event.persistence_failed",
                 event_id=str(event.id),
@@ -92,6 +92,9 @@ class EventPublisher:
                 user_id=str(event.user_id),
                 err=str(exc),
             )
+            # Durable replay is part of the event contract. Publishing a live
+            # event that was not stored would make reconnecting clients lose it.
+            raise
 
 
 event_publisher = EventPublisher()

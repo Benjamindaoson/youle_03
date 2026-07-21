@@ -67,6 +67,7 @@ export async function apiRequest<T>(path: string, init: RequestInit = {}): Promi
 
 export type TokenResponse = components['schemas']['TokenResponse'];
 type BackendConversation = components['schemas']['ConversationOut'];
+type ConversationCreate = components['schemas']['ConversationCreate'];
 
 export async function sendSmsCode(phone: string): Promise<void> {
   await apiRequest<void>('/api/auth/sms/send', {
@@ -94,6 +95,16 @@ export function normalizeConversation(value: BackendConversation): ConversationS
 export async function fetchConversations(): Promise<ConversationSummary[]> {
   const rows = await apiRequest<BackendConversation[]>('/api/conversations');
   return rows.map(normalizeConversation);
+}
+
+export async function createConversation(
+  input: ConversationCreate,
+): Promise<ConversationSummary> {
+  const value = await apiRequest<BackendConversation>('/api/conversations', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+  return normalizeConversation(value);
 }
 
 type BackendMessage = components['schemas']['Message'];
