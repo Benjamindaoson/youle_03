@@ -1,0 +1,48 @@
+name: Security
+
+on:
+  push:
+    branches: [main, dev, "codex/**", "feat/**"]
+  pull_request:
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+jobs:
+  security-ci:
+    name: Secrets and dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Scan Git history with gitleaks
+        uses: gitleaks/gitleaks-action@v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.29"
+          enable-cache: true
+      - name: Reject tracked env files and high-risk secrets
+        run: python backend/scripts/check-secrets.py
+      - name: Audit locked Python dependencies
+        run: |
+          uv export --locked --all-packages --all-extras --no-hashes --no-emit-workspace --output-file /tmp/python-workspace.txt
+          uvx --python 3.12 pip-audit -r /tmp/python-workspace.txt --no-deps
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.9
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - name: Audit locked frontend dependencies
+        working-directory: frontend
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm audit --audit-level=high

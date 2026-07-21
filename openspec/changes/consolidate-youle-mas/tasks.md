@@ -7,11 +7,11 @@
 
 ## 2. Blocking CI and contracts
 
-- [ ] 2.1 Add a failing CI structure check for required root frontend and blocking backend/agents/frontend/contract/security jobs.
-- [ ] 2.2 Split root workflows into blocking jobs that run Ruff, compileall, backend pytest, agents pytest, Alembic, frozen frontend install, lint, typecheck, test, and build.
-- [ ] 2.3 Add Agent import, Skill YAML, AgentTask/AgentResult parity, direct LLM SDK, and cross-Agent call checks.
+- [x] 2.1 Add a failing CI structure check for required root frontend and blocking backend/agents/frontend/contract/security jobs.
+- [x] 2.2 Split root workflows into blocking jobs that run Ruff, compileall, backend pytest, agents pytest, Alembic, frozen frontend install, lint, typecheck, test, and build.
+- [x] 2.3 Add Agent import, Skill YAML, AgentTask/AgentResult parity, direct LLM SDK, and cross-Agent call checks.
 - [ ] 2.4 Add OpenAPI/frontend type synchronization and Event/Skill contract checks.
-- [ ] 2.5 Add gitleaks, `.env`, high-risk secret, Python dependency, and Node dependency audit checks.
+- [x] 2.5 Add gitleaks, `.env`, high-risk secret, Python dependency, and Node dependency audit checks.
 
 ## 3. Unified event delivery
 

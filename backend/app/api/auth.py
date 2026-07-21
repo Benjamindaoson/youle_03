@@ -9,9 +9,9 @@ import secrets
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
+import jwt
 import structlog
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
-from jose import JWTError, jwt
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -40,7 +40,7 @@ def decode_token(token: str) -> UUID:
     try:
         payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
         return UUID(payload["sub"])
-    except (JWTError, KeyError, ValueError) as e:
+    except (jwt.InvalidTokenError, KeyError, ValueError) as e:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "token 无效") from e
 
 

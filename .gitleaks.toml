@@ -1,0 +1,6 @@
+[allowlist]
+description = "Synthetic credentials used only by secret-redaction regression tests"
+regexes = [
+  '''sk-ant-api03-AAAAAAAAAAAA1234567890abcdef(?:XYZ)?''',
+  '''sk-proj-abcdef(?:ABCDEF)?1234567890(?:XYZ)?''',
+]
