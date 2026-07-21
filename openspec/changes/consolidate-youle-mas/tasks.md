@@ -42,20 +42,20 @@
 - [x] 5.6 Implement the SSE client/store integration and HITL/task/artifact updates.
 - [x] 5.7 Add failing Skill marketplace tests and connect list/detail/install/enable/disable/search to real APIs.
 - [x] 5.8 Migrate the non-duplicated `youle01` product landing page and useful group/private chat presentation details without importing its backend, conductor, or duplicate stores.
-- [ ] 5.9 Run frontend lint, typecheck, unit tests, build, and existing Playwright scenarios; repair failures.
+- [x] 5.9 Run frontend lint, typecheck, unit tests, build, and existing Playwright scenarios; repair failures.
 
 ## 6. End-to-end and data verification
 
-- [ ] 6.1 Add a no-key mock E2E covering login, group creation, Agent member, task, Skill match, AgentTask, Redis dispatch, mock AgentResult, SSE, and frontend completion.
-- [ ] 6.2 Verify every Agent service imports, accepts valid AgentTask, rejects invalid schema, uses Router/MCP, and returns structured timeout/retry errors.
+- [x] 6.1 Add a no-key mock E2E covering login, group creation, Agent member, task, Skill match, AgentTask, Redis dispatch, mock AgentResult, SSE, and frontend completion.
+- [x] 6.2 Verify every Agent service imports, accepts valid AgentTask, rejects invalid schema, uses Router/MCP, and returns structured timeout/retry errors.
 - [ ] 6.3 Upgrade a fresh PostgreSQL database through every Alembic revision and verify the final schema contains one model set.
 - [ ] 6.4 Start backend, workers, MCP, Redis, PostgreSQL, and frontend; check health/readiness and the primary user flow when local services are available.
 
 ## 7. Documentation and delivery
 
-- [ ] 7.1 Add `THIRD_PARTY_NOTICES.md` preserving Hermes/Nous Research attribution and recording the missing root licenses in all four source repositories.
-- [ ] 7.2 Rewrite README and add CONTRIBUTING using only existing, verified functionality, commands, environment variables, architecture, events, Agents, Skills, MCP, and known limits.
-- [ ] 7.3 Complete `MIGRATION_REPORT.md` and `docs/migration/FINAL_VALIDATION_REPORT.md` with exact migrated/skipped modules, schema/API/UI changes, commands, results, failures, risks, and unverified items.
-- [ ] 7.4 Run the full Ruff, pytest, compileall, frontend, Alembic, Docker Compose, health, E2E, secret, dependency, and ship-readiness checks; repair any in-scope failure.
-- [ ] 7.5 Review the final diff for duplicate architectures, imports, secrets, env documentation, unnecessary dependencies, attribution, and intent alignment.
+- [x] 7.1 Add `THIRD_PARTY_NOTICES.md` preserving Hermes/Nous Research attribution and recording the missing root licenses in all four source repositories.
+- [x] 7.2 Rewrite README and add CONTRIBUTING using only existing, verified functionality, commands, environment variables, architecture, events, Agents, Skills, MCP, and known limits.
+- [x] 7.3 Complete `MIGRATION_REPORT.md` and `docs/migration/FINAL_VALIDATION_REPORT.md` with exact migrated/skipped modules, schema/API/UI changes, commands, results, failures, risks, and unverified items.
+- [x] 7.4 Run the full Ruff, pytest, compileall, frontend, Alembic, Docker Compose, health, E2E, secret, dependency, and ship-readiness checks; repair any in-scope failure.
+- [x] 7.5 Review the final diff for duplicate architectures, imports, secrets, env documentation, unnecessary dependencies, attribution, and intent alignment.
 - [ ] 7.6 Commit each verified phase, push `codex/youle-mas-consolidation`, and open a Draft PR targeting the default branch without merging it.
