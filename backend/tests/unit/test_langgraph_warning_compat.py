@@ -2,9 +2,8 @@ from __future__ import annotations
 
 import warnings
 
-from langchain_core._api.deprecation import LangChainPendingDeprecationWarning
-
 from agents.orchestrator_agent.langgraph_compat import install_langgraph_warning_filters
+from langchain_core._api.deprecation import LangChainPendingDeprecationWarning
 
 _ALLOWED_OBJECTS_WARNING = (
     "The default value of `allowed_objects` will change in a future version. "

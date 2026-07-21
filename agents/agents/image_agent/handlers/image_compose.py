@@ -83,7 +83,6 @@ def _resolve_xy(position_key: str, layer: dict, w: int, h: int, tw: int, th: int
 
 
 def _apply_text_layer(draw, img_size: tuple[int, int], layer: dict) -> None:
-    from PIL import ImageDraw
     w, h = img_size
     text = str(layer.get("content", ""))
     if not text:
@@ -294,7 +293,7 @@ async def image_compose_handler(task: AgentTask) -> AgentResult:
     except Exception as e:
         log.warning("image_compose.failed_passthrough", err=str(e))
 
-    layer_types = [l.get("type", "text") for l in layers]
+    layer_types = [layer.get("type", "text") for layer in layers]
 
     await emit(
         signal_type="trace",

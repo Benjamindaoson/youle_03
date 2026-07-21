@@ -186,10 +186,16 @@ TASK_CASES = [
             {"_prompt": f"run {task_type}"},
             {},
             "completed",
-            "text",
+            expected_type,
             id=f"agent1-{task_type}",
         )
-        for task_type in ["structured_writing", "summarization", "analysis", "translation", "polish"]
+        for task_type, expected_type in [
+            ("structured_writing", "json"),
+            ("summarization", "text"),
+            ("analysis", "json"),
+            ("translation", "text"),
+            ("polish", "text"),
+        ]
     ],
     pytest.param(
         "agents.document_agent.handlers.image_concat_long.image_concat_long_handler",
@@ -356,6 +362,11 @@ async def test_registered_agent_task_handler_completes(
     monkeypatch,
 ):
     module, handler = _load_handler(handler_path)
+    if hasattr(module, "get_user_prefs"):
+        async def fake_get_user_prefs(*args, **kwargs):
+            return {}
+
+        monkeypatch.setattr(module, "get_user_prefs", fake_get_user_prefs)
     if task_type == "bgm_select":
         _patch_bgm_select(module, monkeypatch)
     if task_type == "video_compose":

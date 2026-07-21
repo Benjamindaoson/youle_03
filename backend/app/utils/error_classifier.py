@@ -30,8 +30,9 @@ from __future__ import annotations
 import enum
 import json
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -66,11 +67,11 @@ class ClassifiedError:
     """Structured classification result with recovery hints."""
 
     reason: FailoverReason
-    status_code: Optional[int] = None
-    provider: Optional[str] = None
-    model: Optional[str] = None
+    status_code: int | None = None
+    provider: str | None = None
+    model: str | None = None
     message: str = ""
-    error_context: Dict[str, Any] = field(default_factory=dict)
+    error_context: dict[str, Any] = field(default_factory=dict)
 
     retryable: bool = True
     should_compress: bool = False
@@ -250,7 +251,7 @@ def classify_api_error(
     model_lower = (model or "").strip().lower()
 
     def _result(reason: FailoverReason, **overrides: Any) -> ClassifiedError:
-        defaults: Dict[str, Any] = {
+        defaults: dict[str, Any] = {
             "reason": reason,
             "status_code": status_code,
             "provider": provider,
@@ -363,7 +364,7 @@ def _classify_by_status(
     context_length: int,
     num_messages: int,
     result_fn: Callable[..., ClassifiedError],
-) -> Optional[ClassifiedError]:
+) -> ClassifiedError | None:
     if status_code == 401:
         return result_fn(
             FailoverReason.auth,
@@ -545,7 +546,7 @@ def _classify_by_error_code(
     error_code: str,
     error_msg: str,
     result_fn: Callable[..., ClassifiedError],
-) -> Optional[ClassifiedError]:
+) -> ClassifiedError | None:
     code_lower = error_code.lower()
     if code_lower in ("resource_exhausted", "throttled", "rate_limit_exceeded"):
         return result_fn(
@@ -582,7 +583,7 @@ def _classify_by_message(
     approx_tokens: int,
     context_length: int,
     result_fn: Callable[..., ClassifiedError],
-) -> Optional[ClassifiedError]:
+) -> ClassifiedError | None:
     if any(p in error_msg for p in _PAYLOAD_TOO_LARGE_PATTERNS):
         return result_fn(
             FailoverReason.payload_too_large,
@@ -649,7 +650,7 @@ def _classify_by_message(
 # ── Helpers ──────────────────────────────────────────────────────────
 
 
-def _extract_status_code(error: Exception) -> Optional[int]:
+def _extract_status_code(error: Exception) -> int | None:
     current: Any = error
     for _ in range(5):
         code = getattr(current, "status_code", None)

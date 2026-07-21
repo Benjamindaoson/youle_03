@@ -319,7 +319,7 @@ def build_retry_prompt(
 # 内部工具
 # ─────────────────────────────────────────────────────────────────
 _CRITIC_FEEDBACK_BLOCK = re.compile(
-    r"\n\n## \[Critic 反馈 — 重新生成请改进\].*?(?=\n\n|$)",
+    r"\n\n## \[Critic 反馈 — 重新生成请改进\].*$",
     re.DOTALL,
 )
 _JSON_FENCE_RE = re.compile(r"```(?:json)?\s*(.+?)\s*```", re.DOTALL)

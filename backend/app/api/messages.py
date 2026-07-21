@@ -21,10 +21,10 @@ from app.db import SessionLocal, get_session
 from app.models.conversation import Conversation
 from app.models.user import User
 from app.schemas.send_message import SendMessageRequest, SendMessageResponse
+from app.services.brief_builder import brief_debouncer
 from app.services.conversation import append_message
 from app.services.quota_enforce import QuotaExceeded, enforce_plan_turn
 from app.services.send_message_handlers import _parse_mentions, dispatch_send_message
-from app.services.brief_builder import brief_debouncer
 
 router = APIRouter()
 log = structlog.get_logger(__name__)

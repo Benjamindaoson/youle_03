@@ -57,7 +57,7 @@ async def ws_endpoint(websocket: WebSocket, token: str | None = None) -> None:
                     websocket.receive_text(), timeout=_AUTH_MESSAGE_TIMEOUT_S
                 )
                 msg = json.loads(raw)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 await websocket.send_json({"type": "error", "code": "auth_timeout"})
                 await websocket.close(code=4401)
                 return
@@ -89,7 +89,7 @@ async def ws_endpoint(websocket: WebSocket, token: str | None = None) -> None:
 
     # M-7: 每 N 次心跳重校验 token 是否过期
     _heartbeat_count = 0
-    _REAUTH_EVERY_N = 10  # 每 10 次心跳重校验一次(约 5 分钟,取决于 WS_HEARTBEAT_SECONDS)
+    reauth_every_n = 10  # 每 10 次心跳重校验一次(约 5 分钟,取决于 WS_HEARTBEAT_SECONDS)
 
     try:
         while True:
@@ -108,7 +108,7 @@ async def ws_endpoint(websocket: WebSocket, token: str | None = None) -> None:
             # 周期性 token 过期检查(仅对有效 JWT 用户,anonymous 跳过)
             if _session_token and user_id != "anonymous":
                 _heartbeat_count += 1
-                if _heartbeat_count % _REAUTH_EVERY_N == 0:
+                if _heartbeat_count % reauth_every_n == 0:
                     try:
                         await _validate_token(_session_token)
                     except WebSocketAuthError:
@@ -125,6 +125,7 @@ async def ws_endpoint(websocket: WebSocket, token: str | None = None) -> None:
 async def _validate_token(token: str) -> str:
     """校验 JWT,返回 user_id 字符串;无效则抛 WebSocketAuthError。"""
     from fastapi import HTTPException
+
     from app.api.auth import decode_token
 
     try:

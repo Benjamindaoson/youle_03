@@ -11,7 +11,6 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from typing import Literal
 from uuid import UUID
 
@@ -30,7 +29,7 @@ log = structlog.get_logger(__name__)
 
 
 # ── 异常 ──
-class QuotaExceeded(Exception):
+class QuotaExceeded(Exception):  # noqa: N818 - public API name retained for compatibility
     """配额超限。`code` 决定前端弹什么提示。"""
 
     def __init__(self, code: str, detail: str) -> None:

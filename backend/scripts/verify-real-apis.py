@@ -15,12 +15,10 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import io
-import json
 import os
 import sys
 import time
-from typing import Awaitable, Callable
+from collections.abc import Awaitable
 
 GREEN = "\033[0;32m"
 RED = "\033[0;31m"
@@ -65,7 +63,7 @@ async def check_litellm() -> None:
             if resp.status_code >= 400:
                 fail(f"litellm /health http={resp.status_code}")
                 return
-            ok(f"litellm /health 200")
+            ok("litellm /health 200")
 
             # 实际跑一发 chat completion
             t0 = time.monotonic()

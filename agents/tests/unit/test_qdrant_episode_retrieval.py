@@ -6,12 +6,10 @@ LITELLM_MOCK=true → embed_text 返回 None → search_episodes 直接返回 []
 
 from __future__ import annotations
 
-import pytest
 
 from agents._common import qdrant_client as qc
 from agents.orchestrator_agent.planner.episode_retrieval import (
     Episode,
-    retrieve_similar_episodes,
 )
 
 

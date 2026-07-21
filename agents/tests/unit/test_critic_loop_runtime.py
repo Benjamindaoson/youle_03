@@ -149,7 +149,10 @@ async def test_critic_pass_records_critique(monkeypatch) -> None:
             model_used="mock-pass",
         )
 
-    monkeypatch.setattr(cmp, "_critic_evaluate", always_pass)
+    monkeypatch.setattr(
+        "agents.orchestrator_agent.langgraph_runner.compiler_step_node._critic_evaluate",
+        always_pass,
+    )
 
     skill = _mk_skill(
         [
@@ -212,7 +215,10 @@ async def test_critic_retries_with_feedback(monkeypatch) -> None:
             model_used="mock-pass",
         )
 
-    monkeypatch.setattr(cmp, "_critic_evaluate", fail_then_pass)
+    monkeypatch.setattr(
+        "agents.orchestrator_agent.langgraph_runner.compiler_step_node._critic_evaluate",
+        fail_then_pass,
+    )
 
     skill = _mk_skill(
         [
@@ -275,7 +281,10 @@ async def test_critic_max_retries_pass_through(monkeypatch) -> None:
             model_used="mock-always-fail",
         )
 
-    monkeypatch.setattr(cmp, "_critic_evaluate", always_fail)
+    monkeypatch.setattr(
+        "agents.orchestrator_agent.langgraph_runner.compiler_step_node._critic_evaluate",
+        always_fail,
+    )
 
     skill = _mk_skill(
         [
@@ -331,7 +340,10 @@ async def test_step_level_critic_enable_overrides_global_off(monkeypatch) -> Non
         seen["called"] = True
         return cn.CritiqueResult(score=0.95, threshold_used=0.7, model_used="m")
 
-    monkeypatch.setattr(cmp, "_critic_evaluate", fake_eval)
+    monkeypatch.setattr(
+        "agents.orchestrator_agent.langgraph_runner.compiler_step_node._critic_evaluate",
+        fake_eval,
+    )
 
     skill = _mk_skill(
         [

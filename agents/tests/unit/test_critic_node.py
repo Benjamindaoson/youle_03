@@ -5,7 +5,6 @@ LITELLM_MOCK=true 下走 _mock_critique 路径,无网络依赖。
 
 from __future__ import annotations
 
-import pytest
 
 from agents.orchestrator_agent.langgraph_runner.critic_node import (
     CRITIC_DEFAULT_ON_TASK_TYPES,
@@ -14,7 +13,6 @@ from agents.orchestrator_agent.langgraph_runner.critic_node import (
     evaluate,
     get_max_retries,
     get_threshold,
-    is_critic_enabled_for,
 )
 
 

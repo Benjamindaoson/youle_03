@@ -22,8 +22,8 @@ from app.utils.context_compressor import (
 )
 from app.utils.error_classifier import FailoverReason, classify_api_error
 from app.utils.fuzzy_match import find_closest_lines, fuzzy_find_and_replace
-from app.utils.path_security import has_traversal_component, validate_within_dir
 from app.utils.patch_parser import OperationType, parse_v4a_patch
+from app.utils.path_security import has_traversal_component, validate_within_dir
 from app.utils.prompt_caching import apply_anthropic_cache_control
 from app.utils.rate_limit_tracker import parse_rate_limit_headers
 from app.utils.redact import mask_secret, redact_sensitive_text
@@ -34,8 +34,8 @@ from app.utils.schema_sanitizer import (
 )
 from app.utils.tool_output_limits import get_tool_output_limits
 from app.utils.tool_result_storage import (
-    PERSISTED_OUTPUT_TAG,
     DEFAULT_BUDGET,
+    PERSISTED_OUTPUT_TAG,
     maybe_persist_tool_result,
 )
 from app.utils.url_safety import is_always_blocked_url, is_safe_url
@@ -45,7 +45,6 @@ from app.utils.usage_pricing import (
     lookup_pricing,
     normalize_usage,
 )
-
 
 # ── ansi_strip ──────────────────────────────────────────────────────────
 
@@ -204,7 +203,7 @@ def test_parse_v4a_simple_update() -> None:
     assert ops[0].operation == OperationType.UPDATE
     assert ops[0].file_path == "foo.py"
     assert ops[0].hunks
-    prefixes = [l.prefix for l in ops[0].hunks[0].lines]
+    prefixes = [line.prefix for line in ops[0].hunks[0].lines]
     assert "+" in prefixes and "-" in prefixes and " " in prefixes
 
 

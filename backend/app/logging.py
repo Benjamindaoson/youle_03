@@ -19,7 +19,6 @@ import structlog
 from app.config import settings
 from app.utils.redact import RedactingFormatter, redact_sensitive_text
 
-
 _SENSITIVE_KEY_RE = re.compile(r"(password|secret|token|authorization|credential|jwt|sms_code)", re.I)
 _SENSITIVE_EXACT_KEYS = frozenset(
     {"phone", "code", "access_token", "refresh_token"}

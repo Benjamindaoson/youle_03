@@ -67,9 +67,7 @@ def _is_blocked_ip(ip: ipaddress.IPv4Address | ipaddress.IPv6Address) -> bool:
         return True
     if ip.is_multicast or ip.is_unspecified:
         return True
-    if ip in _CGNAT_NETWORK:
-        return True
-    return False
+    return ip in _CGNAT_NETWORK
 
 
 def is_always_blocked_url(url: str) -> bool:

@@ -11,9 +11,9 @@ from __future__ import annotations
 from uuid import uuid4
 
 import pytest
-
 from agents.orchestrator_agent.input_validator import validate_inputs
 from agents.orchestrator_agent.task_compiler import compile_task
+
 from app.services.skill_loader import load_skill_by_id
 
 

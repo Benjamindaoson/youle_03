@@ -31,8 +31,8 @@ from app.config import settings
 from app.db import SessionLocal
 from app.logging import configure_logging
 from app.mcp_client import close_mcp_client
-from app.redis_client import close_redis, get_redis
 from app.rate_limit import limiter
+from app.redis_client import close_redis, get_redis
 from app.router import close as close_llm
 
 configure_logging()

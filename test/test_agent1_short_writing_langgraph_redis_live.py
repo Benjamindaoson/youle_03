@@ -35,6 +35,11 @@ os.environ["LITELLM_MOCK"] = "false"
 os.environ["DEBUG"] = "true"
 os.environ.setdefault("AGENT_HEARTBEAT_INTERVAL", "60")
 
+pytestmark = pytest.mark.skipif(
+    os.getenv("YOULE_RUN_LIVE_TESTS") != "1",
+    reason="requires explicit YOULE_RUN_LIVE_TESTS=1, Redis, and a live LLM endpoint",
+)
+
 
 @pytest.mark.asyncio
 async def test_agent1_short_writing_via_langgraph_redis_live(monkeypatch):

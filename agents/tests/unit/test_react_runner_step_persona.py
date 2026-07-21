@@ -22,7 +22,6 @@ from agents._common.react_runner import (
     _system_instruction,
 )
 from agents._common.step_persona import (
-    get_step_persona,
     resolve_budget_tokens,
     resolve_step_persona_for_task,
 )

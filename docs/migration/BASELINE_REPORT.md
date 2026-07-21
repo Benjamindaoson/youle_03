@@ -58,7 +58,7 @@ uv pip install --python .\.venv\Scripts\python.exe -e '.\backend[dev]' -e '.\age
 
 ## Agent 测试收集失败
 
-`agents/tests/unit/test_browser_use_mcp.py` 从 `agents.mcp_servers` 导入，但 MCP 子项目实际以顶层可编辑包安装（例如 `browser_use`、`code_executor`）。这是测试导入路径与 `agents/mcp_servers/pyproject.toml` 包布局不一致，后续基线修复将统一为实际可安装路径并增加 CI import smoke check。
+`agents/tests/unit/test_browser_use_mcp.py` 从 `agents.mcp_servers` 导入，但生产代码、Docker 启动命令和集成文档使用的是命名空间包 `mcp_servers.*`。这是测试导入路径与运行时包布局不一致，后续基线修复将统一为实际运行路径并增加 CI import smoke check。
 
 ## 风险与后续门禁
 
@@ -66,3 +66,17 @@ uv pip install --python .\.venv\Scripts\python.exe -e '.\backend[dev]' -e '.\age
 - 随后的基线修复单独提交，并要求 Ruff、后端测试、Agent 测试和 compileall 通过。
 - 只有基线绿灯后才接入 EventBus/SSE、OTP、Skill 生命周期和正式前端。
 - 最终必须在可用 Docker 环境上补跑全量 Alembic、PostgreSQL/Redis、后端、Worker、MCP、前端和无 Key mock E2E。若当前机器始终没有 Docker 守护进程，最终报告会明确列为未验证，不会伪报成功。
+
+## 基线修复结果
+
+基线报告提交后，既有失败用独立修复提交处理，未混入四库迁移功能：
+
+| 检查 | 修复后结果 |
+| --- | --- |
+| 全仓 Ruff | 通过：`All checks passed!` |
+| 后端 pytest | 252 通过、2 跳过；共 254 项 |
+| Agent pytest | 188 通过、2 跳过；共 190 项 |
+| 根目录 Agent handler/Live 套件 | 31 通过、75 按显式 live 条件跳过；共 106 项 |
+| Python compileall | 通过 |
+
+根目录原有 `*live*.py` 和数据库工作流测试以前会在没有外部依赖时直接等待真实 LLM、Redis 或 PostgreSQL。它们现在保留原测试体，仅增加 `YOULE_RUN_LIVE_TESTS=1` 的显式 opt-in 门禁；默认执行的 31 个无外部依赖 handler 契约测试仍全部运行。后续新增的无 Key mock E2E 不使用该 live 门禁。

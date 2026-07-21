@@ -27,7 +27,6 @@ from typing import Any
 
 import httpx
 
-
 BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
 JWT = os.getenv("JWT_TOKEN", "")
 TIMEOUT_S = int(os.getenv("SMOKE_TIMEOUT", "600"))

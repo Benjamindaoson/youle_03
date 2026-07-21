@@ -22,7 +22,7 @@ Usage::
 from __future__ import annotations
 
 import copy
-from typing import Any, Dict, List
+from typing import Any
 
 
 def _apply_cache_marker(
@@ -56,10 +56,10 @@ def _apply_cache_marker(
 
 
 def apply_anthropic_cache_control(
-    api_messages: List[Dict[str, Any]],
+    api_messages: list[dict[str, Any]],
     cache_ttl: str = "5m",
     native_anthropic: bool = False,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Apply ``system_and_3`` caching to *api_messages* for Anthropic models.
 
     Args:
@@ -76,7 +76,7 @@ def apply_anthropic_cache_control(
     if not messages:
         return messages
 
-    marker: Dict[str, Any] = {"type": "ephemeral"}
+    marker: dict[str, Any] = {"type": "ephemeral"}
     if cache_ttl == "1h":
         marker["ttl"] = "1h"
 

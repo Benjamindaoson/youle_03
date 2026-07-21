@@ -8,9 +8,8 @@
 
 from __future__ import annotations
 
-import pytest
 
-from agents.mcp_servers.browser_use.server import (
+from mcp_servers.browser_use.server import (
     click,
     fill,
     navigate,
@@ -50,7 +49,7 @@ async def test_wait_for_requires_selector() -> None:
 # ─── playwright 未装时的 graceful 行为 ───
 async def test_navigate_graceful_without_playwright(monkeypatch) -> None:
     """模拟 playwright 不在 → navigate 返回 error 而不是崩溃。"""
-    import agents.mcp_servers.browser_use.server as srv
+    import mcp_servers.browser_use.server as srv
 
     monkeypatch.setattr(srv, "_try_import_playwright", lambda: None)
     # 重置全局 session

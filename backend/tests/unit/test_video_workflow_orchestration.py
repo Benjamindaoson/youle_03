@@ -8,10 +8,8 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 from uuid import uuid4
-
-import pytest
 
 # 让 backend tests 能 import 仓库根的 agents/*
 ROOT = Path(__file__).resolve().parents[3]

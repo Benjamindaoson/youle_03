@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+import re
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -44,6 +45,32 @@ class CompiledDAG(BaseModel):
 
 class DAGCompileError(ValueError):
     """编译期错误(环 / 缺失 dep / 重复 step_id 等)。"""
+
+
+_JINJA_EXPRESSION_RE = re.compile(r"\{\{.*?\}\}")
+
+
+def _render_preview_prompt(
+    template: str, *, fields: dict[str, Any], step_ids: set[str]
+) -> str:
+    """渲染用户字段，同时保留只能在运行期解析的上游步骤表达式。"""
+    deferred: dict[str, str] = {}
+
+    def _mask(match: re.Match[str]) -> str:
+        expression = match.group(0)
+        body = expression[2:-2].strip()
+        root = re.split(r"[.[]", body, maxsplit=1)[0].strip()
+        if root not in step_ids:
+            return expression
+        token = f"__YOULE_DEFERRED_STEP_{len(deferred)}__"
+        deferred[token] = expression
+        return token
+
+    masked = _JINJA_EXPRESSION_RE.sub(_mask, template)
+    rendered = Template(masked).render(**fields)
+    for token, expression in deferred.items():
+        rendered = rendered.replace(token, expression)
+    return rendered
 
 
 def _toposort_levels(
@@ -146,11 +173,18 @@ def compile_task(
 
     workflow = skill_yaml.get("workflow") or []
     by_id = {s["step_id"]: s for s in workflow}
+    step_ids = set(by_id)
     for cs in dag.steps:
         raw = by_id[cs.step_id]
         prompt_tpl = raw.get("prompt_template", "")
         rendered_prompt = (
-            Template(prompt_tpl).render(**collected_fields) if prompt_tpl else ""
+            _render_preview_prompt(
+                prompt_tpl,
+                fields=collected_fields,
+                step_ids=step_ids,
+            )
+            if prompt_tpl
+            else ""
         )
         if rendered_prompt:
             cs.inputs = {**cs.inputs, "_prompt": rendered_prompt}

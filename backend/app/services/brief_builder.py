@@ -15,10 +15,10 @@ from typing import Any
 from uuid import UUID
 
 import structlog
+from agents.orchestrator_agent.mode_manager import update_brief
 
 from app.db import SessionLocal as async_session_factory  # noqa: N813
 from app.models.conversation import Conversation
-from agents.orchestrator_agent.mode_manager import update_brief
 from app.schemas.ws import WSEventType
 from app.ws.manager import ws_manager
 

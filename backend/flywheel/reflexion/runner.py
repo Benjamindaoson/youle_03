@@ -19,7 +19,6 @@ from typing import Any
 
 import redis.asyncio as aioredis
 import structlog
-
 from agents.orchestrator_agent.langgraph_runner.reflexion_graph import process_reflexion_event
 
 log = structlog.get_logger(__name__)

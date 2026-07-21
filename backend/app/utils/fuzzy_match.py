@@ -23,8 +23,8 @@ Multi-occurrence is handled via the ``replace_all`` flag.
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from difflib import SequenceMatcher
-from typing import Callable, List, Optional, Tuple
 
 UNICODE_MAP = {
     "“": '"', "”": '"',  # smart double quotes
@@ -45,7 +45,7 @@ def fuzzy_find_and_replace(
     old_string: str,
     new_string: str,
     replace_all: bool = False,
-) -> Tuple[str, int, Optional[str], Optional[str]]:
+) -> tuple[str, int, str | None, str | None]:
     """Find and replace text using a chain of increasingly fuzzy strategies.
 
     Returns:
@@ -58,7 +58,7 @@ def fuzzy_find_and_replace(
     if old_string == new_string:
         return content, 0, None, "old_string and new_string are identical"
 
-    strategies: List[Tuple[str, Callable]] = [
+    strategies: list[tuple[str, Callable]] = [
         ("exact", _strategy_exact),
         ("line_trimmed", _strategy_line_trimmed),
         ("whitespace_normalized", _strategy_whitespace_normalized),
@@ -95,10 +95,10 @@ def fuzzy_find_and_replace(
 
 def _detect_escape_drift(
     content: str,
-    matches: List[Tuple[int, int]],
+    matches: list[tuple[int, int]],
     old_string: str,
     new_string: str,
-) -> Optional[str]:
+) -> str | None:
     """Detect tool-call escape-drift artefacts in ``new_string``.
 
     Looks for ``\\'`` / ``\\"`` sequences present in both old/new but absent
@@ -132,7 +132,7 @@ def _detect_escape_drift(
 
 def _apply_replacements(
     content: str,
-    matches: List[Tuple[int, int]],
+    matches: list[tuple[int, int]],
     new_string: str,
 ) -> str:
     sorted_matches = sorted(matches, key=lambda x: x[0], reverse=True)
@@ -147,7 +147,7 @@ def _apply_replacements(
 # =============================================================================
 
 
-def _strategy_exact(content: str, pattern: str) -> List[Tuple[int, int]]:
+def _strategy_exact(content: str, pattern: str) -> list[tuple[int, int]]:
     matches = []
     start = 0
     while True:
@@ -159,7 +159,7 @@ def _strategy_exact(content: str, pattern: str) -> List[Tuple[int, int]]:
     return matches
 
 
-def _strategy_line_trimmed(content: str, pattern: str) -> List[Tuple[int, int]]:
+def _strategy_line_trimmed(content: str, pattern: str) -> list[tuple[int, int]]:
     pattern_lines = [line.strip() for line in pattern.split('\n')]
     pattern_normalized = '\n'.join(pattern_lines)
     content_lines = content.split('\n')
@@ -170,7 +170,7 @@ def _strategy_line_trimmed(content: str, pattern: str) -> List[Tuple[int, int]]:
     )
 
 
-def _strategy_whitespace_normalized(content: str, pattern: str) -> List[Tuple[int, int]]:
+def _strategy_whitespace_normalized(content: str, pattern: str) -> list[tuple[int, int]]:
     def normalize(s: str) -> str:
         return re.sub(r'[ \t]+', ' ', s)
     pattern_normalized = normalize(pattern)
@@ -181,7 +181,7 @@ def _strategy_whitespace_normalized(content: str, pattern: str) -> List[Tuple[in
     return _map_normalized_positions(content, content_normalized, matches_in_normalized)
 
 
-def _strategy_indentation_flexible(content: str, pattern: str) -> List[Tuple[int, int]]:
+def _strategy_indentation_flexible(content: str, pattern: str) -> list[tuple[int, int]]:
     content_lines = content.split('\n')
     content_stripped_lines = [line.lstrip() for line in content_lines]
     pattern_lines = [line.lstrip() for line in pattern.split('\n')]
@@ -191,7 +191,7 @@ def _strategy_indentation_flexible(content: str, pattern: str) -> List[Tuple[int
     )
 
 
-def _strategy_escape_normalized(content: str, pattern: str) -> List[Tuple[int, int]]:
+def _strategy_escape_normalized(content: str, pattern: str) -> list[tuple[int, int]]:
     def unescape(s: str) -> str:
         return s.replace('\\n', '\n').replace('\\t', '\t').replace('\\r', '\r')
     pattern_unescaped = unescape(pattern)
@@ -200,7 +200,7 @@ def _strategy_escape_normalized(content: str, pattern: str) -> List[Tuple[int, i
     return _strategy_exact(content, pattern_unescaped)
 
 
-def _strategy_trimmed_boundary(content: str, pattern: str) -> List[Tuple[int, int]]:
+def _strategy_trimmed_boundary(content: str, pattern: str) -> list[tuple[int, int]]:
     pattern_lines = pattern.split('\n')
     if not pattern_lines:
         return []
@@ -226,8 +226,8 @@ def _strategy_trimmed_boundary(content: str, pattern: str) -> List[Tuple[int, in
     return matches
 
 
-def _build_orig_to_norm_map(original: str) -> List[int]:
-    result: List[int] = []
+def _build_orig_to_norm_map(original: str) -> list[int]:
+    result: list[int] = []
     norm_pos = 0
     for char in original:
         result.append(norm_pos)
@@ -238,15 +238,15 @@ def _build_orig_to_norm_map(original: str) -> List[int]:
 
 
 def _map_positions_norm_to_orig(
-    orig_to_norm: List[int],
-    norm_matches: List[Tuple[int, int]],
-) -> List[Tuple[int, int]]:
+    orig_to_norm: list[int],
+    norm_matches: list[tuple[int, int]],
+) -> list[tuple[int, int]]:
     norm_to_orig_start: dict[int, int] = {}
     for orig_pos, norm_pos in enumerate(orig_to_norm[:-1]):
         if norm_pos not in norm_to_orig_start:
             norm_to_orig_start[norm_pos] = orig_pos
 
-    results: List[Tuple[int, int]] = []
+    results: list[tuple[int, int]] = []
     orig_len = len(orig_to_norm) - 1
 
     for norm_start, norm_end in norm_matches:
@@ -261,7 +261,7 @@ def _map_positions_norm_to_orig(
     return results
 
 
-def _strategy_unicode_normalized(content: str, pattern: str) -> List[Tuple[int, int]]:
+def _strategy_unicode_normalized(content: str, pattern: str) -> list[tuple[int, int]]:
     norm_pattern = _unicode_normalize(pattern)
     norm_content = _unicode_normalize(content)
     if norm_content == content and norm_pattern == pattern:
@@ -275,7 +275,7 @@ def _strategy_unicode_normalized(content: str, pattern: str) -> List[Tuple[int, 
     return _map_positions_norm_to_orig(orig_to_norm, norm_matches)
 
 
-def _strategy_block_anchor(content: str, pattern: str) -> List[Tuple[int, int]]:
+def _strategy_block_anchor(content: str, pattern: str) -> list[tuple[int, int]]:
     norm_pattern = _unicode_normalize(pattern)
     norm_content = _unicode_normalize(content)
 
@@ -315,7 +315,7 @@ def _strategy_block_anchor(content: str, pattern: str) -> List[Tuple[int, int]]:
     return matches
 
 
-def _strategy_context_aware(content: str, pattern: str) -> List[Tuple[int, int]]:
+def _strategy_context_aware(content: str, pattern: str) -> list[tuple[int, int]]:
     pattern_lines = pattern.split('\n')
     content_lines = content.split('\n')
     if not pattern_lines:
@@ -326,7 +326,7 @@ def _strategy_context_aware(content: str, pattern: str) -> List[Tuple[int, int]]
     for i in range(len(content_lines) - pattern_line_count + 1):
         block_lines = content_lines[i:i + pattern_line_count]
         high_similarity_count = 0
-        for p_line, c_line in zip(pattern_lines, block_lines):
+        for p_line, c_line in zip(pattern_lines, block_lines, strict=True):
             sim = SequenceMatcher(None, p_line.strip(), c_line.strip()).ratio()
             if sim >= 0.80:
                 high_similarity_count += 1
@@ -344,11 +344,11 @@ def _strategy_context_aware(content: str, pattern: str) -> List[Tuple[int, int]]
 
 
 def _calculate_line_positions(
-    content_lines: List[str],
+    content_lines: list[str],
     start_line: int,
     end_line: int,
     content_length: int,
-) -> Tuple[int, int]:
+) -> tuple[int, int]:
     start_pos = sum(len(line) + 1 for line in content_lines[:start_line])
     end_pos = sum(len(line) + 1 for line in content_lines[:end_line]) - 1
     if end_pos >= content_length:
@@ -358,11 +358,11 @@ def _calculate_line_positions(
 
 def _find_normalized_matches(
     content: str,
-    content_lines: List[str],
-    content_normalized_lines: List[str],
+    content_lines: list[str],
+    content_normalized_lines: list[str],
     pattern: str,
     pattern_normalized: str,
-) -> List[Tuple[int, int]]:
+) -> list[tuple[int, int]]:
     pattern_norm_lines = pattern_normalized.split('\n')
     num_pattern_lines = len(pattern_norm_lines)
     matches = []
@@ -379,8 +379,8 @@ def _find_normalized_matches(
 def _map_normalized_positions(
     original: str,
     normalized: str,
-    normalized_matches: List[Tuple[int, int]],
-) -> List[Tuple[int, int]]:
+    normalized_matches: list[tuple[int, int]],
+) -> list[tuple[int, int]]:
     if not normalized_matches:
         return []
 
@@ -447,7 +447,7 @@ def find_closest_lines(
 
     anchor = old_lines[0].strip()
     if not anchor:
-        candidates = [l.strip() for l in old_lines if l.strip()]
+        candidates = [line.strip() for line in old_lines if line.strip()]
         if not candidates:
             return ""
         anchor = candidates[0]
@@ -486,7 +486,7 @@ def find_closest_lines(
 
 
 def format_no_match_hint(
-    error: Optional[str],
+    error: str | None,
     match_count: int,
     old_string: str,
     content: str,

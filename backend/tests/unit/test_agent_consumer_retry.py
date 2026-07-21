@@ -111,12 +111,13 @@ async def test_timeout_triggers_retry(monkeypatch, fake_redis) -> None:
     resp = await redis.xreadgroup(
         consumer.group, "test-2", streams={consumer.queue: ">"}, count=1, block=100
     )
+    original_wait_for = asyncio.wait_for
     for _stream, messages in resp or []:
         for msg_id, fields in messages:
             # _dispatch 会 wait_for(timeout=10) — 我们 patch 一下
             monkeypatch.setattr(
                 "agents._common.consumer.asyncio.wait_for",
-                lambda coro, timeout: asyncio.wait_for(coro, timeout=0.1),
+                lambda coro, timeout: original_wait_for(coro, timeout=0.1),
             )
             await consumer._dispatch(redis, msg_id, fields)
 

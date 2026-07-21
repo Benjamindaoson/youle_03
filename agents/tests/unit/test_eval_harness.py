@@ -20,7 +20,6 @@ from agents.eval import (
     CaseResult,
     EvalCase,
     EvalSuite,
-    SuiteLoadError,
     SuiteReport,
     run_case,
     run_suite,

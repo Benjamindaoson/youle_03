@@ -26,11 +26,6 @@ async def cleanup_task_redis(task_id: UUID | str) -> None:
     """
     tid = str(task_id)
     redis = await get_redis()
-    keys = [
-        f"agent_results:{tid}",   # 结果流(Worker 读完后应清理)
-        f"agent_cancel:{tid}",    # 取消标志
-        f"result_cursor:{tid}:*", # result_waiter 的 read cursor(若有)
-    ]
     # 先直接删有确定 key 的,再用 SCAN 清理 cursor 通配符
     await redis.delete(f"agent_results:{tid}", f"agent_cancel:{tid}")
     # 用 SCAN 处理 cursor key(可能按 step_id 派生)
