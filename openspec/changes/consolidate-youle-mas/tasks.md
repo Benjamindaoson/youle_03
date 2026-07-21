@@ -26,11 +26,11 @@
 
 ## 4. OTP and Skill lifecycle
 
-- [ ] 4.1 Write failing OTP tests for send, login, refresh, wrong code, expiry, delivery failure cleanup, and concurrent one-time consumption.
-- [ ] 4.2 Implement atomic Redis OTP consumption and the smallest delivery-policy service while preserving existing routes and User/JWT models.
-- [ ] 4.3 Write failing Skill API tests for built-in, uninstalled, installed-enabled, installed-disabled, search, detail metadata, idempotent install, enable, and disable.
-- [ ] 4.4 Add the Skill lifecycle Alembic change and API/model behavior using canonical YAML metadata; keep subscribe endpoints as compatibility aliases.
-- [ ] 4.5 Ensure disabled or unvalidated Skills cannot be selected for automatic execution.
+- [x] 4.1 Write failing OTP tests for send, login, refresh, wrong code, expiry, delivery failure cleanup, and concurrent one-time consumption.
+- [x] 4.2 Implement atomic Redis OTP consumption and the smallest delivery-policy service while preserving existing routes and User/JWT models.
+- [x] 4.3 Write failing Skill API tests for built-in, uninstalled, installed-enabled, installed-disabled, search, detail metadata, idempotent install, enable, and disable.
+- [x] 4.4 Add the Skill lifecycle Alembic change and API/model behavior using canonical YAML metadata; keep subscribe endpoints as compatibility aliases.
+- [x] 4.5 Ensure disabled or unvalidated Skills cannot be selected for automatic execution.
 
 ## 5. Canonical frontend
 

@@ -52,6 +52,8 @@ class Settings(BaseSettings):
     TAVILY_API_KEY: str = ""
     ALIYUN_ACCESS_KEY: str = ""
     ALIYUN_SECRET_KEY: str = ""
+    ALIYUN_SMS_SIGN_NAME: str = ""
+    ALIYUN_SMS_TEMPLATE_CODE: str = ""
     VOLCENGINE_TTS_APP_ID: str = ""
     VOLCENGINE_TTS_TOKEN: str = ""
 
@@ -60,6 +62,7 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_HOURS: int = 72
     SMS_DEV_MODE: bool = True
+    SMS_OTP_TTL_SECONDS: int = 300
 
     # ── CORS / WS ──
     CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"

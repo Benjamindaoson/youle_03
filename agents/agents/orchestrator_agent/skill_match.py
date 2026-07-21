@@ -15,12 +15,14 @@ import re
 from collections import Counter
 from dataclasses import dataclass, field
 from typing import Any
+from uuid import UUID
 
 import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.skill import Skill
+from app.services.skill_lifecycle import _execution_skill_filters
 
 log = structlog.get_logger(__name__)
 
@@ -174,6 +176,7 @@ async def match_skill(
     user_message: str,
     intent: dict[str, Any],
     memory_context: str = "",
+    user_id: UUID | None = None,
 ) -> Skill | None:
     """Backwards-compatible wrapper — returns Skill or None."""
     result = await match_skill_with_confidence(
@@ -181,6 +184,7 @@ async def match_skill(
         user_message=user_message,
         intent=intent,
         memory_context=memory_context,
+        user_id=user_id,
     )
     return result.skill
 
@@ -191,11 +195,16 @@ async def match_skill_with_confidence(
     user_message: str,
     intent: dict[str, Any],
     memory_context: str = "",
+    user_id: UUID | None = None,
 ) -> MatchResult:
     """Full match with confidence score. Preferred for orchestrator use."""
     domain = intent.get("domain")
     scenario = intent.get("scenario")
-    base_filters = [Skill.status == "published", Skill.visibility == "public"]
+    base_filters = (
+        _execution_skill_filters(user_id)
+        if user_id is not None
+        else [Skill.status == "published", Skill.visibility == "public"]
+    )
 
     # ── L1: exact scenario match ──────────────────────────────────────────────
     candidates: list[Skill] = []

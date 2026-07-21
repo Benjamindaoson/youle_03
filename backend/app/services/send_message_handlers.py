@@ -672,6 +672,7 @@ async def dispatch_send_message(
         user_message=body.content,
         intent=intent.model_dump(),
         memory_context=memory_ctx,
+        user_id=conv.user_id,
     )
     if skill is None:
         return SendMessageResponse(

@@ -5,7 +5,6 @@ dev 模式(SMS_DEV_MODE=True)直接 console.log 验证码,不发真短信。
 
 from __future__ import annotations
 
-import secrets
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
@@ -20,8 +19,8 @@ from app.config import settings
 from app.db import get_session
 from app.models.user import User
 from app.rate_limit import limiter
-from app.redis_client import get_redis
 from app.services.avatar import ensure_default_avatar_style
+from app.services.otp import consume_sms_otp, issue_sms_otp
 
 router = APIRouter()
 log = structlog.get_logger(__name__)
@@ -75,22 +74,12 @@ class MeResponse(BaseModel):
 @router.post("/sms/send", status_code=status.HTTP_204_NO_CONTENT)
 @limiter.limit("12/minute")
 async def sms_send(request: Request, req: SmsSendRequest) -> None:
-    code = "123456" if settings.SMS_DEV_MODE else f"{secrets.randbelow(900000) + 100000:06d}"
-    redis = await get_redis()
-    await redis.setex(f"sms:{req.phone}", 300, code)
+    from app.exceptions import SmsError
 
-    if settings.SMS_DEV_MODE:
-        suf = req.phone[-4:] if len(req.phone) >= 4 else "****"
-        log.info("sms.dev_code_issued", phone_suffix=suf, dev_mode=True)
-    else:
-        from app.exceptions import SmsError
-        from app.services.sms import send_sms_code
-        try:
-            await send_sms_code(req.phone, code)
-        except SmsError as e:
-            # 发送失败时撤销 Redis 中已写入的验证码，防止用户用旧码登录
-            await redis.delete(f"sms:{req.phone}")
-            raise HTTPException(status.HTTP_502_BAD_GATEWAY, e.message_zh) from e
+    try:
+        await issue_sms_otp(req.phone)
+    except SmsError as e:
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, e.message_zh) from e
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -100,11 +89,8 @@ async def login(
     req: SmsLoginRequest,
     session: AsyncSession = Depends(get_session),
 ) -> TokenResponse:
-    redis = await get_redis()
-    expected = await redis.get(f"sms:{req.phone}")
-    if not expected or expected != req.code:
+    if not await consume_sms_otp(req.phone, req.code):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "验证码错误或已过期")
-    await redis.delete(f"sms:{req.phone}")
 
     user = (await session.execute(select(User).where(User.phone == req.phone))).scalar_one_or_none()
     if user is None:

@@ -41,5 +41,5 @@ async def test_sms_dev_mode() -> None:
 async def test_settings_loaded() -> None:
     from app.config import settings
 
-    assert settings.ENV in {"dev", "staging", "prod"}
+    assert settings.ENV in {"dev", "test", "staging", "prod"}
     assert settings.cors_origins_list  # 至少 1 个
