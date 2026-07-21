@@ -4,7 +4,6 @@
 import { useState } from 'react';
 import { Download, ExternalLink, FileText, Image as ImageIcon, Music, Video } from 'lucide-react';
 import clsx from 'clsx';
-import { AppShell } from '@/components/layout/AppShell';
 import { useArtifacts, type ArtifactRow } from '@/lib/api';
 
 type TypeKey = 'all' | 'text' | 'image' | 'video' | 'document' | 'audio';
@@ -27,8 +26,7 @@ export default function ResultsPage() {
   });
 
   return (
-    <AppShell>
-      <div className="flex h-full flex-col bg-white">
+    <div className="flex h-full flex-col bg-white">
         <header className="flex h-14 flex-shrink-0 items-center justify-between border-b border-wechat-line px-5">
           <div>
             <h1 className="text-[15px] font-semibold text-wechat-fg">成果库</h1>
@@ -83,8 +81,7 @@ export default function ResultsPage() {
             )}
           </main>
         </div>
-      </div>
-    </AppShell>
+    </div>
   );
 }
 

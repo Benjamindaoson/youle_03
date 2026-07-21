@@ -2,14 +2,15 @@
 
 // 技能市场二级页(v4 §33)
 // V1 浏览 / 订阅;V2 创作者计划 / 分润 / 后台
-import { useMemo, useState } from 'react';
+import Link from 'next/link';
+import { useState } from 'react';
 import { Search, Star, Store } from 'lucide-react';
 import clsx from 'clsx';
-import { AppShell } from '@/components/layout/AppShell';
 import {
+  useDisableSkill,
+  useEnableSkill,
+  useInstallSkill,
   useSkills,
-  useSubscribeSkill,
-  useUnsubscribeSkill,
   type SkillCard,
 } from '@/lib/api';
 
@@ -24,35 +25,26 @@ const DOMAINS: { key: string | null; label: string }[] = [
 export default function MarketPage() {
   const [domain, setDomain] = useState<string | null>(null);
   const [q, setQ] = useState('');
-  const { data: all = [] } = useSkills();
-  const sub = useSubscribeSkill();
-  const unsub = useUnsubscribeSkill();
+  const { data: skills = [] } = useSkills({ q: q || undefined, domain: domain || undefined });
+  const install = useInstallSkill();
+  const enable = useEnableSkill();
+  const disable = useDisableSkill();
 
-  const filtered = useMemo(() => {
-    return all.filter((s) => {
-      if (domain && s.domain !== domain) return false;
-      if (q) {
-        const t = q.toLowerCase();
-        return (
-          s.name.toLowerCase().includes(t) ||
-          (s.description || '').toLowerCase().includes(t) ||
-          (s.keywords ?? []).some((k) => k.toLowerCase().includes(t))
-        );
-      }
-      return true;
-    });
-  }, [all, domain, q]);
+  function changeLifecycle(skill: SkillCard) {
+    if (!skill.installed) install.mutate(skill.id);
+    else if (skill.enabled) disable.mutate(skill.id);
+    else enable.mutate(skill.id);
+  }
 
   return (
-    <AppShell>
-      <div className="flex h-full flex-col bg-white">
+    <div className="flex h-full flex-col bg-white">
         <header className="flex h-14 flex-shrink-0 items-center justify-between border-b border-wechat-line px-5">
           <div>
             <h1 className="flex items-center gap-2 text-[15px] font-semibold text-wechat-fg">
               <Store size={16} /> 技能市场
             </h1>
             <p className="text-[11px] text-wechat-mute">
-              浏览 / 订阅平台 Skill(创作者计划 V2 上线)
+              搜索、安装并启用平台 Skill
             </p>
           </div>
           <div className="flex items-center gap-1.5 rounded-sm border border-wechat-line bg-white px-2 py-1">
@@ -85,27 +77,23 @@ export default function MarketPage() {
         </div>
 
         <main className="flex-1 overflow-y-auto p-5">
-          {filtered.length === 0 ? (
+          {skills.length === 0 ? (
             <div className="grid h-full place-items-center text-[13px] text-wechat-mute">
               没有匹配的 Skill
             </div>
           ) : (
             <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {filtered.map((s) => (
+              {skills.map((s) => (
                 <MarketCard
                   key={s.id}
                   skill={s}
-                  onToggle={() => {
-                    if (s.subscribed) unsub.mutate(s.id);
-                    else sub.mutate(s.id);
-                  }}
+                  onToggle={() => changeLifecycle(s)}
                 />
               ))}
             </ul>
           )}
         </main>
-      </div>
-    </AppShell>
+    </div>
   );
 }
 
@@ -119,10 +107,15 @@ function MarketCard({
   return (
     <li className="rounded-md border border-wechat-line bg-white p-3 hover:border-wechat-green">
       <div className="mb-1 flex items-center justify-between">
-        <span className="text-[13px] font-semibold text-wechat-fg">{skill.name}</span>
-        {skill.creator_type === 'platform' && (
+        <Link
+          href={`/market/${skill.id}`}
+          className="text-[13px] font-semibold text-wechat-fg hover:text-wechat-green"
+        >
+          {skill.name}
+        </Link>
+        {skill.built_in && (
           <span className="flex items-center gap-1 rounded-sm bg-wechat-green-soft px-1.5 py-0.5 text-[10px] text-wechat-green">
-            <Star size={9} /> 官方
+            <Star size={9} /> 内置
           </span>
         )}
       </div>
@@ -136,17 +129,23 @@ function MarketCard({
           </span>
         ))}
       </div>
+      <Link
+        href={`/market/${skill.id}`}
+        className="mb-2 block text-[11px] text-wechat-green hover:underline"
+      >
+        查看工作流与权限
+      </Link>
       <button
         type="button"
         onClick={onToggle}
         className={clsx(
           'w-full rounded-sm border py-1 text-[12px] transition-colors',
-          skill.subscribed
+          skill.installed
             ? 'border-wechat-line bg-white text-wechat-fg hover:bg-neutral-50'
             : 'border-wechat-green bg-wechat-green text-white hover:bg-[#06AE56]',
         )}
       >
-        {skill.subscribed ? '已订阅 · 取消' : '订阅'}
+        {!skill.installed ? '安装并启用' : skill.enabled ? '已启用 · 停用' : '重新启用'}
       </button>
     </li>
   );

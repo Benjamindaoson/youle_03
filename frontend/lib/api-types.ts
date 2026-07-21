@@ -321,7 +321,8 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        /** List Messages */
+        get: operations["list_messages_api_conversations__conversation_id__messages_get"];
         put?: never;
         /** Send Message */
         post: operations["send_message_api_conversations__conversation_id__messages_post"];
@@ -1328,6 +1329,37 @@ export interface components {
                 [key: string]: unknown;
             };
         };
+        /** Message */
+        Message: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Conversation Id
+             * Format: uuid
+             */
+            conversation_id: string;
+            /** Role */
+            role: string;
+            /** Content */
+            content: string | null;
+            /**
+             * Content Type
+             * @default text
+             */
+            content_type: string;
+            /** Extra Metadata */
+            extra_metadata?: {
+                [key: string]: unknown;
+            };
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
         /** ModifyBody */
         ModifyBody: {
             /** Target Step */
@@ -2267,6 +2299,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MemoryContextPack"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_messages_api_conversations__conversation_id__messages_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                conversation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Message"][];
                 };
             };
             /** @description Validation Error */

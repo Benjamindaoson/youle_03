@@ -110,6 +110,7 @@ interface State {
   setMembers: (id: string, members: AgentMember[]) => void;
   setMessages: (id: string, messages: Message[]) => void;
   appendMessage: (msg: Message) => void;
+  appendMessageDelta: (conversationId: string, messageId: string, delta: string) => void;
   withdrawMessage: (conversationId: string, messageId: string) => void;
   patchMode: (id: string, mode: WorkMode) => void;
   patchMemberStatus: (id: string, role: RoleKey, status: AgentStatus) => void;
@@ -144,6 +145,7 @@ export const useConversationStore = create<State>((set) => ({
   appendMessage: (msg) =>
     set((s) => {
       const prev = s.messages[msg.conversation_id] ?? [];
+      if (prev.some((item) => item.id === msg.id)) return s;
       return {
         messages: {
           ...s.messages,
@@ -151,6 +153,17 @@ export const useConversationStore = create<State>((set) => ({
         },
       };
     }),
+  appendMessageDelta: (conversationId, messageId, delta) =>
+    set((s) => ({
+      messages: {
+        ...s.messages,
+        [conversationId]: (s.messages[conversationId] ?? []).map((message) =>
+          message.id === messageId
+            ? { ...message, text: `${message.text ?? ''}${delta}` }
+            : message,
+        ),
+      },
+    })),
   patchMode: (id, mode) =>
     set((s) => ({
       list: s.list.map((c) => (c.id === id ? { ...c, work_mode: mode } : c)),

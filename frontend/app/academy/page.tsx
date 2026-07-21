@@ -1,12 +1,11 @@
 'use client';
 
 // AI 学院二级页(v4 §32)
-// 学习中心:浏览所有 Skill;管理已订阅 / 平台预置 / 自己创建
+// 学习中心:浏览所有 Skill;管理已安装 / 平台预置 / 自己创建
 // V1 不含 Skill 创作 / Agent 进修 (V2)
 import { useState } from 'react';
 import { CheckCircle, GraduationCap, Layers, Lock } from 'lucide-react';
 import clsx from 'clsx';
-import { AppShell } from '@/components/layout/AppShell';
 import { useMySkills, useSkills, type SkillCard } from '@/lib/api';
 
 type Tab = 'browse' | 'mine';
@@ -18,15 +17,14 @@ export default function AcademyPage() {
   const items = tab === 'browse' ? all : mine;
 
   return (
-    <AppShell>
-      <div className="flex h-full flex-col bg-white">
+    <div className="flex h-full flex-col bg-white">
         <header className="flex h-14 flex-shrink-0 items-center justify-between border-b border-wechat-line px-5">
           <div>
             <h1 className="flex items-center gap-2 text-[15px] font-semibold text-wechat-fg">
               <GraduationCap size={16} /> AI 学院
             </h1>
             <p className="text-[11px] text-wechat-mute">
-              浏览 Skill,挑选订阅(Skill 创作 / Agent 进修 V2 上线)
+              浏览 Skill，管理已安装与已启用状态（Skill 创作 / Agent 进修 V2 上线）
             </p>
           </div>
           <div className="flex rounded-md border border-wechat-line bg-white p-0.5 text-[12px]">
@@ -51,7 +49,7 @@ export default function AcademyPage() {
         <main className="flex-1 overflow-y-auto p-5">
           {items.length === 0 ? (
             <div className="grid h-full place-items-center text-[13px] text-wechat-mute">
-              {tab === 'browse' ? '暂无可用 Skill' : '尚未订阅任何 Skill'}
+              {tab === 'browse' ? '暂无可用 Skill' : '尚未安装任何 Skill'}
             </div>
           ) : (
             <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -70,8 +68,7 @@ export default function AcademyPage() {
             </p>
           </section>
         </main>
-      </div>
-    </AppShell>
+    </div>
   );
 }
 
@@ -80,9 +77,9 @@ function SkillCardView({ skill }: { skill: SkillCard }) {
     <li className="rounded-md border border-wechat-line bg-white p-3 hover:border-wechat-green">
       <div className="mb-1 flex items-center justify-between">
         <span className="text-[13px] font-semibold text-wechat-fg">{skill.name}</span>
-        {skill.subscribed && (
+        {skill.installed && (
           <span className="flex items-center gap-1 text-[10px] text-wechat-green">
-            <CheckCircle size={10} /> 已订阅
+            <CheckCircle size={10} /> {skill.enabled ? '已启用' : '已停用'}
           </span>
         )}
       </div>

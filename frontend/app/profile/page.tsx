@@ -3,7 +3,6 @@
 // 个人主页(v4 §37 #327-331)
 import { useState } from 'react';
 import { Camera, Crown, ListTodo, Package } from 'lucide-react';
-import { AppShell } from '@/components/layout/AppShell';
 import { QuotaWidget } from '@/components/layout/QuotaWidget';
 import {
   useMyQuota,
@@ -35,8 +34,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <AppShell>
-      <div className="flex h-full flex-col overflow-y-auto bg-white">
+    <div className="flex h-full flex-col overflow-y-auto bg-white">
         <header className="flex h-14 flex-shrink-0 items-center border-b border-wechat-line px-5">
           <h1 className="text-[15px] font-semibold text-wechat-fg">个人主页</h1>
         </header>
@@ -121,8 +119,7 @@ export default function ProfilePage() {
             </div>
           </section>
         </div>
-      </div>
-    </AppShell>
+    </div>
   );
 }
 

@@ -27,7 +27,7 @@ const PING_INTERVAL_MS = 25_000;
 const WATCHDOG_MS = 35_000;
 const MAX_BACKOFF_MS = 30_000;
 
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK !== 'false';
+const USE_MOCK = process.env.NEXT_PUBLIC_MOCK_MODE === 'true';
 
 function backoffDelay(attempt: number): number {
   const base = Math.min(500 * 2 ** attempt, MAX_BACKOFF_MS);

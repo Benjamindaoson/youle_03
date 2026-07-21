@@ -178,6 +178,36 @@ def _check_single_architecture() -> list[str]:
     return errors
 
 
+def _check_frontend_event_contract() -> list[str]:
+    """Require the frontend to consume the backend-generated event schema."""
+    from app.schemas.events import EventType
+
+    errors: list[str] = []
+    generated_path = ROOT / "frontend" / "lib" / "api-types.ts"
+    adapter_path = ROOT / "frontend" / "lib" / "ws-events.ts"
+    if not generated_path.is_file():
+        return ["generated frontend OpenAPI types are missing: frontend/lib/api-types.ts"]
+    if not adapter_path.is_file():
+        return ["frontend event type adapter is missing: frontend/lib/ws-events.ts"]
+
+    generated = generated_path.read_text(encoding="utf-8")
+    adapter = adapter_path.read_text(encoding="utf-8")
+    for event_type in EventType:
+        if f'"{event_type.value}"' not in generated:
+            errors.append(
+                f"frontend generated EventType is missing {event_type.value!r}"
+            )
+    if "UserEvent:" not in generated:
+        errors.append("frontend generated OpenAPI types do not contain UserEvent")
+    if "components['schemas']['EventType']" not in adapter:
+        errors.append("frontend EventType does not reference generated OpenAPI components")
+    if "components['schemas']['UserEvent']" not in adapter:
+        errors.append("frontend UserEvent does not reference generated OpenAPI components")
+    if "export type EventType = '" in adapter or 'export type EventType = "' in adapter:
+        errors.append("frontend contains a handwritten EventType union")
+    return errors
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -193,6 +223,7 @@ def main() -> int:
         errors.extend(_check_skill_playbooks())
         errors.extend(_check_forbidden_code_patterns())
         errors.extend(_check_single_architecture())
+        errors.extend(_check_frontend_event_contract())
 
     if errors:
         for error in errors:

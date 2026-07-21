@@ -3,7 +3,6 @@
 // 知识库二级页(v4 §31 §281-284)— 用户收藏的 Prompt
 import { useState } from 'react';
 import { Plus, Sparkles, Trash2 } from 'lucide-react';
-import { AppShell } from '@/components/layout/AppShell';
 import {
   useCreatePrompt,
   useDeletePrompt,
@@ -33,8 +32,7 @@ export default function PromptsPage() {
   }
 
   return (
-    <AppShell>
-      <div className="flex h-full flex-col bg-white">
+    <div className="flex h-full flex-col bg-white">
         <header className="flex h-14 flex-shrink-0 items-center justify-between border-b border-wechat-line px-5">
           <div>
             <h1 className="text-[15px] font-semibold text-wechat-fg">知识库</h1>
@@ -128,7 +126,6 @@ export default function PromptsPage() {
             </ul>
           )}
         </div>
-      </div>
-    </AppShell>
+    </div>
   );
 }

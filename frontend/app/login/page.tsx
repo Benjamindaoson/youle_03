@@ -4,9 +4,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/stores/user';
+import { MOCK_MODE, loginWithSms, sendSmsCode } from '@/lib/client';
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8000';
-const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK !== 'false';
+const USE_MOCK = MOCK_MODE;
 
 export default function LoginPage() {
   const router = useRouter();
@@ -41,12 +41,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       if (!USE_MOCK) {
-        const r = await fetch(`${BASE}/api/auth/sms/send`, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ phone }),
-        });
-        if (!r.ok) throw new Error(`${r.status}`);
+        await sendSmsCode(phone);
       }
       setStep('code');
       startCounter();
@@ -68,13 +63,7 @@ export default function LoginPage() {
       if (USE_MOCK) {
         setAuth({ id: 'mock-user', phone, nickname: `用户${phone.slice(-4)}` }, 'mock-token');
       } else {
-        const r = await fetch(`${BASE}/api/auth/login`, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ phone, code }),
-        });
-        if (!r.ok) throw new Error(`${r.status} ${await r.text()}`);
-        const data = await r.json();
+        const data = await loginWithSms(phone, code);
         setAuth(
           { id: data.user_id, phone, nickname: `用户${phone.slice(-4)}` },
           data.access_token,

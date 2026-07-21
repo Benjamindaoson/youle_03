@@ -4,7 +4,6 @@
 import { useState } from 'react';
 import { Bell, HelpCircle, LogOut, Monitor, Moon, Shield, Sun } from 'lucide-react';
 import clsx from 'clsx';
-import { AppShell } from '@/components/layout/AppShell';
 import { useUserStore } from '@/stores/user';
 import { useRouter } from 'next/navigation';
 
@@ -33,8 +32,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <AppShell>
-      <div className="flex h-full flex-col overflow-y-auto bg-white">
+    <div className="flex h-full flex-col overflow-y-auto bg-white">
         <header className="flex h-14 flex-shrink-0 items-center border-b border-wechat-line px-5">
           <h1 className="text-[15px] font-semibold text-wechat-fg">设置</h1>
         </header>
@@ -132,8 +130,7 @@ export default function SettingsPage() {
             <LogOut size={13} /> 退出登录
           </button>
         </div>
-      </div>
-    </AppShell>
+    </div>
   );
 }
 

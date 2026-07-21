@@ -5,7 +5,6 @@
 import { useState } from 'react';
 import { File, FolderOpen, Image, Music, Trash2, Upload, Video } from 'lucide-react';
 import clsx from 'clsx';
-import { AppShell } from '@/components/layout/AppShell';
 import {
   useMaterials,
   useCreateMaterial,
@@ -70,8 +69,7 @@ export default function MaterialsPage() {
   }
 
   return (
-    <AppShell>
-      <div className="flex h-full flex-col bg-white">
+    <div className="flex h-full flex-col bg-white">
         <header className="flex h-14 flex-shrink-0 items-center justify-between border-b border-wechat-line px-5">
           <div>
             <h1 className="text-[15px] font-semibold text-wechat-fg">素材库</h1>
@@ -206,8 +204,7 @@ export default function MaterialsPage() {
             )}
           </main>
         </div>
-      </div>
-    </AppShell>
+    </div>
   );
 }
 

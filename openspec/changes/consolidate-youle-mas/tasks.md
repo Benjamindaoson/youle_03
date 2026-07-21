@@ -10,7 +10,7 @@
 - [x] 2.1 Add a failing CI structure check for required root frontend and blocking backend/agents/frontend/contract/security jobs.
 - [x] 2.2 Split root workflows into blocking jobs that run Ruff, compileall, backend pytest, agents pytest, Alembic, frozen frontend install, lint, typecheck, test, and build.
 - [x] 2.3 Add Agent import, Skill YAML, AgentTask/AgentResult parity, direct LLM SDK, and cross-Agent call checks.
-- [ ] 2.4 Add OpenAPI/frontend type synchronization and Event/Skill contract checks.
+- [x] 2.4 Add OpenAPI/frontend type synchronization and Event/Skill contract checks.
 - [x] 2.5 Add gitleaks, `.env`, high-risk secret, Python dependency, and Node dependency audit checks.
 
 ## 3. Unified event delivery
@@ -22,7 +22,7 @@
 - [x] 3.5 Write failing SSE tests for Bearer authentication, 403 ownership, heartbeat, replay, live delivery, and client disconnect cleanup.
 - [x] 3.6 Implement the conversation SSE route and unified `UserEvent` Pydantic schema.
 - [x] 3.7 Route existing `ws_manager.publish` through the unified publisher and make WebSocket consume the same local EventBus without a second Redis channel.
-- [ ] 3.8 Generate/check frontend TypeScript event types and run event/backend regression tests.
+- [x] 3.8 Generate/check frontend TypeScript event types and run event/backend regression tests.
 
 ## 4. OTP and Skill lifecycle
 
@@ -35,13 +35,13 @@
 ## 5. Canonical frontend
 
 - [x] 5.1 Copy the `oye-mas` Next.js frontend into root `frontend/`, remove legacy/mock-only duplicates, normalize package scripts, and prove frozen install plus build before feature edits.
-- [ ] 5.2 Add a typed API client with JWT handling, error normalization, explicit `NEXT_PUBLIC_MOCK_MODE`, and generated backend types.
-- [ ] 5.3 Add failing frontend tests for login, conversation loading, group messages, private messages, API errors, and shared message state.
-- [ ] 5.4 Connect login, conversation list, group chat, private Agent chat, Agent/task status, and @Agent UI to canonical backend APIs.
-- [ ] 5.5 Add failing SSE client tests for delta aggregation, duplicate event IDs, reconnect, `Last-Event-ID`, and visible connection errors.
-- [ ] 5.6 Implement the SSE client/store integration and HITL/task/artifact updates.
-- [ ] 5.7 Add failing Skill marketplace tests and connect list/detail/install/enable/disable/search to real APIs.
-- [ ] 5.8 Migrate the non-duplicated `youle01` product landing page and useful group/private chat presentation details without importing its backend, conductor, or duplicate stores.
+- [x] 5.2 Add a typed API client with JWT handling, error normalization, explicit `NEXT_PUBLIC_MOCK_MODE`, and generated backend types.
+- [x] 5.3 Add failing frontend tests for login, conversation loading, group messages, private messages, API errors, and shared message state.
+- [x] 5.4 Connect login, conversation list, group chat, private Agent chat, Agent/task status, and @Agent UI to canonical backend APIs.
+- [x] 5.5 Add failing SSE client tests for delta aggregation, duplicate event IDs, reconnect, `Last-Event-ID`, and visible connection errors.
+- [x] 5.6 Implement the SSE client/store integration and HITL/task/artifact updates.
+- [x] 5.7 Add failing Skill marketplace tests and connect list/detail/install/enable/disable/search to real APIs.
+- [x] 5.8 Migrate the non-duplicated `youle01` product landing page and useful group/private chat presentation details without importing its backend, conductor, or duplicate stores.
 - [ ] 5.9 Run frontend lint, typecheck, unit tests, build, and existing Playwright scenarios; repair failures.
 
 ## 6. End-to-end and data verification

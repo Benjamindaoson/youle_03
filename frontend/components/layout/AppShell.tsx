@@ -4,6 +4,7 @@
 // 桌面优先;移动端(< 768px)三栏可折叠为抽屉:
 //   左栏抽屉 / 主对话(默认)/ 右栏抽屉
 import { useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { Menu, PanelRight, X } from 'lucide-react';
 import clsx from 'clsx';
 import { AppSidebar } from '@/components/layout/AppSidebar';
@@ -12,20 +13,20 @@ import { AgentPanel } from '@/components/layout/AgentPanel';
 import { useConversationStore } from '@/stores/conversation';
 import { useConversations } from '@/lib/api';
 import { useUserStore } from '@/stores/user';
-import { useWsLifecycle } from '@/lib/ws';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { data: conversations } = useConversations();
+  const token = useUserStore((s) => s.token);
+  const pathname = usePathname();
+  const router = useRouter();
+  const isPublic = pathname === '/login' || pathname === '/website';
+  const { data: conversations } = useConversations({ enabled: !!token && !isPublic });
   const setList = useConversationStore((s) => s.setList);
   const list = useConversationStore((s) => s.list);
   const currentId = useConversationStore((s) => s.currentId);
   const setCurrent = useConversationStore((s) => s.setCurrent);
-  const token = useUserStore((s) => s.token);
 
   const [leftOpen, setLeftOpen] = useState(false);
   const [rightOpen, setRightOpen] = useState(false);
-
-  useWsLifecycle(token);
 
   useEffect(() => {
     if (conversations && conversations.length) setList(conversations);
@@ -37,6 +38,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       if (main) setCurrent(main.id);
     }
   }, [list, currentId, setCurrent]);
+
+  useEffect(() => {
+    if (!token && !isPublic) router.replace('/login');
+  }, [isPublic, router, token]);
+
+  if (isPublic) return <>{children}</>;
+  if (!token) return null;
 
   const current = list.find((c) => c.id === currentId) ?? null;
   const showAgentPanel =
