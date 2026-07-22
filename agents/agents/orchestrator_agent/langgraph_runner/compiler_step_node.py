@@ -147,6 +147,38 @@ def make_step_node(
         attempt_idx = 0
         result: Any = None
 
+        # 图片生成属于用户可见的付费动作：必须在派发前逐次确认，不能由
+        # HAOLE_AUTO_APPROVE_HITL 绕过，也不能先生成再让用户审核成品。
+        if has_gate and gate_cfg.get("phase") == "before_dispatch":
+            confirmation = dict(parameters_tpl.get("confirmation") or {})
+            expected_count = int(
+                parameters_tpl.get("count") or len(parameters_tpl.get("image_specs") or [])
+            )
+            decision = interrupt(
+                {
+                    "kind": "hitl_gate",
+                    "step_id": sid,
+                    "gate_type": gate_cfg.get("type", "image_generation_confirmation"),
+                    "timeout_seconds": gate_cfg.get("timeout_seconds"),
+                    "task_id": state["task_id"],
+                    "agent_id": agent_id,
+                    "trace_id": trace_tid,
+                    "orchestration_run_id": run_id_str,
+                    "preview_artifact_metadata": {
+                        **confirmation,
+                        "image_count": expected_count,
+                        "requires_exact_count_confirmation": True,
+                    },
+                }
+            )
+            chosen_count = (decision.get("user_choice") or {}).get("confirmed_image_count")
+            if decision.get("resolution") != "approved" or chosen_count != expected_count:
+                return {
+                    **state_trace_patch,
+                    "final_status": "failed",
+                    "failure_reason": "image_generation_not_confirmed",
+                }
+
         while attempt_idx < retry_max:
             p_render = dict(parameters_tpl)
             if attempt_idx > 0:
@@ -433,7 +465,7 @@ def make_step_node(
         }
 
         # ─── HITL gate:中断,等用户决议 ───
-        if has_gate and result.status == "completed":
+        if has_gate and gate_cfg.get("phase") != "before_dispatch" and result.status == "completed":
             if os.getenv("HAOLE_AUTO_APPROVE_HITL", "").lower() in {"1", "true", "yes"}:
                 update["hitl_decisions"] = {
                     sid: {
