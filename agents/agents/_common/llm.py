@@ -185,6 +185,10 @@ def _task_type_model_chain(task_type: str, routing_hints: dict[str, Any] | None)
     table = AGENT_ROUTING.get(task_type, {})
     out: list[str] = []
     _push_models_from_hint(out, hints.get("primary"))
+    if hints.get("no_fallback"):
+        if not out:
+            _push_models_from_hint(out, table.get("primary"))
+        return out or [_resolve_model("deepseek-v4-flash")]
     _push_models_from_hint(out, table.get("primary"))
     _push_models_from_hint(out, hints.get("fallback"))
     _push_models_from_hint(out, table.get("fallback"))

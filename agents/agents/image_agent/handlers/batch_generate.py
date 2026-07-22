@@ -1,12 +1,4 @@
-"""Agent 3 batch_generate — 批量生图:风格锚点 + 并行生成 + manifest 落 OSS。
-
-设计:
-- 第 1 张图作为"风格锚点",normalize 后将风格约束注入后续 prompt
-- 后续图 asyncio.gather 并行生成(无阻塞等待)
-- 全部通过 _normalize_image_artifact 规范化(URL/base64/oss 三类)
-- 写 manifest.json 记录所有 ref + metadata
-- 支持 ecommerce / default 两种预设风格提示
-"""
+"""Agent 3 batch image generation handler."""
 
 from __future__ import annotations
 
@@ -28,44 +20,58 @@ from agents.image_agent.handlers.extras import _normalize_image_artifact
 log = structlog.get_logger(__name__)
 
 _SET_TYPE_STYLE_HINTS: dict[str, str] = {
-    "ecommerce": (
-        "白底留白产品图,主体居中,卖点文字清晰,"
-        "电商橙/红点缀,干净专业高转化率"
-    ),
-    "default": "统一色调和构图风格,保持视觉一致性",
+    "ecommerce": "clean ecommerce product composition, readable Chinese copy, consistent palette",
+    "default": "consistent palette and composition across the complete image set",
 }
 
 
 async def _gen_one(
     *,
-    spec: dict,
+    spec: dict[str, Any],
     idx: int,
     style_context: str,
     task_id: str,
     step_id: str,
-    routing_hints: dict | None,
-) -> tuple[str, str, str, list[dict[Any, Any]]]:
-    """生成单张图并 normalize,返回 (ref, normalized_via, model, xhs_trail)。"""
-    prompt = spec.get("prompt", "")
+    routing_hints: dict[str, Any] | None,
+    reference_images: list[str] | None = None,
+) -> tuple[str, str, str, list[dict[str, Any]]]:
+    """Generate one image and return its normalized artifact reference."""
+    prompt = str(spec.get("prompt") or "")
     full_prompt = f"{style_context}\n{prompt}" if style_context else prompt
-    vk = spec.get("xhs_visual_kind")
-    trail: list[dict[Any, Any]] = []
-    if isinstance(vk, str) and vk:
+    trail: list[dict[str, Any]] = []
+
+    if (routing_hints or {}).get("provider") == "ark_seedream":
+        from agents.image_agent.handlers.ark_seedream import generate_seedream_image
+
+        seedream = await generate_seedream_image(
+            prompt=full_prompt,
+            size=str(spec.get("size") or "2K"),
+            reference_images=reference_images,
+        )
+        ref, via = await _normalize_image_artifact(
+            resp_content=seedream.url,
+            task_id=task_id,
+            step_id=f"{step_id}_{idx}",
+        )
+        return ref, via, seedream.model, trail
+
+    visual_kind = spec.get("xhs_visual_kind")
+    if isinstance(visual_kind, str) and visual_kind:
         from agents.image_agent.xhs_image_router import generate_with_xhs_model_chain
 
         try:
-            resp, trail = await generate_with_xhs_model_chain(
+            response, trail = await generate_with_xhs_model_chain(
                 logical_task_type="xhs_series_image",
                 messages=[
                     {"role": "system", "content": IMAGE_GENERATE_SYSTEM},
                     {"role": "user", "content": full_prompt},
                 ],
-                visual_kind=vk,
+                visual_kind=visual_kind,
                 base_routing_hints=routing_hints,
             )
-        except Exception as e:
-            log.warning("batch_gen.xhs_chain_failed_fallback", idx=idx, err=str(e))
-            resp = await llm.complete(
+        except Exception:
+            # Legacy non-ecommerce callers retain their existing generic path.
+            response = await llm.complete(
                 task_type="image_generate",
                 messages=[
                     {"role": "system", "content": IMAGE_GENERATE_SYSTEM},
@@ -74,7 +80,7 @@ async def _gen_one(
                 routing_hints=routing_hints,
             )
     else:
-        resp = await llm.complete(
+        response = await llm.complete(
             task_type="image_generate",
             messages=[
                 {"role": "system", "content": IMAGE_GENERATE_SYSTEM},
@@ -82,30 +88,28 @@ async def _gen_one(
             ],
             routing_hints=routing_hints,
         )
+
     ref, via = await _normalize_image_artifact(
-        resp_content=resp.content if isinstance(resp.content, str) else "",
+        resp_content=response.content if isinstance(response.content, str) else "",
         task_id=task_id,
         step_id=f"{step_id}_{idx}",
     )
-    return ref, via, resp.model, trail
+    return ref, via, response.model, trail
 
 
 async def batch_generate_handler(task: AgentTask) -> AgentResult:
-    t0 = time.monotonic()
-    image_specs: list[dict] = (
-        task.parameters.get("image_specs")
-        or task.inputs.get("image_specs")
-        or []
+    """Generate a confirmed image collection and persist its manifest."""
+    started = time.monotonic()
+    image_specs: list[dict[str, Any]] = (
+        task.parameters.get("image_specs") or task.inputs.get("image_specs") or []
     )
     base_prompt = task.inputs.get("_prompt") or task.inputs.get("prompt", "")
     count = int(task.parameters.get("count", len(image_specs) or 4))
-    image_set_type = task.parameters.get("image_set_type", "default")
+    image_set_type = str(task.parameters.get("image_set_type", "default"))
     style_hint = _SET_TYPE_STYLE_HINTS.get(image_set_type, _SET_TYPE_STYLE_HINTS["default"])
 
-    # 若 image_specs 为空,用 base_prompt × count 扩展
     if not image_specs and base_prompt:
-        image_specs = [{"prompt": base_prompt, "index": i} for i in range(count)]
-
+        image_specs = [{"prompt": base_prompt, "index": index} for index in range(count)]
     if not image_specs:
         return AgentResult(
             task_id=task.task_id,
@@ -115,57 +119,57 @@ async def batch_generate_handler(task: AgentTask) -> AgentResult:
         )
 
     task_id = str(task.task_id)
+    reference_images = task.inputs.get("reference_images") or []
+    if not isinstance(reference_images, list):
+        reference_images = [str(reference_images)]
 
-    # Inject user style preferences from flywheel memory
     user_prefs = await get_user_prefs(str(task.user_id))
-    pref_ctx = build_pref_context(user_prefs)
-    style_base = f"[图集风格基调:{style_hint}]"
-    md_k = ""
-    if isinstance(task.inputs, dict):
-        raw_md = task.inputs.get("_md_skill_knowledge")
-        if isinstance(raw_md, str) and raw_md.strip():
-            md_k = raw_md.strip()
-    if md_k:
-        style_base = f"{style_base}\n[小红书内容/卡片版式规范]\n{md_k}"
-    if pref_ctx:
-        style_base = f"{style_base}\n[用户偏好:{pref_ctx}]"
+    preference_context = build_pref_context(user_prefs)
+    style_base = f"[image set style: {style_hint}]"
+    if preference_context:
+        style_base = f"{style_base}\n[user preferences: {preference_context}]"
 
-    # 第 1 张:风格锚点(串行,后续图的风格依赖锚点描述)
-    anchor_ref, anchor_via, anchor_model, _anchor_trail = await _gen_one(
-        spec=image_specs[0],
-        idx=0,
-        style_context=style_base,
-        task_id=task_id,
-        step_id=task.step_id,
-        routing_hints=task.routing_hints,
-    )
-
-    # 风格一致性约束注入后续图 prompt
-    style_context = (
-        f"[风格一致性约束:{style_hint};"
-        f"与图集第1张保持相同色调、构图、字体粗细]"
-    )
-
-    # 后续图并行生成
-    rest_coros = [
-        _gen_one(
-            spec=spec,
-            idx=i + 1,
-            style_context=style_context,
+    try:
+        anchor_ref, anchor_via, anchor_model, _ = await _gen_one(
+            spec=image_specs[0],
+            idx=0,
+            style_context=style_base,
             task_id=task_id,
             step_id=task.step_id,
             routing_hints=task.routing_hints,
+            reference_images=reference_images,
         )
-        for i, spec in enumerate(image_specs[1:])
-    ]
-    rest_results: list[tuple[str, str, str, list]] = (
-        list(await asyncio.gather(*rest_coros)) if rest_coros else []
-    )
+        followup_context = (
+            f"[style consistency: {style_hint}; "
+            "keep the same palette, composition, and typography as image 1]"
+        )
+        rest = await asyncio.gather(
+            *[
+                _gen_one(
+                    spec=spec,
+                    idx=index + 1,
+                    style_context=followup_context,
+                    task_id=task_id,
+                    step_id=task.step_id,
+                    routing_hints=task.routing_hints,
+                    reference_images=reference_images,
+                )
+                for index, spec in enumerate(image_specs[1:])
+            ]
+        )
+    except Exception as exc:
+        if (task.routing_hints or {}).get("provider") == "ark_seedream":
+            return AgentResult(
+                task_id=task.task_id,
+                step_id=task.step_id,
+                status="failed",
+                error_detail={"reason": "ark_seedream_failed", "message": str(exc)[:300]},
+                duration_ms=int((time.monotonic() - started) * 1000),
+            )
+        raise
 
-    all_refs = [anchor_ref, *(r for r, _, _, _ in rest_results)]
-    all_vias = [anchor_via, *(v for _, v, _, _ in rest_results)]
-
-    # 写 manifest
+    all_refs = [anchor_ref, *(ref for ref, _, _, _ in rest)]
+    all_vias = [anchor_via, *(via for _, via, _, _ in rest)]
     manifest = {
         "task_id": task_id,
         "step_id": task.step_id,
@@ -173,13 +177,12 @@ async def batch_generate_handler(task: AgentTask) -> AgentResult:
         "count": len(all_refs),
         "image_refs": all_refs,
         "normalized_via": all_vias,
-        "specs": [s.get("prompt", "")[:80] for s in image_specs],
+        "specs": [str(spec.get("prompt") or "")[:80] for spec in image_specs],
     }
     manifest_ref = await put_json(
         key=f"artifacts/{task_id}/{task.step_id}/manifest.json",
         payload=manifest,
     )
-
     await emit(
         signal_type="trace",
         payload={
@@ -192,7 +195,6 @@ async def batch_generate_handler(task: AgentTask) -> AgentResult:
             "model": anchor_model,
         },
     )
-
     return AgentResult(
         task_id=task.task_id,
         step_id=task.step_id,
@@ -208,6 +210,7 @@ async def batch_generate_handler(task: AgentTask) -> AgentResult:
                 "model": anchor_model,
             },
         ),
-        duration_ms=int((time.monotonic() - t0) * 1000),
+        duration_ms=int((time.monotonic() - started) * 1000),
         model_used=anchor_model,
     )
+
