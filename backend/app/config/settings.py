@@ -63,6 +63,7 @@ class Settings(BaseSettings):
     JWT_EXPIRE_HOURS: int = 72
     SMS_DEV_MODE: bool = True
     SMS_OTP_TTL_SECONDS: int = 300
+    LOCAL_GUEST_ACCESS: bool = False
 
     # ── CORS / WS ──
     CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
@@ -104,6 +105,8 @@ class Settings(BaseSettings):
             )
         if self.SMS_DEV_MODE:
             raise ValueError("非 dev 环境必须设置 SMS_DEV_MODE=false，禁止通用验证码")
+        if self.LOCAL_GUEST_ACCESS:
+            raise ValueError("LOCAL_GUEST_ACCESS may only be enabled in dev/test")
         sms_fields = {
             "ALIYUN_ACCESS_KEY": self.ALIYUN_ACCESS_KEY,
             "ALIYUN_SECRET_KEY": self.ALIYUN_SECRET_KEY,

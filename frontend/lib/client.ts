@@ -11,6 +11,14 @@ export function mockModeEnabled(value = process.env.NEXT_PUBLIC_MOCK_MODE): bool
 
 export const MOCK_MODE = mockModeEnabled();
 
+export function localGuestAccessEnabled(
+  value = process.env.NEXT_PUBLIC_LOCAL_GUEST_ACCESS,
+): boolean {
+  return value === 'true';
+}
+
+export const LOCAL_GUEST_ACCESS = localGuestAccessEnabled();
+
 export class ApiError extends Error {
   constructor(
     public readonly status: number,
@@ -81,6 +89,10 @@ export function loginWithSms(phone: string, code: string): Promise<TokenResponse
     method: 'POST',
     body: JSON.stringify({ phone, code }),
   });
+}
+
+export function startLocalGuestSession(): Promise<TokenResponse> {
+  return apiRequest<TokenResponse>('/api/auth/local-guest', { method: 'POST' });
 }
 
 export function normalizeConversation(value: BackendConversation): ConversationSummary {

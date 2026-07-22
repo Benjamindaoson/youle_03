@@ -12,11 +12,14 @@ import { ChatList } from '@/components/layout/ChatList';
 import { AgentPanel } from '@/components/layout/AgentPanel';
 import { useConversationStore } from '@/stores/conversation';
 import { useConversations } from '@/lib/api';
+import { LOCAL_GUEST_ACCESS, startLocalGuestSession } from '@/lib/client';
 import { useUserStore } from '@/stores/user';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const token = useUserStore((s) => s.token);
+  const setAuth = useUserStore((s) => s.setAuth);
   const [authHydrated, setAuthHydrated] = useState(false);
+  const [guestBootstrapFailed, setGuestBootstrapFailed] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const isPublic = pathname === '/login' || pathname === '/website';
@@ -39,6 +42,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (!authHydrated || token || isPublic || !LOCAL_GUEST_ACCESS) return;
+
+    let active = true;
+    void startLocalGuestSession()
+      .then((session) => {
+        if (!active) return;
+        setAuth(
+          { id: session.user_id, phone: 'local-guest', nickname: '本地访客' },
+          session.access_token,
+        );
+      })
+      .catch(() => {
+        if (active) setGuestBootstrapFailed(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [authHydrated, isPublic, setAuth, token]);
+
+  useEffect(() => {
     if (conversations && conversations.length) setList(conversations);
   }, [conversations, setList]);
 
@@ -50,8 +73,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [list, currentId, setCurrent]);
 
   useEffect(() => {
-    if (authHydrated && !token && !isPublic) router.replace('/login');
-  }, [authHydrated, isPublic, router, token]);
+    if (
+      authHydrated &&
+      !token &&
+      !isPublic &&
+      (!LOCAL_GUEST_ACCESS || guestBootstrapFailed)
+    ) {
+      router.replace('/login');
+    }
+  }, [authHydrated, guestBootstrapFailed, isPublic, router, token]);
 
   if (isPublic) return <>{children}</>;
   if (!authHydrated || !token) return null;

@@ -7,6 +7,7 @@ from app.main import app
 FRONTEND_ROUTES = {
     ("post", "/api/auth/sms/send"),
     ("post", "/api/auth/login"),
+    ("post", "/api/auth/local-guest"),
     ("get", "/api/conversations"),
     ("post", "/api/conversations"),
     ("get", "/api/conversations/{conversation_id}/members"),
@@ -39,6 +40,7 @@ FRONTEND_ROUTES = {
 
 FRONTEND_JSON_SCHEMAS = {
     ("post", "/api/auth/login"): ("TokenResponse", "SmsLoginRequest"),
+    ("post", "/api/auth/local-guest"): ("TokenResponse", None),
     ("post", "/api/conversations"): ("ConversationOut", "ConversationCreate"),
     ("post", "/api/conversations/{conversation_id}/messages"): (
         "SendMessageResponse",

@@ -66,6 +66,8 @@ test/                       仓库级 Agent handler/live 测试
 .\scripts\core.ps1 status
 ```
 
+The local core command explicitly enables a dev/test-only local guest session. Opening the frontend root URL enters the real workspace without SMS; the frontend still uses its normal JWT, FastAPI, PostgreSQL, Redis, and Agent paths. Production, staging, and ordinary development starts leave this disabled.
+
 脚本会打印实际 URL，后端默认从 `8001` 开始查找空闲端口，前端默认从 `3000` 开始，不会停止不属于本项目的进程。详细说明见 [`GETTING_STARTED.md`](GETTING_STARTED.md)。
 
 默认 `Procfile` 只启动后端、合并 Agent worker 和前端。四个独立 Worker、MCP、MinIO、Qdrant、LiteLLM 网关和 K8s 都属于可选生产配置，见 [`deploy/production/README.md`](deploy/production/README.md)。
@@ -100,12 +102,12 @@ pnpm dev
 | --- | --- |
 | 运行环境 | `ENV`、`DEBUG`、`LOG_LEVEL` |
 | 数据 | `DATABASE_URL`、`REDIS_URL`、`CELERY_*` |
-| 鉴权 | `JWT_SECRET`、`JWT_EXPIRE_HOURS`、`SMS_DEV_MODE`、`SMS_OTP_TTL_SECONDS` |
+| 鉴权 | `JWT_SECRET`、`JWT_EXPIRE_HOURS`、`SMS_DEV_MODE`、`SMS_OTP_TTL_SECONDS`、`LOCAL_GUEST_ACCESS` |
 | 实时事件 | `SSE_HEARTBEAT_SECONDS`、`WS_HEARTBEAT_SECONDS`、`CORS_ORIGINS` |
 | 模型 | `LITELLM_URL`、`LITELLM_API_KEY`、`LITELLM_MOCK` |
 | 工具 | `MCP_*_URL` |
 | 对象存储 | `OSS_*` |
-| 前端 | `NEXT_PUBLIC_API_URL`、`NEXT_PUBLIC_MOCK_MODE` |
+| 前端 | `NEXT_PUBLIC_API_URL`、`NEXT_PUBLIC_MOCK_MODE`、`NEXT_PUBLIC_LOCAL_GUEST_ACCESS` |
 
 `JWT_SECRET`、`SMS_DEV_MODE=true` 和示例基础设施密码只能用于本地开发/测试；安全 CI 会阻止提交 `.env`、疑似真实密钥和高风险生产默认值。
 

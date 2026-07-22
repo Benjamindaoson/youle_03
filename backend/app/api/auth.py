@@ -71,6 +71,10 @@ class MeResponse(BaseModel):
     nickname: str
 
 
+_LOCAL_GUEST_PHONE = "local-guest"
+_LOCAL_GUEST_NICKNAME = "本地访客"
+
+
 @router.post("/sms/send", status_code=status.HTTP_204_NO_CONTENT)
 @limiter.limit("12/minute")
 async def sms_send(request: Request, req: SmsSendRequest) -> None:
@@ -105,6 +109,30 @@ async def login(
 
     token = _create_token(user.id)
     return TokenResponse(access_token=token, user_id=str(user.id))
+
+
+@router.post("/local-guest", response_model=TokenResponse)
+async def local_guest_login(
+    session: AsyncSession = Depends(get_session),
+) -> TokenResponse:
+    """Create a reusable local-only identity for the core demo."""
+    if not settings.is_dev or not settings.LOCAL_GUEST_ACCESS:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "本地访客访问未启用")
+
+    user = (
+        await session.execute(select(User).where(User.phone == _LOCAL_GUEST_PHONE))
+    ).scalar_one_or_none()
+    if user is None:
+        user = User(phone=_LOCAL_GUEST_PHONE, nickname=_LOCAL_GUEST_NICKNAME)
+        ensure_default_avatar_style(user)
+        session.add(user)
+        await session.flush()
+    else:
+        ensure_default_avatar_style(user)
+    user.last_login_at = datetime.now(UTC)
+    await session.commit()
+
+    return TokenResponse(access_token=_create_token(user.id), user_id=str(user.id))
 
 
 @router.post("/refresh", response_model=TokenResponse)

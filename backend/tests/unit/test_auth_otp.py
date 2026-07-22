@@ -178,3 +178,32 @@ async def test_wrong_login_code_never_queries_user_table(
 
     assert exc_info.value.status_code == 401
     assert session.executions == 0
+
+
+@pytest.mark.asyncio
+async def test_local_guest_session_is_opt_in_and_returns_a_regular_jwt(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    session = _UserSession()
+    monkeypatch.setattr(auth.settings, "LOCAL_GUEST_ACCESS", True)
+
+    response = await auth.local_guest_login(session=session)  # type: ignore[arg-type]
+
+    assert isinstance(auth.decode_token(response.access_token), UUID)
+    assert response.user_id == str(auth.decode_token(response.access_token))
+    assert session.added[0].phone == "local-guest"
+    assert session.commits == 1
+
+
+@pytest.mark.asyncio
+async def test_local_guest_session_is_rejected_when_disabled(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    session = _UserSession()
+    monkeypatch.setattr(auth.settings, "LOCAL_GUEST_ACCESS", False)
+
+    with pytest.raises(HTTPException) as exc_info:
+        await auth.local_guest_login(session=session)  # type: ignore[arg-type]
+
+    assert exc_info.value.status_code == 403
+    assert session.executions == 0

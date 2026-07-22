@@ -1,10 +1,10 @@
 'use client';
 
 // 登录页(v4 §38 #332-335)— 短信验证码登录
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserStore } from '@/stores/user';
-import { MOCK_MODE, loginWithSms, sendSmsCode } from '@/lib/client';
+import { LOCAL_GUEST_ACCESS, MOCK_MODE, loginWithSms, sendSmsCode } from '@/lib/client';
 
 const USE_MOCK = MOCK_MODE;
 
@@ -18,6 +18,14 @@ export default function LoginPage() {
   const [counter, setCounter] = useState(0);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (LOCAL_GUEST_ACCESS) router.replace('/');
+  }, [router]);
+
+  if (LOCAL_GUEST_ACCESS) {
+    return null;
+  }
 
   function startCounter() {
     setCounter(60);

@@ -35,3 +35,8 @@ def test_production_sms_requires_provider_credentials() -> None:
             _env_file=None,
             **_production_settings(ALIYUN_SMS_TEMPLATE_CODE=""),
         )
+
+
+def test_production_rejects_local_guest_access() -> None:
+    with pytest.raises(ValidationError, match="LOCAL_GUEST_ACCESS"):
+        Settings(_env_file=None, **_production_settings(LOCAL_GUEST_ACCESS=True))

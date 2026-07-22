@@ -6,6 +6,7 @@ import {
   fetchConversations,
   fetchConversationMessages,
   loginWithSms,
+  startLocalGuestSession,
   mockModeEnabled,
   openPrivateConversation,
   fetchSkillDetail,
@@ -52,6 +53,21 @@ describe('typed API client', () => {
         method: 'POST',
         body: JSON.stringify({ phone: '13800138000', code: '123456' }),
       }),
+    );
+  });
+
+  it('starts an explicitly requested local guest session through the backend', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({ access_token: 'guest-jwt', token_type: 'bearer', user_id: 'guest-user' }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await startLocalGuestSession();
+
+    expect(result).toMatchObject({ access_token: 'guest-jwt', user_id: 'guest-user' });
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringMatching(/\/api\/auth\/local-guest$/),
+      expect.objectContaining({ method: 'POST' }),
     );
   });
 

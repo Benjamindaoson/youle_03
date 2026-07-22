@@ -48,6 +48,7 @@ function Initialize-Core {
     $env:PYTHONUTF8 = '1'
     $env:DEBUG = 'false'
     $env:LITELLM_MOCK = 'true'
+    $env:LOCAL_GUEST_ACCESS = 'true'
 
     if (-not (Test-Path (Join-Path $Root '.env'))) {
         Copy-Item (Join-Path $Root '.env.example') (Join-Path $Root '.env')
@@ -110,10 +111,12 @@ function Start-Core {
     $FrontendPort = Find-FreePort $FrontendPort
     Invoke-Checked 'docker' @('compose', '-f', $ComposeFile, 'up', '-d', '--wait')
     $env:LITELLM_MOCK = 'true'
+    $env:LOCAL_GUEST_ACCESS = 'true'
     $env:DEBUG = 'false'
     $env:PYTHONUTF8 = '1'
     $env:REDIS_URL = 'redis://127.0.0.1:6379/0'
     $env:NEXT_PUBLIC_API_URL = "http://127.0.0.1:$BackendPort"
+    $env:NEXT_PUBLIC_LOCAL_GUEST_ACCESS = 'true'
 
     $Backend = Start-Process -FilePath $Python -ArgumentList @('-m', 'app.run', '--host', '127.0.0.1', '--port', $BackendPort) -WorkingDirectory (Join-Path $Root 'backend') -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $RuntimeDir 'backend.log') -RedirectStandardError (Join-Path $RuntimeDir 'backend.error.log')
     $Agent = Start-Process -FilePath $Python -ArgumentList @('-m', 'agents.core_worker') -WorkingDirectory $Root -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $RuntimeDir 'agent.log') -RedirectStandardError (Join-Path $RuntimeDir 'agent.error.log')
