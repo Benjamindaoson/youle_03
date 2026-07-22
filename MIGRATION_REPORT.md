@@ -2,11 +2,12 @@
 
 日期：2026-07-21
 整合分支：`codex/youle-mas-consolidation`
-唯一主干：`Benjamindaoson/youle_03@14815ee`
+历史基线：`Benjamindaoson/youle_03@14815ee`
+最终仓库：`Benjamindaoson/youle-mas`（`main`）
 
 ## 结论
 
-四个仓库没有被机械拼接。最终工程只保留 `backend/`、`agents/`、`frontend/` 三个正式应用根目录，以 `youle_03` 的 FastAPI、SQLAlchemy/Alembic、Redis Streams、LangGraph、Agent Worker、MCP 和 Skill YAML 为事实来源。其他仓库只迁移了不重复且能接入该边界的产品、事件和安全增量。
+四个仓库没有被机械拼接。最终工程只保留 `backend/`、`agents/`、`frontend/` 三个正式应用根目录，以现已重命名为 `youle-mas` 的原 `youle_03` 代码线为事实来源。其他仓库只迁移了不重复且能接入该边界的产品、事件和安全增量；`youle01`、`oye-mas`、`youle-agno` 已在最终验证后删除。
 
 ## 各来源迁移内容
 
