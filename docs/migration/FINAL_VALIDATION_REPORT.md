@@ -1,5 +1,16 @@
 # youle-mas 最终验证报告
 
+## 2026-07-22 最终状态（覆盖下方历史阶段记录）
+
+- 最终仓库：`https://github.com/Benjamindaoson/youle-mas`，默认分支 `main`。
+- PR #2（全栈清理）与 PR #3（pnpm 9/11 frozen-install 兼容）均在全部阻断检查通过后合并。
+- 全量结果：Ruff 通过；Backend **313 passed, 2 skipped**；Agents/root **228 passed, 77 skipped**；Frontend lint/typecheck、**20 tests**、13 路由 production build 通过。
+- 本机核心运行已验证：PostgreSQL + Redis 两个容器，FastAPI + combined LangGraph worker + Next.js 三个应用进程；`/ready` 为 db/redis `ok`、LiteLLM `mock`，前端页面 200，真实浏览器 HITL 长流程通过。
+- 从最终 `main` fresh clone 到 `D:\Codex\youle-mas-final` 后，Python 安装、Alembic、后端、Agent 和 6 个代表性 E2E/worker 测试通过。由于 D: 剩余空间为 0 GB，前端从同一提交导出到 C 盘运行副本完成安装、lint、typecheck、20 tests 和页面 200 验证；Chromium runtime 的再次下载在 5 分钟网络超时，浏览器证据沿用合并前同一代码的完整实测。
+- `youle01`、`oye-mas`、`youle-agno` 已删除；原 `youle_03` 已重命名为 `youle-mas`。旧 URL 仅为 GitHub 自动重定向。
+
+以下内容保留为 2026-07-21 整合阶段的历史验证记录。
+
 验证日期：2026-07-21
 分支：`codex/youle-mas-consolidation`
 基线：`youle_03@14815ee`

@@ -70,10 +70,10 @@
 
 ## 9. Single repository retirement
 
-- [ ] 9.1 Commit and push the verified cleanup branch, open a PR against the target repository default branch, and merge only after required checks pass.
-- [ ] 9.2 Verify the merged default branch can install, migrate, build, test, and start from a fresh checkout.
-- [ ] 9.3 Confirm the final target repository identity and the exact three source repositories to retire.
-- [ ] 9.4 Delete the three source GitHub repositories only after 9.1-9.3 pass, then verify the account exposes only the target repository for this project.
+- [x] 9.1 Commit and push the verified cleanup branch, open a PR against the target repository default branch, and merge only after required checks pass.
+- [x] 9.2 Verify the merged default branch can install, migrate, build, test, and start from a fresh checkout.
+- [x] 9.3 Confirm the final target repository identity and the exact three source repositories to retire.
+- [x] 9.4 Delete the three source GitHub repositories only after 9.1-9.3 pass, then verify the account exposes only the target repository for this project.
 
 ## 10. Cost-aware runtime profiles
 
@@ -82,4 +82,4 @@
 - [x] 10.3 Provide one unified Agent worker entry point for the core runtime; retain independently scalable workers only in production configuration.
 - [x] 10.4 Move optional production infrastructure and deployment settings under a separate `deploy/production/` directory without duplicating application code.
 - [x] 10.5 Verify the core mock journey performs zero paid model calls and measure its two-container/three-application-process runtime.
-- [ ] 10.6 Fresh-clone the merged canonical repository to the local D: drive and repeat install, migration, start, API, frontend, Agent, and browser verification before repository retirement.
+- [x] 10.6 Fresh-clone the merged canonical repository to the local D: drive and repeat install, migration, start, API, frontend, Agent, and browser verification before repository retirement. D: had 0 GB free, so dependency storage and the frontend runtime copy were placed on C: while the canonical clone, backend, Agent, and migration ran from D:.
