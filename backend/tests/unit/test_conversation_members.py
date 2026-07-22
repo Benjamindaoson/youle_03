@@ -21,6 +21,11 @@ def test_group_has_five_roles_no_hr_finance() -> None:
     assert len(members) == 5
     assert "hr" not in members
     assert "finance_manager" not in members
+
+
+def test_ecommerce_group_excludes_av_hr_and_finance() -> None:
+    members = _members_for_mode("group", skill_id="ecommerce_detail_image")
+    assert members == ["ceo_assistant", "agent_1", "agent_2", "agent_3"]
     assert "ceo_assistant" in members
 
 

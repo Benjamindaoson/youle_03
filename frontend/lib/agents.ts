@@ -52,6 +52,14 @@ export const GROUP_ROLES: RoleKey[] = [
   'agent_4',
 ];
 
+// 电商详情图在同一群聊中协作：不需要影音师、HR 或财务经理。
+export const ECOMMERCE_GROUP_ROLES: RoleKey[] = [
+  'ceo_assistant',
+  'agent_1',
+  'agent_2',
+  'agent_3',
+];
+
 export const STATUS_LABEL: Record<AgentStatus, string> = {
   working: '工作中',
   idle: '发呆中',

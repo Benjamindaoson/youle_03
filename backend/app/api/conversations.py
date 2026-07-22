@@ -17,6 +17,7 @@ from app.api.auth import get_current_user_id
 from app.db import get_session
 from app.models.conversation import Conversation
 from app.models.mode_switch_log import ModeSwitchLog
+from app.models.skill import Skill
 from app.models.user import User
 from app.schemas.ws import WSEventType
 from app.services.quota_enforce import QuotaExceeded, enforce_group_creation
@@ -248,12 +249,20 @@ _MAIN_SESSION_ROLES = (
     "finance_manager",
 )
 _GROUP_ROLES = ("ceo_assistant", "agent_1", "agent_2", "agent_3", "agent_4")
+_ECOMMERCE_GROUP_ROLES = ("ceo_assistant", "agent_1", "agent_2", "agent_3")
 
 
-def _members_for_mode(mode: str, *, private_chat_agent_id: str | None = None) -> list[str]:
+def _members_for_mode(
+    mode: str,
+    *,
+    skill_id: str | None = None,
+    private_chat_agent_id: str | None = None,
+) -> list[str]:
     if mode == "main_session":
         return list(_MAIN_SESSION_ROLES)
     if mode == "group":
+        if skill_id == "ecommerce_detail_image":
+            return list(_ECOMMERCE_GROUP_ROLES)
         return list(_GROUP_ROLES)
     if mode == "private_chat":
         return [private_chat_agent_id or "ceo_assistant"]
@@ -273,7 +282,15 @@ async def list_members(
     if conv.user_id != user_id:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "无权访问")
 
-    role_ids = _members_for_mode(conv.mode, private_chat_agent_id=conv.private_chat_agent_id)
+    skill_key: str | None = None
+    if conv.skill_id is not None:
+        skill = await session.get(Skill, conv.skill_id)
+        skill_key = skill.skill_id if skill is not None else None
+    role_ids = _members_for_mode(
+        conv.mode,
+        skill_id=skill_key,
+        private_chat_agent_id=conv.private_chat_agent_id,
+    )
     if not role_ids:
         return []
 
