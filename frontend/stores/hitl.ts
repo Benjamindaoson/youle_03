@@ -4,9 +4,13 @@ import type { components } from '@/lib/api-types';
 type APIHITLGate = components['schemas']['HITLGateOut'];
 
 export type HITLGate = Omit<APIHITLGate, 'gate_type'> & {
-  gate_type: 'version_select' | 'quality_review' | 'final_approval';
+  gate_type: 'version_select' | 'quality_review' | 'final_approval' | 'image_generation_confirmation';
   conversation_id?: string;
-  preview_artifact?: { type: string; reference: string };
+  preview_artifact?: {
+    type?: string;
+    reference?: string;
+    metadata?: Record<string, unknown>;
+  };
 };
 
 export type ClarificationPrompt = {
