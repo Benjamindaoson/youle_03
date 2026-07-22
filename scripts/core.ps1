@@ -128,11 +128,16 @@ function Start-Core {
     $env:NEXT_PUBLIC_API_URL = "http://127.0.0.1:$BackendPort"
     $env:NEXT_PUBLIC_LOCAL_GUEST_ACCESS = 'true'
 
+    # The production server uses much less memory than next dev after it has
+    # compiled the workspace. This keeps the core profile viable on a small
+    # machine while preserving the same mock API contract.
+    Invoke-Checked 'pnpm' @('--dir', 'frontend', 'build')
+
     $Backend = Start-Process -FilePath $Python -ArgumentList @('-m', 'app.run', '--host', '127.0.0.1', '--port', $BackendPort) -WorkingDirectory (Join-Path $Root 'backend') -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $RuntimeDir 'backend.log') -RedirectStandardError (Join-Path $RuntimeDir 'backend.error.log')
     $Agent = Start-Process -FilePath $Python -ArgumentList @('-m', 'agents.core_worker') -WorkingDirectory $Root -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $RuntimeDir 'agent.log') -RedirectStandardError (Join-Path $RuntimeDir 'agent.error.log')
     $Node = (Get-Command node).Source
     $Next = Join-Path $Root 'frontend\node_modules\next\dist\bin\next'
-    $Frontend = Start-Process -FilePath $Node -ArgumentList @($Next, 'dev', '--hostname', '127.0.0.1', '--port', $FrontendPort) -WorkingDirectory (Join-Path $Root 'frontend') -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $RuntimeDir 'frontend.log') -RedirectStandardError (Join-Path $RuntimeDir 'frontend.error.log')
+    $Frontend = Start-Process -FilePath $Node -ArgumentList @($Next, 'start', '--hostname', '127.0.0.1', '--port', $FrontendPort) -WorkingDirectory (Join-Path $Root 'frontend') -WindowStyle Hidden -PassThru -RedirectStandardOutput (Join-Path $RuntimeDir 'frontend.log') -RedirectStandardError (Join-Path $RuntimeDir 'frontend.error.log')
 
     @{
         backend = $Backend.Id
