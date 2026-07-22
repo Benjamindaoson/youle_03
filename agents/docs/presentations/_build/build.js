@@ -1,4 +1,4 @@
-// 给老板的智能体技术架构 PPT — youle_mas
+// 给老板的智能体技术架构 PPT — haole_mas
 // 9 维度全栈能力 · 9 篇 ADR 治理 · production-grade
 
 const pptxgen = require("pptxgenjs");
@@ -7,7 +7,7 @@ const path = require("path");
 const pres = new pptxgen();
 pres.layout = "LAYOUT_WIDE"; // 13.3 × 7.5
 pres.author = "Benjamin";
-pres.title = "youle_mas 智能体技术架构";
+pres.title = "haole_mas 智能体技术架构";
 
 // ─── 调色板:Midnight Executive + Coral 强调 ───
 const C = {
@@ -61,7 +61,7 @@ const TOTAL = 12;
   });
 
   // 主标题
-  s.addText("youle_mas", {
+  s.addText("haole_mas", {
     x: 0.9, y: 2.3, w: 12, h: 0.8,
     fontSize: 22, color: C.ice, fontFace: F.body,
     charSpacing: 8, bold: false, margin: 0,
@@ -683,7 +683,7 @@ const TOTAL = 12;
   // 表头
   const cols = [3.4, 2.2, 2.2, 2.2, 2.2];
   const xStart = 0.7;
-  const headers = ["能力 / 维度", "youle_mas", "Anthropic", "Manus", "Devin"];
+  const headers = ["能力 / 维度", "haole_mas", "Anthropic", "Manus", "Devin"];
   const headerColors = [C.navy, C.coral, C.navy, C.navy, C.navy];
 
   let cx = xStart;

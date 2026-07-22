@@ -65,7 +65,7 @@ if _SENTRY_DSN:
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     log.info(
-        "youle.startup",
+        "haole.startup",
         env=settings.ENV,
         mock=settings.LITELLM_MOCK,
         runner="langgraph",
@@ -89,7 +89,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await event_bus.start()
     event_publisher.start()
     yield
-    log.info("youle.shutdown")
+    log.info("haole.shutdown")
     from agents.orchestrator_agent.langgraph_runner.checkpointer import (
         close_postgres_checkpointer,
     )
@@ -103,7 +103,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(
-    title="「有了」后端",
+    title="「haole」后端",
     version="0.1.0",
     lifespan=lifespan,
     docs_url="/docs" if settings.is_dev else None,

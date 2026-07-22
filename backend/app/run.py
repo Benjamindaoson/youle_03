@@ -18,7 +18,7 @@ def server_loop_factory() -> asyncio.AbstractEventLoop:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run the Youle FastAPI backend")
+    parser = argparse.ArgumentParser(description="Run the haole FastAPI backend")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", default=8000, type=int)
     args = parser.parse_args()

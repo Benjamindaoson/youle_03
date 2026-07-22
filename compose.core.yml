@@ -1,20 +1,20 @@
-name: youle-core
+name: haole-core
 
 services:
   postgres:
     image: pgvector/pgvector:pg16
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-youle}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-youle_dev}
-      POSTGRES_DB: ${POSTGRES_DB:-youle}
+      POSTGRES_USER: ${POSTGRES_USER:-haole}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-haole_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-haole}
     ports:
       - "5432:5432"
     volumes:
-      - youle_core_postgres:/var/lib/postgresql/data
+      - haole_core_postgres:/var/lib/postgresql/data
       - ./backend/infrastructure/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-youle} -d ${POSTGRES_DB:-youle}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-haole} -d ${POSTGRES_DB:-haole}"]
       interval: 5s
       timeout: 5s
       retries: 12
@@ -25,7 +25,7 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - youle_core_redis:/data
+      - haole_core_redis:/data
     command: ["redis-server", "--appendonly", "yes"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -34,5 +34,5 @@ services:
       retries: 12
 
 volumes:
-  youle_core_postgres:
-  youle_core_redis:
+  haole_core_postgres:
+  haole_core_redis:

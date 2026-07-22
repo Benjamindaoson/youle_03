@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: postgres
-  namespace: youle
+  namespace: haole
 spec:
   serviceName: postgres
   replicas: 1
@@ -15,10 +15,10 @@ spec:
         - name: postgres
           image: pgvector/pgvector:pg16
           env:
-            - { name: POSTGRES_USER, value: youle }
-            - { name: POSTGRES_DB,   value: youle }
+            - { name: POSTGRES_USER, value: haole }
+            - { name: POSTGRES_DB,   value: haole }
             - name: POSTGRES_PASSWORD
-              valueFrom: { secretKeyRef: { name: youle-secrets, key: POSTGRES_PASSWORD } }
+              valueFrom: { secretKeyRef: { name: haole-secrets, key: POSTGRES_PASSWORD } }
             - { name: PGDATA, value: /var/lib/postgresql/data/pgdata }
           ports: [{ containerPort: 5432 }]
           resources:
@@ -27,7 +27,7 @@ spec:
           volumeMounts:
             - { name: data, mountPath: /var/lib/postgresql/data }
           readinessProbe:
-            exec: { command: ["pg_isready", "-U", "youle"] }
+            exec: { command: ["pg_isready", "-U", "haole"] }
             initialDelaySeconds: 10
   volumeClaimTemplates:
     - metadata: { name: data }
@@ -37,7 +37,7 @@ spec:
 ---
 apiVersion: v1
 kind: Service
-metadata: { name: postgres, namespace: youle }
+metadata: { name: postgres, namespace: haole }
 spec:
   selector: { app: postgres }
   ports: [{ port: 5432, targetPort: 5432 }]

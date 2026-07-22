@@ -38,8 +38,8 @@ os.environ["DEBUG"] = "true"
 os.environ["LITELLM_MOCK"] = "true"
 
 pytestmark = pytest.mark.skipif(
-    os.getenv("YOULE_RUN_LIVE_TESTS") != "1",
-    reason="requires explicit YOULE_RUN_LIVE_TESTS=1 with PostgreSQL and Redis",
+    os.getenv("HAOLE_RUN_LIVE_TESTS") != "1",
+    reason="requires explicit HAOLE_RUN_LIVE_TESTS=1 with PostgreSQL and Redis",
 )
 
 

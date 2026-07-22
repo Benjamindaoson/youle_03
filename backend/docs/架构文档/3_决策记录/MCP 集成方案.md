@@ -388,7 +388,7 @@ spec:
         gpu: "true"
       containers:
       - name: mcp-server
-        image: youle/mcp-video-tools:v1.0
+        image: haole/mcp-video-tools:v1.0
         resources:
           limits: {nvidia.com/gpu: 1, memory: 8Gi}
         ports: [{containerPort: 8001}]

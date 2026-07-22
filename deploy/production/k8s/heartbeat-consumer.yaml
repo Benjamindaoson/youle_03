@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: heartbeat-consumer
-  namespace: youle
+  namespace: haole
   labels: { app: heartbeat-consumer }
 spec:
   replicas: 1   # 单副本即可,XREADGROUP 只在内部记录状态
@@ -12,11 +12,11 @@ spec:
     spec:
       containers:
         - name: consumer
-          image: ghcr.io/your-org/youle-backend:0.1.0
+          image: ghcr.io/your-org/haole-backend:0.1.0
           command: ["python", "-m", "app.services.heartbeat_consumer"]
           envFrom:
-            - configMapRef: { name: youle-config }
-            - secretRef:    { name: youle-secrets }
+            - configMapRef: { name: haole-config }
+            - secretRef:    { name: haole-secrets }
           resources:
             requests: { cpu: "50m", memory: "128Mi" }
             limits:   { cpu: "300m", memory: "256Mi" }
@@ -25,7 +25,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: reflexion-runner
-  namespace: youle
+  namespace: haole
   labels: { app: reflexion-runner }
 spec:
   replicas: 1
@@ -35,11 +35,11 @@ spec:
     spec:
       containers:
         - name: runner
-          image: ghcr.io/your-org/youle-backend:0.1.0
+          image: ghcr.io/your-org/haole-backend:0.1.0
           command: ["python", "-m", "flywheel.reflexion.runner"]
           envFrom:
-            - configMapRef: { name: youle-config }
-            - secretRef:    { name: youle-secrets }
+            - configMapRef: { name: haole-config }
+            - secretRef:    { name: haole-secrets }
           resources:
             requests: { cpu: "100m", memory: "256Mi" }
             limits:   { cpu: "500m", memory: "512Mi" }
@@ -48,7 +48,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ingestion-runner
-  namespace: youle
+  namespace: haole
   labels: { app: ingestion-runner }
 spec:
   replicas: 1
@@ -58,11 +58,11 @@ spec:
     spec:
       containers:
         - name: runner
-          image: ghcr.io/your-org/youle-backend:0.1.0
+          image: ghcr.io/your-org/haole-backend:0.1.0
           command: ["python", "-m", "flywheel.ingestion.runner"]
           envFrom:
-            - configMapRef: { name: youle-config }
-            - secretRef:    { name: youle-secrets }
+            - configMapRef: { name: haole-config }
+            - secretRef:    { name: haole-secrets }
           resources:
             requests: { cpu: "100m", memory: "256Mi" }
             limits:   { cpu: "500m", memory: "512Mi" }

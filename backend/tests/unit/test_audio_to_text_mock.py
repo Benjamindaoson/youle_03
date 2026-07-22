@@ -19,7 +19,7 @@ def fake_task() -> AgentTask:
         task_type="audio_to_text",
         user_id=uuid4(),
         conversation_id=uuid4(),
-        inputs={"audio_url": "oss://youle-dev/clips/sample.mp3"},
+        inputs={"audio_url": "oss://haole-dev/clips/sample.mp3"},
         parameters={"language": "zh"},
         routing_hints={},
     )

@@ -1,7 +1,7 @@
 [project]
-name = "youle-mas"
+name = "haole-mas"
 version = "0.1.0"
-description = "Unified Youle multi-agent platform workspace"
+description = "Unified haole multi-agent platform workspace"
 requires-python = ">=3.12"
 dependencies = []
 

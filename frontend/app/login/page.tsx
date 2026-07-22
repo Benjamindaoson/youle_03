@@ -81,7 +81,7 @@ export default function LoginPage() {
     <main className="grid min-h-screen place-items-center bg-wechat-bg">
       <div className="w-[360px] rounded-md border border-wechat-line bg-white p-6 shadow-sm">
         <h1 className="mb-1 text-center text-[17px] font-semibold text-wechat-fg">
-          登录「有了」
+          登录「haole」
         </h1>
         <p className="mb-4 text-center text-[12px] text-wechat-mute">
           你的专属 AI 工作团队

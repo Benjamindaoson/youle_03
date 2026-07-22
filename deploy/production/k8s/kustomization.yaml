@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: youle
+namespace: haole
 namePrefix: ""
 
 resources:
@@ -23,16 +23,16 @@ resources:
   - ingress.yaml
 
 commonLabels:
-  app.kubernetes.io/part-of: youle
+  app.kubernetes.io/part-of: haole
 
 images:
-  - name: ghcr.io/your-org/youle-backend
+  - name: ghcr.io/your-org/haole-backend
     newTag: 0.1.0
-  - name: ghcr.io/your-org/youle-agent
+  - name: ghcr.io/your-org/haole-agent
     newTag: 0.1.0
-  - name: ghcr.io/your-org/youle-mcp
+  - name: ghcr.io/your-org/haole-mcp
     newTag: 0.1.0
-  - name: ghcr.io/your-org/youle-frontend
+  - name: ghcr.io/your-org/haole-frontend
     newTag: 0.1.0
-  - name: ghcr.io/your-org/youle-celery-video
+  - name: ghcr.io/your-org/haole-celery-video
     newTag: 0.1.0

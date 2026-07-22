@@ -1,8 +1,8 @@
-# Youle MAS Consolidation Implementation Plan
+# haole MAS Consolidation Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Consolidate the four Youle repositories into one runnable `youle-mas` project while preserving `youle_03` as the only backend and orchestration trunk.
+**Goal:** Consolidate the four haole repositories into one runnable `haole-mas` project while preserving `haole_03` as the only backend and orchestration trunk.
 
 **Architecture:** Keep `backend/` and `agents/` unchanged as the canonical FastAPI/LangGraph/Redis/MCP boundary, add one `frontend/`, and introduce one `UserEvent` publisher shared by PostgreSQL replay, Redis Pub/Sub, SSE, and WebSocket. Extend existing OTP and Skill models instead of importing alternative auth, Agno, or task systems.
 
@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- `youle_03@14815ee` is the only trunk; never copy `youle01/backend`, `oye-mas/youle/backend`, or `youle-agno/src` as a second runtime.
+- `haole_03@14815ee` is the only trunk; never copy `haole01/backend`, `oye-mas/haole/backend`, or `haole-agno/src` as a second runtime.
 - The only formal roots are `backend/`, `agents/`, and `frontend/`.
 - Every behavior change follows RED → GREEN → regression verification.
 - Every database change is a new Alembic revision; never edit existing revisions or call `create_all` at startup.
@@ -26,10 +26,10 @@
 **Files:**
 - Modify: `.gitignore`
 - Create: `docs/migration/BASELINE_REPORT.md`
-- Modify: `openspec/changes/consolidate-youle-mas/tasks.md`
+- Modify: `openspec/changes/consolidate-haole-mas/tasks.md`
 
 **Interfaces:**
-- Consumes: clean branch `codex/youle-mas-consolidation` and `docs/migration/MIGRATION_MATRIX.md`.
+- Consumes: clean branch `codex/haole-mas-consolidation` and `docs/migration/MIGRATION_MATRIX.md`.
 - Produces: reproducible local toolchain and an evidence-only baseline report.
 
 - [ ] **Step 1: Protect the project-local environment**
@@ -72,7 +72,7 @@ Expected: actual results are copied to `BASELINE_REPORT.md`; missing frontend an
 
 ```bash
 git add .gitignore .codex openspec docs/migration docs/superpowers
-git commit -m "chore: establish youle_03 consolidation baseline"
+git commit -m "chore: establish haole_03 consolidation baseline"
 ```
 
 ### Task 2: Blocking CI structure
@@ -163,7 +163,7 @@ Expected: import failure because the modules do not exist.
 
 - [ ] **Step 3: Implement minimal schema and bus**
 
-`UserEvent` uses UUID v4 IDs and UTC timestamps. `EventBus` keeps `dict[str, WeakSet[Queue[UserEvent]]]`, bounds every queue, and uses Redis channel `youle:events:{user_id}`. Redis failure calls `publish_local` and logs one warning.
+`UserEvent` uses UUID v4 IDs and UTC timestamps. `EventBus` keeps `dict[str, WeakSet[Queue[UserEvent]]]`, bounds every queue, and uses Redis channel `haole:events:{user_id}`. Redis failure calls `publish_local` and logs one warning.
 
 - [ ] **Step 4: Add lifecycle and verify GREEN**
 
@@ -211,7 +211,7 @@ Persist best-effort, then publish through EventBus. SSE authenticates with `get_
 
 - [ ] **Step 5: Unify WebSocket transport**
 
-Make `ws_manager.publish()` delegate to `event_publisher.publish_user_event`. Make the WebSocket endpoint subscribe to EventBus and forward `UserEvent.model_dump(mode="json")`; remove its independent `youle.ws` Redis listener.
+Make `ws_manager.publish()` delegate to `event_publisher.publish_user_event`. Make the WebSocket endpoint subscribe to EventBus and forward `UserEvent.model_dump(mode="json")`; remove its independent `haole.ws` Redis listener.
 
 - [ ] **Step 6: Verify GREEN**
 
@@ -276,7 +276,7 @@ git commit -m "refactor: harden otp and skill lifecycle contracts"
 ### Task 6: Canonical frontend baseline and typed API client
 
 **Files:**
-- Create: `frontend/` from `source-oye-mas/youle/frontend/`
+- Create: `frontend/` from `source-oye-mas/haole/frontend/`
 - Modify: `frontend/package.json`
 - Modify: `frontend/lib/api.ts`
 - Create: `frontend/lib/events.ts`
@@ -323,7 +323,7 @@ git add frontend
 git commit -m "feat: migrate canonical frontend and typed api client"
 ```
 
-### Task 7: Product flows, SSE UI, and youle01 product presentation
+### Task 7: Product flows, SSE UI, and haole01 product presentation
 
 **Files:**
 - Modify: `frontend/app/login/page.tsx`
@@ -333,7 +333,7 @@ git commit -m "feat: migrate canonical frontend and typed api client"
 - Modify: `frontend/components/chat/*`
 - Modify: `frontend/components/hitl/*`
 - Modify: `frontend/stores/{conversation,task,hitl,ws}.ts`
-- Create: `frontend/app/website/` from non-duplicated `youle01` product components
+- Create: `frontend/app/website/` from non-duplicated `haole01` product components
 - Create: `frontend/app/login/page.test.tsx`
 - Create: `frontend/components/chat/ChatPanel.test.tsx`
 - Create: `frontend/components/hitl/ScriptApproval.test.tsx`
@@ -352,7 +352,7 @@ Cover login, conversations, group message, private message, task state, HITL act
 
 Remove `mock-data` production imports and component-level fetch calls. The browser submits user intent only; Agent/Skill selection returned by backend is rendered, not recomputed.
 
-- [ ] **Step 3: Migrate unique youle01 presentation**
+- [ ] **Step 3: Migrate unique haole01 presentation**
 
 Bring the product landing page and useful visual chat elements into existing components; do not copy `chat-store.ts`, `store.ts`, legacy routes, direct conductor APIs, or default mocks.
 
@@ -408,7 +408,7 @@ git commit -m "test: add mock multi-agent sse end-to-end coverage"
 - Create: `MIGRATION_REPORT.md`
 - Create: `docs/migration/FINAL_VALIDATION_REPORT.md`
 - Modify: `README.md`
-- Modify: `openspec/changes/consolidate-youle-mas/tasks.md`
+- Modify: `openspec/changes/consolidate-haole-mas/tasks.md`
 
 **Interfaces:**
 - Produces: evidence-based handoff, commits, pushed branch, and Draft PR.
@@ -451,8 +451,8 @@ git commit -m "docs: add migration report and update architecture"
 - [ ] **Step 5: Push and open Draft PR**
 
 ```bash
-git push -u origin codex/youle-mas-consolidation
-gh pr create --draft --base main --title "Consolidate Youle repositories into unified youle-mas platform" --body-file .github/PULL_REQUEST_TEMPLATE.md
+git push -u origin codex/haole-mas-consolidation
+gh pr create --draft --base main --title "Consolidate haole repositories into unified haole-mas platform" --body-file .github/PULL_REQUEST_TEMPLATE.md
 ```
 
 Expected: Draft PR URL returned; do not merge.

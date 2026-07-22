@@ -73,7 +73,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <Menu size={16} />
         </button>
         <span className="text-[13px] font-semibold text-wechat-fg">
-          {current?.name ?? '有了'}
+          {current?.name ?? 'haole'}
         </span>
         {showAgentPanel ? (
           <button

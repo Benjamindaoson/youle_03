@@ -8,9 +8,9 @@ via env vars (no config-file dependency, unlike the upstream module which
 read ``hermes_cli.config``).
 
 Env vars:
-    YOULE_TOOL_OUTPUT_MAX_BYTES        terminal stdout/stderr cap (chars)
-    YOULE_TOOL_OUTPUT_MAX_LINES        read_file pagination + truncation cap
-    YOULE_TOOL_OUTPUT_MAX_LINE_LENGTH  per-line length cap
+    HAOLE_TOOL_OUTPUT_MAX_BYTES        terminal stdout/stderr cap (chars)
+    HAOLE_TOOL_OUTPUT_MAX_LINES        read_file pagination + truncation cap
+    HAOLE_TOOL_OUTPUT_MAX_LINE_LENGTH  per-line length cap
 """
 
 from __future__ import annotations
@@ -43,13 +43,13 @@ def get_tool_output_limits() -> dict[str, int]:
     """
     return {
         "max_bytes": _coerce_positive_int(
-            os.getenv("YOULE_TOOL_OUTPUT_MAX_BYTES"), DEFAULT_MAX_BYTES
+            os.getenv("HAOLE_TOOL_OUTPUT_MAX_BYTES"), DEFAULT_MAX_BYTES
         ),
         "max_lines": _coerce_positive_int(
-            os.getenv("YOULE_TOOL_OUTPUT_MAX_LINES"), DEFAULT_MAX_LINES
+            os.getenv("HAOLE_TOOL_OUTPUT_MAX_LINES"), DEFAULT_MAX_LINES
         ),
         "max_line_length": _coerce_positive_int(
-            os.getenv("YOULE_TOOL_OUTPUT_MAX_LINE_LENGTH"),
+            os.getenv("HAOLE_TOOL_OUTPUT_MAX_LINE_LENGTH"),
             DEFAULT_MAX_LINE_LENGTH,
         ),
     }

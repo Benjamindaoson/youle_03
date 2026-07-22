@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: litellm-config
-  namespace: youle
+  namespace: haole
 data:
   config.yaml: |
     # 真实 prod 配置由 ops 维护;此处放安全默认骨架
@@ -31,7 +31,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: litellm-proxy
-  namespace: youle
+  namespace: haole
   labels: { app: litellm-proxy }
 spec:
   replicas: 2
@@ -46,9 +46,9 @@ spec:
           ports: [{ containerPort: 4000 }]
           env:
             - name: LITELLM_MASTER_KEY
-              valueFrom: { secretKeyRef: { name: youle-secrets, key: LITELLM_MASTER_KEY } }
+              valueFrom: { secretKeyRef: { name: haole-secrets, key: LITELLM_MASTER_KEY } }
           envFrom:
-            - secretRef: { name: youle-secrets }
+            - secretRef: { name: haole-secrets }
           volumeMounts:
             - name: config
               mountPath: /app/config.yaml
@@ -65,7 +65,7 @@ spec:
 ---
 apiVersion: v1
 kind: Service
-metadata: { name: litellm-proxy, namespace: youle }
+metadata: { name: litellm-proxy, namespace: haole }
 spec:
   selector: { app: litellm-proxy }
   ports: [{ port: 4000, targetPort: 4000 }]

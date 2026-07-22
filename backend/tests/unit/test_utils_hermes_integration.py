@@ -44,7 +44,7 @@ def test_redacting_formatter_scrubs_anthropic_key(caplog) -> None:
     test_logger.setLevel(logging.INFO)
 
     # Force redaction on (test isolation against env-overridden disable)
-    os.environ["YOULE_REDACT_SECRETS"] = "true"
+    os.environ["HAOLE_REDACT_SECRETS"] = "true"
 
     raw = "Authorization: Bearer sk-ant-api03-AAAAAAAAAAAA1234567890abcdefXYZ"
     record = logging.LogRecord(

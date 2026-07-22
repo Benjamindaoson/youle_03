@@ -1,6 +1,6 @@
-# youle-mas
+# haole-mas
 
-`youle-mas` 是一个以群聊为交互入口的多 Agent 工作平台。项目以 `youle_03` 为唯一后端与编排主干，统一了 Next.js 前端、Skill 市场、Redis Agent 任务总线、MCP 工具、持久化用户事件、SSE 回放和短信 OTP 登录。
+`haole-mas` 是一个以群聊为交互入口的多 Agent 工作平台。项目以 `haole_03` 为唯一后端与编排主干，统一了 Next.js 前端、Skill 市场、Redis Agent 任务总线、MCP 工具、持久化用户事件、SSE 回放和短信 OTP 登录。
 
 当前仓库默认支持 `LITELLM_MOCK=true` 的无密钥开发与测试模式；真实模型、短信、对象存储和发布服务需要在服务端配置对应凭据。
 

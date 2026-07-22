@@ -13,7 +13,7 @@
 ## 执行命令
 
 ```bash
-youle/backend/.venv/bin/pytest test/test_all_agent_task_flows_langgraph_redis_live.py -q -s
+haole/backend/.venv/bin/pytest test/test_all_agent_task_flows_langgraph_redis_live.py -q -s
 ```
 
 首次全量结果:
@@ -30,7 +30,7 @@ youle/backend/.venv/bin/pytest test/test_all_agent_task_flows_langgraph_redis_li
 调高 `batch_generate` live test timeout 到 600s 后单独复测:
 
 ```bash
-youle/backend/.venv/bin/pytest 'test/test_all_agent_task_flows_langgraph_redis_live.py::test_all_agent_task_flows_via_langgraph_redis_live[agent_3-batch_generate]' -q -s
+haole/backend/.venv/bin/pytest 'test/test_all_agent_task_flows_langgraph_redis_live.py::test_all_agent_task_flows_via_langgraph_redis_live[agent_3-batch_generate]' -q -s
 ```
 
 结果:

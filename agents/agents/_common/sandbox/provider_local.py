@@ -30,7 +30,7 @@ from agents._common.sandbox.provider import (
 log = structlog.get_logger(__name__)
 
 LOCAL_SANDBOX_ROOT = os.getenv(
-    "LOCAL_SANDBOX_ROOT", str(Path(tempfile.gettempdir()) / "youle-sandbox")
+    "LOCAL_SANDBOX_ROOT", str(Path(tempfile.gettempdir()) / "haole-sandbox")
 )
 PYTHON_EXE = os.getenv("LOCAL_SANDBOX_PYTHON", "python")
 
@@ -135,7 +135,7 @@ class LocalSandbox(_SandboxBase):
         max_stdout_bytes: int | None = None,
     ) -> ExecResult:
         # 落到 sandbox cwd 下临时文件,避免 shell 转义噩梦
-        script_name = f"_youle_{uuid.uuid4().hex[:8]}.py"
+        script_name = f"_haole_{uuid.uuid4().hex[:8]}.py"
         script_path = self._cwd / script_name
         script_path.write_text(code, encoding="utf-8")
         try:

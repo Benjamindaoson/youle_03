@@ -8,7 +8,7 @@ metadata endpoints (169.254.169.254), localhost services, or private
 network hosts.
 
 Configuration:
-    YOULE_ALLOW_PRIVATE_URLS=true|false  (default: false; safe)
+    HAOLE_ALLOW_PRIVATE_URLS=true|false  (default: false; safe)
 
 Even when private resolution is allowed, cloud-metadata hostnames /
 IPs (169.254.169.254, metadata.google.internal, ECS task metadata,
@@ -57,7 +57,7 @@ _CGNAT_NETWORK = ipaddress.ip_network("100.64.0.0/10")
 
 def _global_allow_private_urls() -> bool:
     """Return True when the deployment opted out of private-IP blocking."""
-    return os.getenv("YOULE_ALLOW_PRIVATE_URLS", "").strip().lower() in (
+    return os.getenv("HAOLE_ALLOW_PRIVATE_URLS", "").strip().lower() in (
         "1", "true", "yes", "on",
     )
 
@@ -75,7 +75,7 @@ def is_always_blocked_url(url: str) -> bool:
 
     Use this as the security floor — cloud metadata IPs / hostnames have no
     legitimate agent use regardless of routing or the
-    ``YOULE_ALLOW_PRIVATE_URLS`` toggle.  Callers that bypass the full
+    ``HAOLE_ALLOW_PRIVATE_URLS`` toggle.  Callers that bypass the full
     :func:`is_safe_url` (e.g. routing private URLs through a sidecar) must
     still enforce this floor.
     """
@@ -145,7 +145,7 @@ def is_safe_url(url: str) -> bool:
     Resolves the hostname to an IP and checks against private ranges.
     Fails closed: DNS errors and unexpected exceptions block the request.
 
-    When ``YOULE_ALLOW_PRIVATE_URLS=true``, private-IP blocking is skipped
+    When ``HAOLE_ALLOW_PRIVATE_URLS=true``, private-IP blocking is skipped
     but cloud-metadata endpoints remain blocked.
     """
     try:
@@ -194,7 +194,7 @@ def is_safe_url(url: str) -> bool:
 
         if allow_all_private:
             logger.debug(
-                "Allowing private/internal resolution (YOULE_ALLOW_PRIVATE_URLS): %s",
+                "Allowing private/internal resolution (HAOLE_ALLOW_PRIVATE_URLS): %s",
                 hostname,
             )
 

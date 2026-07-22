@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: youle
+  name: haole
   labels:
-    name: youle
-    app.kubernetes.io/part-of: youle
+    name: haole
+    app.kubernetes.io/part-of: haole

@@ -3,7 +3,7 @@
 #   mock LLM: docker compose -f docker-compose.yml -f docker-compose.mock.yml -f docker-compose.celery.yml up -d
 #   real LLM: docker compose -f docker-compose.yml -f docker-compose.celery.yml up -d
 
-name: youle-dev
+name: haole-dev
 
 # 公共 agent 环境变量块（YAML anchor，各 agent 服务 <<: *agent-env 继承）
 x-agent-env: &agent-env
@@ -22,7 +22,7 @@ x-agent-env: &agent-env
   OSS_ENDPOINT: http://minio:9000
   OSS_ACCESS_KEY: ${OSS_ACCESS_KEY:-minioadmin}
   OSS_SECRET_KEY: ${OSS_SECRET_KEY:-minioadmin}
-  OSS_BUCKET: ${OSS_BUCKET:-youle-dev}
+  OSS_BUCKET: ${OSS_BUCKET:-haole-dev}
   MCP_OSS_URL: http://mcp-oss:7006
   MCP_SEARCH_URL: http://mcp-search:7001
   MCP_IMAGE_TOOLS_URL: http://mcp-image-tools:7002
@@ -40,8 +40,8 @@ services:
       dockerfile: deploy/production/Dockerfile.agent
       args:
         AGENT_KIND: text
-    image: youle-agent-text:latest
-    container_name: youle-agent-1
+    image: haole-agent-text:latest
+    container_name: haole-agent-1
     restart: unless-stopped
     depends_on:
       redis:
@@ -59,8 +59,8 @@ services:
       dockerfile: deploy/production/Dockerfile.agent
       args:
         AGENT_KIND: document
-    image: youle-agent-document:latest
-    container_name: youle-agent-2
+    image: haole-agent-document:latest
+    container_name: haole-agent-2
     restart: unless-stopped
     depends_on:
       redis:
@@ -78,8 +78,8 @@ services:
       dockerfile: deploy/production/Dockerfile.agent
       args:
         AGENT_KIND: image
-    image: youle-agent-image:latest
-    container_name: youle-agent-3
+    image: haole-agent-image:latest
+    container_name: haole-agent-3
     restart: unless-stopped
     depends_on:
       redis:
@@ -94,8 +94,8 @@ services:
     build:
       context: ../..
       dockerfile: deploy/production/Dockerfile.celery
-    image: youle-celery-worker:latest
-    container_name: youle-celery-worker-video
+    image: haole-celery-worker:latest
+    container_name: haole-celery-worker-video
     restart: unless-stopped
     depends_on:
       redis:
@@ -109,7 +109,7 @@ services:
       OSS_ENDPOINT: http://minio:9000
       OSS_ACCESS_KEY: ${OSS_ACCESS_KEY:-minioadmin}
       OSS_SECRET_KEY: ${OSS_SECRET_KEY:-minioadmin}
-      OSS_BUCKET: ${OSS_BUCKET:-youle-dev}
+      OSS_BUCKET: ${OSS_BUCKET:-haole-dev}
       MCP_AUDIO_TOOLS_URL: http://mcp-audio-tools:7004
       MCP_VIDEO_TOOLS_URL: http://mcp-video-tools:7003
     command: ["celery", "-A", "agents.av_agent.celery_tasks.video_workflow", "worker",
@@ -118,7 +118,7 @@ services:
   # 可选:Flower 监控面板
   flower:
     image: mher/flower:2.0
-    container_name: youle-flower
+    container_name: haole-flower
     restart: unless-stopped
     depends_on:
       - redis
@@ -136,8 +136,8 @@ services:
       dockerfile: deploy/production/Dockerfile.mcp
       args:
         MCP_KIND: search
-    image: youle-mcp-search:latest
-    container_name: youle-mcp-search
+    image: haole-mcp-search:latest
+    container_name: haole-mcp-search
     restart: unless-stopped
     environment:
       MCP_KIND: search
@@ -151,8 +151,8 @@ services:
       dockerfile: deploy/production/Dockerfile.mcp
       args:
         MCP_KIND: image_tools
-    image: youle-mcp-image-tools:latest
-    container_name: youle-mcp-image-tools
+    image: haole-mcp-image-tools:latest
+    container_name: haole-mcp-image-tools
     restart: unless-stopped
     depends_on:
       minio:
@@ -162,7 +162,7 @@ services:
       OSS_ENDPOINT: http://minio:9000
       OSS_ACCESS_KEY: ${OSS_ACCESS_KEY:-minioadmin}
       OSS_SECRET_KEY: ${OSS_SECRET_KEY:-minioadmin}
-      OSS_BUCKET: ${OSS_BUCKET:-youle-dev}
+      OSS_BUCKET: ${OSS_BUCKET:-haole-dev}
     ports:
       - "7002:7002"
 
@@ -172,8 +172,8 @@ services:
       dockerfile: deploy/production/Dockerfile.mcp
       args:
         MCP_KIND: document_tools
-    image: youle-mcp-document-tools:latest
-    container_name: youle-mcp-document-tools
+    image: haole-mcp-document-tools:latest
+    container_name: haole-mcp-document-tools
     restart: unless-stopped
     depends_on:
       minio:
@@ -183,7 +183,7 @@ services:
       OSS_ENDPOINT: http://minio:9000
       OSS_ACCESS_KEY: ${OSS_ACCESS_KEY:-minioadmin}
       OSS_SECRET_KEY: ${OSS_SECRET_KEY:-minioadmin}
-      OSS_BUCKET: ${OSS_BUCKET:-youle-dev}
+      OSS_BUCKET: ${OSS_BUCKET:-haole-dev}
     ports:
       - "7005:7005"
 
@@ -193,8 +193,8 @@ services:
       dockerfile: deploy/production/Dockerfile.mcp
       args:
         MCP_KIND: oss
-    image: youle-mcp-oss:latest
-    container_name: youle-mcp-oss
+    image: haole-mcp-oss:latest
+    container_name: haole-mcp-oss
     restart: unless-stopped
     depends_on:
       minio:
@@ -204,14 +204,14 @@ services:
       OSS_ENDPOINT: http://minio:9000
       OSS_ACCESS_KEY: ${OSS_ACCESS_KEY:-minioadmin}
       OSS_SECRET_KEY: ${OSS_SECRET_KEY:-minioadmin}
-      OSS_BUCKET: ${OSS_BUCKET:-youle-dev}
+      OSS_BUCKET: ${OSS_BUCKET:-haole-dev}
     ports:
       - "7006:7006"
 
   # mcp-video-tools 也需要 ffmpeg/MoviePy(因为它执行真实 compose),所以也用 celery 镜像
   mcp-video-tools:
-    image: youle-celery-worker:latest
-    container_name: youle-mcp-video-tools
+    image: haole-celery-worker:latest
+    container_name: haole-mcp-video-tools
     restart: unless-stopped
     depends_on:
       minio:
@@ -220,7 +220,7 @@ services:
       OSS_ENDPOINT: http://minio:9000
       OSS_ACCESS_KEY: ${OSS_ACCESS_KEY:-minioadmin}
       OSS_SECRET_KEY: ${OSS_SECRET_KEY:-minioadmin}
-      OSS_BUCKET: ${OSS_BUCKET:-youle-dev}
+      OSS_BUCKET: ${OSS_BUCKET:-haole-dev}
     ports:
       - "7003:7003"
     # 用 fastapi 而不是 celery worker
@@ -228,8 +228,8 @@ services:
               "--host", "0.0.0.0", "--port", "7003"]
 
   mcp-audio-tools:
-    image: youle-celery-worker:latest
-    container_name: youle-mcp-audio-tools
+    image: haole-celery-worker:latest
+    container_name: haole-mcp-audio-tools
     restart: unless-stopped
     depends_on:
       minio:
@@ -238,7 +238,7 @@ services:
       OSS_ENDPOINT: http://minio:9000
       OSS_ACCESS_KEY: ${OSS_ACCESS_KEY:-minioadmin}
       OSS_SECRET_KEY: ${OSS_SECRET_KEY:-minioadmin}
-      OSS_BUCKET: ${OSS_BUCKET:-youle-dev}
+      OSS_BUCKET: ${OSS_BUCKET:-haole-dev}
       LITELLM_URL: ${LITELLM_URL:-http://litellm-mock:4010}
       LITELLM_API_KEY: ${LITELLM_API_KEY:-sk-mock-1234}
       LITELLM_MOCK: ${LITELLM_MOCK:-true}

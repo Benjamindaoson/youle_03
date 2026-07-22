@@ -69,7 +69,7 @@ async def _check_mcp() -> list[tuple[str, bool, str]]:
 
 
 def _check_minio() -> tuple[bool, str]:
-    bucket = os.getenv("OSS_BUCKET", "youle-dev")
+    bucket = os.getenv("OSS_BUCKET", "haole-dev")
     client = boto3.client(
         "s3",
         endpoint_url=os.getenv("OSS_ENDPOINT", "http://localhost:9000"),

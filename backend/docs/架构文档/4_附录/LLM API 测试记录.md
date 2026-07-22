@@ -2,7 +2,7 @@
 
 日期: 2026-05-06
 
-本文记录本轮对「有了」Agent LLM 路由、真实 API 连通性、handler 任务完成度的测试过程、结果与遗留问题。本文不记录任何真实 API Key。
+本文记录本轮对「haole」Agent LLM 路由、真实 API 连通性、handler 任务完成度的测试过程、结果与遗留问题。本文不记录任何真实 API Key。
 
 ## 测试目标
 
@@ -13,10 +13,10 @@
 
 ## 涉及代码
 
-- `youle/agents/_common/llm.py`
-- `youle/backend/app/router.py`
-- `youle/agents/av_agent/handlers/audio_to_text.py`
-- `youle/agents/av_agent/handlers/tts_generate.py`
+- `haole/agents/_common/llm.py`
+- `haole/backend/app/router.py`
+- `haole/agents/av_agent/handlers/audio_to_text.py`
+- `haole/agents/av_agent/handlers/tts_generate.py`
 - `test/test_agent_task_handlers.py`
 - `test/test_agent_task_handlers_live_api.py`
 
@@ -58,7 +58,7 @@
 命令:
 
 ```bash
-env DEBUG=true youle/backend/.venv/bin/pytest test/test_agent_task_handlers.py -q
+env DEBUG=true haole/backend/.venv/bin/pytest test/test_agent_task_handlers.py -q
 ```
 
 结果:
@@ -78,9 +78,9 @@ env DEBUG=true youle/backend/.venv/bin/pytest test/test_agent_task_handlers.py -
 命令:
 
 ```bash
-env DEBUG=true youle/backend/.venv/bin/pytest \
+env DEBUG=true haole/backend/.venv/bin/pytest \
   test/test_agent_task_handlers.py \
-  youle/backend/tests/smoke/test_infra.py \
+  haole/backend/tests/smoke/test_infra.py \
   -q
 ```
 
@@ -100,7 +100,7 @@ env DEBUG=true youle/backend/.venv/bin/pytest \
 命令:
 
 ```bash
-youle/backend/.venv/bin/pytest test/test_agent_task_handlers_live_api.py -q
+haole/backend/.venv/bin/pytest test/test_agent_task_handlers_live_api.py -q
 ```
 
 结果:

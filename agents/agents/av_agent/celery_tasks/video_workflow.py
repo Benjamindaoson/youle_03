@@ -35,13 +35,13 @@ CELERY_RESULT_BACKEND = os.getenv("CELERY_RESULT_BACKEND", "redis://redis:6379/2
 REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
 
 OSS_ENDPOINT = os.getenv("OSS_ENDPOINT", "http://minio:9000")
-OSS_BUCKET = os.getenv("OSS_BUCKET", "youle-dev")
+OSS_BUCKET = os.getenv("OSS_BUCKET", "haole-dev")
 
 MCP_AUDIO_URL = os.getenv("MCP_AUDIO_TOOLS_URL", "http://mcp-audio-tools:7004")
 MCP_VIDEO_URL = os.getenv("MCP_VIDEO_TOOLS_URL", "http://mcp-video-tools:7003")
 
 celery_app = Celery(
-    "youle-av",
+    "haole-av",
     broker=CELERY_BROKER_URL,
     backend=CELERY_RESULT_BACKEND,
 )

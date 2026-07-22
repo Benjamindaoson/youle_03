@@ -2,15 +2,15 @@
 
 不引 prometheus_client(避免多 worker 文件锁问题),直接拼文本。
 对接 Grafana 大盘的 4 个核心指标(对齐 Sprint 6 acceptance):
-  1. youle_intent_latency_seconds        意图理解延迟
-  2. youle_agent_queue_pending             Agent 队列积压
-  3. youle_video_task_success_total        视频任务成功率
-  4. youle_agent_status                    Agent 状态分布(0/1)
+  1. haole_intent_latency_seconds        意图理解延迟
+  2. haole_agent_queue_pending             Agent 队列积压
+  3. haole_video_task_success_total        视频任务成功率
+  4. haole_agent_status                    Agent 状态分布(0/1)
 
 加 + 系统指标:
-  - youle_tasks_total{status}              任务总数(running/completed/failed)
-  - youle_hitl_open_total                   未关闭的 HITL gate 数
-  - youle_dlq_total{agent}                 DLQ 积压
+  - haole_tasks_total{status}              任务总数(running/completed/failed)
+  - haole_hitl_open_total                   未关闭的 HITL gate 数
+  - haole_dlq_total{agent}                 DLQ 积压
 """
 
 from __future__ import annotations
@@ -74,12 +74,12 @@ async def render_prometheus_metrics() -> str:
         p99 = _percentile(_intent_latency_samples, 0.99)
     else:
         avg = p95 = p99 = 0.0
-    p("# HELP youle_intent_latency_seconds 意图理解模块延迟(秒)")
-    p("# TYPE youle_intent_latency_seconds summary")
-    p(f"youle_intent_latency_seconds_avg {avg:.4f}")
-    p(f"youle_intent_latency_seconds{{quantile=\"0.95\"}} {p95:.4f}")
-    p(f"youle_intent_latency_seconds{{quantile=\"0.99\"}} {p99:.4f}")
-    p(f"youle_intent_latency_samples_total {len(_intent_latency_samples)}")
+    p("# HELP haole_intent_latency_seconds 意图理解模块延迟(秒)")
+    p("# TYPE haole_intent_latency_seconds summary")
+    p(f"haole_intent_latency_seconds_avg {avg:.4f}")
+    p(f"haole_intent_latency_seconds{{quantile=\"0.95\"}} {p95:.4f}")
+    p(f"haole_intent_latency_seconds{{quantile=\"0.99\"}} {p99:.4f}")
+    p(f"haole_intent_latency_samples_total {len(_intent_latency_samples)}")
 
     # 2. Agent 队列积压(Redis Streams XLEN)
     try:
@@ -87,14 +87,14 @@ async def render_prometheus_metrics() -> str:
         for kind in ("text", "document", "image", "av"):
             queue = f"agent_tasks:{kind}"
             pending = await r.xlen(queue)
-            p("# HELP youle_agent_queue_pending Agent 队列积压数")
-            p("# TYPE youle_agent_queue_pending gauge")
-            p(f'youle_agent_queue_pending{{agent="{kind}"}} {pending}')
+            p("# HELP haole_agent_queue_pending Agent 队列积压数")
+            p("# TYPE haole_agent_queue_pending gauge")
+            p(f'haole_agent_queue_pending{{agent="{kind}"}} {pending}')
         # DLQ
         for kind in ("agent_1", "agent_2", "agent_3", "agent_4"):
             dlq = f"agent_dlq:{kind}"
             pending = await r.xlen(dlq)
-            p(f'youle_dlq_total{{agent="{kind}"}} {pending}')
+            p(f'haole_dlq_total{{agent="{kind}"}} {pending}')
     except Exception as e:
         log.warning("metrics.redis_failed", err=str(e))
 
@@ -110,10 +110,10 @@ async def render_prometheus_metrics() -> str:
                     .group_by(Task.status)
                 )
             ).all()
-            p("# HELP youle_tasks_total 24h 内任务数")
-            p("# TYPE youle_tasks_total counter")
+            p("# HELP haole_tasks_total 24h 内任务数")
+            p("# TYPE haole_tasks_total counter")
             for status, n in rows:
-                p(f'youle_tasks_total{{status="{status}"}} {n}')
+                p(f'haole_tasks_total{{status="{status}"}} {n}')
 
             # 视频任务成功率(从 skills 表 join domain=av)— 24h
             from app.models.skill import Skill
@@ -128,14 +128,14 @@ async def render_prometheus_metrics() -> str:
             ).all()
             video_done = sum(n for s, n in video_rows if s == "completed")
             video_fail = sum(n for s, n in video_rows if s == "failed")
-            p(f"youle_video_task_success_total {video_done}")
-            p(f"youle_video_task_failed_total {video_fail}")
+            p(f"haole_video_task_success_total {video_done}")
+            p(f"haole_video_task_failed_total {video_fail}")
 
             # HITL 未关闭门
             open_gates = await session.scalar(
                 select(func.count(HITLGate.id)).where(HITLGate.closed_at.is_(None))
             )
-            p(f"youle_hitl_open_total {open_gates or 0}")
+            p(f"haole_hitl_open_total {open_gates or 0}")
 
             # Agent 状态分布
             status_rows = (
@@ -144,10 +144,10 @@ async def render_prometheus_metrics() -> str:
                     .group_by(AgentStatus.agent_id, AgentStatus.status)
                 )
             ).all()
-            p("# HELP youle_agent_status Agent 状态分布")
-            p("# TYPE youle_agent_status gauge")
+            p("# HELP haole_agent_status Agent 状态分布")
+            p("# TYPE haole_agent_status gauge")
             for aid, status, n in status_rows:
-                p(f'youle_agent_status{{agent="{aid}",status="{status}"}} {n}')
+                p(f'haole_agent_status{{agent="{aid}",status="{status}"}} {n}')
     except Exception as e:
         log.warning("metrics.db_failed", err=str(e))
 

@@ -20,7 +20,7 @@ from mcp_servers._shared.http_app import make_app
 log = structlog.get_logger(__name__)
 
 OSS_ENDPOINT = os.getenv("OSS_ENDPOINT", "http://minio:9000")
-OSS_BUCKET = os.getenv("OSS_BUCKET", "youle-dev")
+OSS_BUCKET = os.getenv("OSS_BUCKET", "haole-dev")
 
 
 def _s3():
@@ -131,7 +131,7 @@ async def download_batch(arguments: dict[str, Any]) -> dict[str, Any]:
     async def _fetch(u: str) -> bytes | None:
         try:
             async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
-                resp = await client.get(u, headers={"User-Agent": "youle/1.0"})
+                resp = await client.get(u, headers={"User-Agent": "haole/1.0"})
                 if resp.status_code == 200:
                     return resp.content
         except Exception as e:

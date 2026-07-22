@@ -16,7 +16,7 @@
 ## 背景
 
 S 档目标的 12 项升级里第 4 条:**通用执行器三件套**(browser / code / files)。
-没有这些,Agent 只能做"我们 handler 写过的"事;有了它们,Agent 可以做
+没有这些,Agent 只能做"我们 handler 写过的"事;haole它们,Agent 可以做
 "用户上传 CSV 让我清洗 + 出图"、"帮我抓抖音热榜"、"读这个 PDF 提取表格" 之类的开放任务。
 
 ## 决策
@@ -97,7 +97,7 @@ agents/mcp_servers/
 |---|---|---|
 | `BROWSER_HEADLESS` | `true` | Playwright 无头模式 |
 | `BROWSER_DEFAULT_TIMEOUT_MS` | `15000` | navigate / click / wait 默认超时 |
-| `BROWSER_USER_AGENT` | `Mozilla/5.0 (compatible; YouleAgent/1.0)` | UA |
+| `BROWSER_USER_AGENT` | `Mozilla/5.0 (compatible; haoleAgent/1.0)` | UA |
 | `CODE_EXECUTOR_DEFAULT_TIMEOUT_S` | `60` | python_exec / shell_exec 默认超时 |
 | `CODE_EXECUTOR_MAX_SESSIONS` | `4` | 进程内最多保留的 task sandbox 数量 |
 | `CODE_EXECUTOR_ALLOW_PIP` | `false` | 是否开启 install_package |

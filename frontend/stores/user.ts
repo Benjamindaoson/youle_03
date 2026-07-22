@@ -19,7 +19,7 @@ export const useUserStore = create<State>()(
       logout: () => set({ user: null, token: null }),
     }),
     {
-      name: 'youle.auth',
+      name: 'haole.auth',
       storage: createJSONStorage(() => localStorage),
     },
   ),

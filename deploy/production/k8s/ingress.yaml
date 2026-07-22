@@ -1,8 +1,8 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: youle-ingress
-  namespace: youle
+  name: haole-ingress
+  namespace: haole
   annotations:
     kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/proxy-body-size: "20m"      # 上传图/视频
@@ -14,10 +14,10 @@ metadata:
     cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
   tls:
-    - hosts: ["youle.example.com"]
-      secretName: youle-tls
+    - hosts: ["haole.example.com"]
+      secretName: haole-tls
   rules:
-    - host: youle.example.com
+    - host: haole.example.com
       http:
         paths:
           - path: /api
@@ -38,7 +38,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: deny-external-from-agents
-  namespace: youle
+  namespace: haole
 spec:
   podSelector:
     matchExpressions:
@@ -46,7 +46,7 @@ spec:
   policyTypes: ["Egress"]
   egress:
     - to:
-        - namespaceSelector: { matchLabels: { name: youle } }
+        - namespaceSelector: { matchLabels: { name: haole } }
     - to:    # DNS
         - namespaceSelector: { matchLabels: { name: kube-system } }
       ports: [{ protocol: UDP, port: 53 }]

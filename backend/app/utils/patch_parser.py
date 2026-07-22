@@ -4,7 +4,7 @@ Adapted from hermes-agent (MIT) © Nous Research — ``tools/patch_parser.py``.
 
 Parses the V4A patch format used by codex / cline / other coding agents.
 The *apply* phase from upstream depends on a ``file_ops`` interface that
-youle_mas's ``document_agent`` provides differently, so this module only
+haole_mas's ``document_agent`` provides differently, so this module only
 exposes the parser + dataclasses.  Wire ``parse_v4a_patch`` together with
 ``utils.fuzzy_match.fuzzy_find_and_replace`` to build the apply pipeline
 inside the agent that owns file I/O.

@@ -1,11 +1,11 @@
 ## Why
 
-`youle_03` 已具备质量最高的 LangGraph、PostgreSQL/Alembic、Redis Streams、Agent Worker、MCP 和 Skill 契约，但正式前端缺失，实时事件仍只有独立 WebSocket 通道，OTP、Skill 市场和跨语言契约的测试与 CI 也不完整。四个仓库继续独立演进会扩大模型、路由、编排和依赖冲突，因此需要在不破坏主干的前提下完成一次可验证的择优整合。
+`haole_03` 已具备质量最高的 LangGraph、PostgreSQL/Alembic、Redis Streams、Agent Worker、MCP 和 Skill 契约，但正式前端缺失，实时事件仍只有独立 WebSocket 通道，OTP、Skill 市场和跨语言契约的测试与 CI 也不完整。四个仓库继续独立演进会扩大模型、路由、编排和依赖冲突，因此需要在不破坏主干的前提下完成一次可验证的择优整合。
 
 ## What Changes
 
-- 将仓库工程名和文档统一为 `youle-mas`，只保留根 `backend/`、`agents/`、`frontend/` 三个正式运行模块。
-- 保留 `youle_03` 唯一后端、LangGraph 主编排、Redis 任务总线、Agent Worker、MCP、JWT、短信 OTP 和 Alembic 历史。
+- 将仓库工程名和文档统一为 `haole-mas`，只保留根 `backend/`、`agents/`、`frontend/` 三个正式运行模块。
+- 保留 `haole_03` 唯一后端、LangGraph 主编排、Redis 任务总线、Agent Worker、MCP、JWT、短信 OTP 和 Alembic 历史。
 - 新增统一事件发布接口，底层同时支持 Redis Pub/Sub、SSE、WebSocket 和 PostgreSQL 短期回放；SSE 支持 Bearer 鉴权、用户/会话归属、heartbeat、事件 ID、`Last-Event-ID` 和断线重连。
 - 建立根 `frontend/` Next.js 应用，交付登录、会话、群聊、Agent 私聊、任务状态、HITL、Skill 市场、素材/成果和错误/重连状态；生产路径只调用真实主干 API，mock 必须显式开启。
 - 在现有 Skill/YAML 和用户可见性模型上补齐内置、安装、启用、禁用、版本、权限、MCP 与 Agent 类型状态，不执行市场中的不可信代码。

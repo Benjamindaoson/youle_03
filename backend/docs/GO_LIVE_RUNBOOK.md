@@ -1,4 +1,4 @@
-# 「有了」V1 上线 Runbook
+# 「haole」V1 上线 Runbook
 
 > Sprint 6 acceptance:**短视频 ≥ 10 次 + 电商详情图 ≥ 5 次,smoke 全绿才算达标。**
 >
@@ -42,12 +42,12 @@ GitHub Actions [release.yml](../.github/workflows/release.yml) 会:
 
 ```bash
 # 装好真凭证(临时 export,不要 commit)
-export LITELLM_URL=https://litellm.youle.example.com
+export LITELLM_URL=https://litellm.haole.example.com
 export LITELLM_MASTER_KEY=...
 export TAVILY_API_KEY=...
 export ALIYUN_OSS_ACCESS_KEY_ID=...
 export ALIYUN_OSS_ACCESS_KEY_SECRET=...
-export ALIYUN_OSS_BUCKET=youle-prod
+export ALIYUN_OSS_BUCKET=haole-prod
 export VOLCENGINE_TTS_APPID=...
 export VOLCENGINE_TTS_TOKEN=...
 export SENTRY_DSN=...
@@ -71,9 +71,9 @@ python backend/scripts/verify-real-apis.py
 
 ```bash
 # 在仓库根目录,确认 prod kubeconfig 已加载
-kubectl --context=prod -n youle apply -f deploy/production/k8s/jobs/db-migrate.yaml
-kubectl --context=prod -n youle wait --for=condition=complete job/db-migrate --timeout=10m
-kubectl --context=prod -n youle logs job/db-migrate
+kubectl --context=prod -n haole apply -f deploy/production/k8s/jobs/db-migrate.yaml
+kubectl --context=prod -n haole wait --for=condition=complete job/db-migrate --timeout=10m
+kubectl --context=prod -n haole logs job/db-migrate
 ```
 
 确认 `Running upgrade ... -> head` 在日志末尾。
@@ -87,7 +87,7 @@ GitHub Actions `release.yml` workflow_dispatch,选 `prod`。
 ```bash
 cd deploy/production/k8s
 sed -i 's/newTag: .*/newTag: v0.1.0/g' kustomization.yaml
-kubectl --context=prod apply -k . -n youle --record
+kubectl --context=prod apply -k . -n haole --record
 ```
 
 ### 3.4 Rollout 等待
@@ -96,7 +96,7 @@ kubectl --context=prod apply -k . -n youle --record
 for d in backend agent-text agent-document agent-image agent-av frontend \
          heartbeat-consumer reflexion-runner ingestion-runner \
          celery-worker-video litellm-proxy; do
-  kubectl --context=prod -n youle rollout status deploy/$d --timeout=10m
+  kubectl --context=prod -n haole rollout status deploy/$d --timeout=10m
 done
 ```
 
@@ -107,7 +107,7 @@ done
 ### 4.1 Sprint 6 必过项
 
 ```bash
-BASE_URL=https://youle.example.com \
+BASE_URL=https://haole.example.com \
 JWT_TOKEN=$(cat /tmp/prod-smoke-jwt) \
 python backend/scripts/smoke-prod.py --short-video 10 --detail 5
 ```
@@ -118,7 +118,7 @@ python backend/scripts/smoke-prod.py --short-video 10 --detail 5
 
 ### 4.2 大盘验证
 
-打开 Grafana:`https://grafana.example.com/d/youle-v1-slo`
+打开 Grafana:`https://grafana.example.com/d/haole-v1-slo`
 
 肉眼检查:
 - 意图理解 p95 < 1.5s ✓
@@ -142,10 +142,10 @@ python backend/scripts/smoke-prod.py --short-video 10 --detail 5
 # 镜像 tag 回退
 cd deploy/production/k8s
 sed -i 's/newTag: .*/newTag: v0.0.x-LAST-GOOD/g' kustomization.yaml
-kubectl --context=prod apply -k . -n youle
+kubectl --context=prod apply -k . -n haole
 
 # DB 迁移回滚(需提前确认 alembic downgrade 路径安全)
-kubectl --context=prod -n youle exec -it deploy/backend -- alembic downgrade -1
+kubectl --context=prod -n haole exec -it deploy/backend -- alembic downgrade -1
 ```
 
 ---
@@ -181,7 +181,7 @@ kubectl --context=prod -n youle exec -it deploy/backend -- alembic downgrade -1
 |---|---|---|
 | 真实 LiteLLM + 真 Tavily / volcengine / 阿里云 OSS 跑通 | ⬜ | `verify-real-apis.py` 输出全绿 |
 | K8s manifest 部署到 staging | ⬜ | `kubectl rollout status` 全部 OK |
-| Grafana 大盘上线 | ⬜ | `youle-v1-slo` dashboard 可访问 + 4 大指标有数据 |
+| Grafana 大盘上线 | ⬜ | `haole-v1-slo` dashboard 可访问 + 4 大指标有数据 |
 | E2E 跑 10 次短视频 + 5 次电商详情图,全绿 | ⬜ | `smoke-prod.py` 输出 15/15 成功 |
 
 四项全部勾完 → 正式上线公告。

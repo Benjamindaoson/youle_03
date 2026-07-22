@@ -81,7 +81,7 @@ export function AgentProfileCard({
   }, [anchorRect]);
 
   function shareCard() {
-    const text = `${meta.name} · ${meta.description ?? ''} · 来自「有了」AI 工作团队`;
+    const text = `${meta.name} · ${meta.description ?? ''} · 来自「haole」AI 工作团队`;
     if (navigator.share) {
       void navigator.share({ title: meta.name, text });
     } else {

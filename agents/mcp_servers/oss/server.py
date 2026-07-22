@@ -14,7 +14,7 @@ from mcp_servers._shared.http_app import make_app
 OSS_ENDPOINT = os.getenv("OSS_ENDPOINT", "http://minio:9000")
 OSS_ACCESS_KEY = os.getenv("OSS_ACCESS_KEY", "minioadmin")
 OSS_SECRET_KEY = os.getenv("OSS_SECRET_KEY", "minioadmin")
-OSS_BUCKET = os.getenv("OSS_BUCKET", "youle-dev")
+OSS_BUCKET = os.getenv("OSS_BUCKET", "haole-dev")
 OSS_REGION = os.getenv("OSS_REGION", "cn-hangzhou")
 
 _s3: Any | None = None

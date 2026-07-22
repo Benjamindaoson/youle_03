@@ -40,7 +40,7 @@ BROWSER_HEADLESS = os.getenv("BROWSER_HEADLESS", "true").lower() in {"1", "true"
 BROWSER_TIMEOUT_MS = int(os.getenv("BROWSER_DEFAULT_TIMEOUT_MS", "15000"))
 BROWSER_USER_AGENT = os.getenv(
     "BROWSER_USER_AGENT",
-    "Mozilla/5.0 (compatible; YouleAgent/1.0)",
+    "Mozilla/5.0 (compatible; haoleAgent/1.0)",
 )
 
 # ─── SSRF 防护 (ADR-026 S1 补丁) ───

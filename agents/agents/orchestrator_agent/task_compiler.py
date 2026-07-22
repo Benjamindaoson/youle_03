@@ -62,7 +62,7 @@ def _render_preview_prompt(
         root = re.split(r"[.[]", body, maxsplit=1)[0].strip()
         if root not in step_ids:
             return expression
-        token = f"__YOULE_DEFERRED_STEP_{len(deferred)}__"
+        token = f"__HAOLE_DEFERRED_STEP_{len(deferred)}__"
         deferred[token] = expression
         return token
 

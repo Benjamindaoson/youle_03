@@ -2,7 +2,7 @@
 """Sprint 6 acceptance:短视频 10 次 + 电商详情图 5 次,全绿才算上线达标。
 
 用法:
-    BASE_URL=https://staging.youle.example.com \
+    BASE_URL=https://staging.haole.example.com \
     JWT_TOKEN=eyJ... \
     python scripts/smoke-prod.py [--short-video N] [--detail M]
 

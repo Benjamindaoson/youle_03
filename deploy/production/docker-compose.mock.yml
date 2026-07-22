@@ -1,9 +1,9 @@
-name: youle-dev
+name: haole-dev
 
 services:
   litellm-mock:
     image: stoplight/prism:5
-    container_name: youle-litellm-mock
+    container_name: haole-litellm-mock
     restart: unless-stopped
     ports:
       - "4000:4010"

@@ -8,7 +8,7 @@ export const MOCK_CONVERSATIONS: ConversationSummary[] = [
     name: '你的第 1 个专属 AI 团队',
     kind: 'main_session',
     work_mode: 'auto',
-    preview: '@一下,你就有了',
+    preview: '@一下,你就haole',
     preview_time: '05:49',
     avatar_image: '/team-avatar.png',
   },

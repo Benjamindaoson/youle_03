@@ -434,11 +434,11 @@ def make_step_node(
 
         # ─── HITL gate:中断,等用户决议 ───
         if has_gate and result.status == "completed":
-            if os.getenv("YOULE_AUTO_APPROVE_HITL", "").lower() in {"1", "true", "yes"}:
+            if os.getenv("HAOLE_AUTO_APPROVE_HITL", "").lower() in {"1", "true", "yes"}:
                 update["hitl_decisions"] = {
                     sid: {
                         "resolution": "approved",
-                        "feedback": "auto approved by YOULE_AUTO_APPROVE_HITL",
+                        "feedback": "auto approved by HAOLE_AUTO_APPROVE_HITL",
                     }
                 }
                 return update

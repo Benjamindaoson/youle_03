@@ -15,7 +15,7 @@ from botocore.client import Config
 OSS_ENDPOINT = os.getenv("OSS_ENDPOINT", "http://minio:9000")
 OSS_ACCESS_KEY = os.getenv("OSS_ACCESS_KEY", "minioadmin")
 OSS_SECRET_KEY = os.getenv("OSS_SECRET_KEY", "minioadmin")
-OSS_BUCKET = os.getenv("OSS_BUCKET", "youle-dev")
+OSS_BUCKET = os.getenv("OSS_BUCKET", "haole-dev")
 
 _s3: Any | None = None
 

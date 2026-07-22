@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     DEBUG: bool = True
 
     # ── DB ──
-    DATABASE_URL: str = "postgresql+asyncpg://youle:youle_dev@localhost:5432/youle"
+    DATABASE_URL: str = "postgresql+asyncpg://haole:haole_dev@localhost:5432/haole"
 
     # ── Redis ──
     REDIS_URL: str = "redis://localhost:6379/0"
@@ -31,7 +31,7 @@ class Settings(BaseSettings):
     OSS_ENDPOINT: str = "http://localhost:9000"
     OSS_ACCESS_KEY: str = "minioadmin"
     OSS_SECRET_KEY: str = "minioadmin"
-    OSS_BUCKET: str = "youle-dev"
+    OSS_BUCKET: str = "haole-dev"
     OSS_REGION: str = "cn-hangzhou"
     OSS_USE_SSL: bool = False
 

@@ -2,7 +2,7 @@
 
 来源:[hermes-agent](https://github.com/NousResearch/hermes-agent)(MIT © Nous Research)
 
-挑选的高复用提示词卡片(均为通用的工程方法论,不绑定具体框架),供 youle_mas
+挑选的高复用提示词卡片(均为通用的工程方法论,不绑定具体框架),供 haole_mas
 的 Planner / Critic / Persona 在编排时引用。
 
 | 文件 | 何时触发 |

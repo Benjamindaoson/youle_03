@@ -1,8 +1,8 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: youle-config
-  namespace: youle
+  name: haole-config
+  namespace: haole
 data:
   ENV: "staging"
   LITELLM_URL: "http://litellm-proxy:4000"
@@ -10,11 +10,11 @@ data:
   STEP_PERSONA_MAX_BUDGET_TOKENS: "8000"
   AGENT_REACT_MAX_STEPS: "6"
   REDIS_URL: "redis://redis:6379/0"
-  DATABASE_URL: "postgresql+asyncpg://youle:youle@postgres:5432/youle"
+  DATABASE_URL: "postgresql+asyncpg://haole:haole@postgres:5432/haole"
   OSS_ENDPOINT: "http://minio:9000"
-  OSS_BUCKET: "youle"
+  OSS_BUCKET: "haole"
   QDRANT_URL: "http://qdrant:6333"
-  CORS_ORIGINS: "https://youle.example.com"
+  CORS_ORIGINS: "https://haole.example.com"
   AGENT_HEARTBEAT_INTERVAL: "20"
   AGENT_MAX_RETRIES: "2"
   AGENT_RETRY_BASE_SLEEP: "1.0"
@@ -25,12 +25,12 @@ data:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: youle-secrets
-  namespace: youle
+  name: haole-secrets
+  namespace: haole
   annotations:
     # 用 SealedSecret 加密;生成命令:
     #   kubeseal -f raw-secret.yaml -w sealed-secret.yaml
-    "youle.example.com/managed-by": "sealed-secrets"
+    "haole.example.com/managed-by": "sealed-secrets"
 type: Opaque
 stringData:
   JWT_SECRET: "<REPLACE-VIA-SEALED-SECRET>"

@@ -31,8 +31,8 @@ _load_env_file(AGENTS_ROOT / ".env")
 os.environ["LITELLM_MOCK"] = "false"
 
 pytestmark = pytest.mark.skipif(
-    os.getenv("YOULE_RUN_LIVE_TESTS") != "1",
-    reason="requires explicit YOULE_RUN_LIVE_TESTS=1 and live provider APIs",
+    os.getenv("HAOLE_RUN_LIVE_TESTS") != "1",
+    reason="requires explicit HAOLE_RUN_LIVE_TESTS=1 and live provider APIs",
 )
 
 
