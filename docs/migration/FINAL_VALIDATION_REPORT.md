@@ -7,7 +7,7 @@
 - 全量结果：Ruff 通过；Backend **313 passed, 2 skipped**；Agents/root **228 passed, 77 skipped**；Frontend lint/typecheck、**20 tests**、13 路由 production build 通过。
 - 本机核心运行已验证：PostgreSQL + Redis 两个容器，FastAPI + combined LangGraph worker + Next.js 三个应用进程；`/ready` 为 db/redis `ok`、LiteLLM `mock`，前端页面 200，真实浏览器 HITL 长流程通过。
 - 从最终 `main` fresh clone 到 `D:\Codex\youle-mas-final` 后，Python 安装、Alembic、后端、Agent 和 6 个代表性 E2E/worker 测试通过。由于 D: 剩余空间为 0 GB，前端从同一提交导出到 C 盘运行副本完成安装、lint、typecheck、20 tests 和页面 200 验证；Chromium runtime 的再次下载在 5 分钟网络超时，浏览器证据沿用合并前同一代码的完整实测。
-- `youle01`、`oye-mas`、`youle-agno` 已删除；原 `youle_03` 已重命名为 `youle-mas`。旧 URL 仅为 GitHub 自动重定向。
+- 已完成账号级 Youle 代码搜索：`youle01`、`oye-mas`、`youle-agno`、`youle_beifen` 和私有仓库 `youle-agno_claude` 均已退休；原 `youle_03` 已重命名为 `youle-mas`。`youle_beifen` 是不可从仓库根运行的一次性双目录备份；`youle-agno_claude` 是已放弃的 Agno 实现，包含旧反诈工作流和仅作参考的 LangGraph 副本，未合并以避免重新引入重复架构与技术债。现在仅保留 `youle-mas`。
 
 以下内容保留为 2026-07-21 整合阶段的历史验证记录。
 
