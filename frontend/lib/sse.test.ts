@@ -11,6 +11,7 @@ import {
 } from './sse';
 import { useConversationStore } from '@/stores/conversation';
 import { useHitlStore } from '@/stores/hitl';
+import { useTaskStore } from '@/stores/task';
 import { useWsStore } from '@/stores/ws';
 import {
   appendCachedMessage,
@@ -38,7 +39,8 @@ describe('conversation SSE', () => {
   beforeEach(() => {
     useConversationStore.setState({ list: [], currentId: null });
     queryClient.clear();
-    useHitlStore.setState({ queue: [] });
+    useHitlStore.setState({ queue: [], clarifications: {} });
+    useTaskStore.getState().reset();
     useWsStore.setState({ connected: false, lastEventId: null, error: null });
   });
 
@@ -97,12 +99,21 @@ describe('conversation SSE', () => {
   it('applies HITL lifecycle events and invalidates artifact queries', () => {
     const gate = {
       id: 'gate-1',
-      task_id: 'task-1',
       step_id: 'step-1',
       gate_type: 'quality_review' as const,
     };
-    applyUserEvent(event({ type: 'hitl_gate_opened', payload: { gate } }));
-    expect(useHitlStore.getState().queue).toEqual([gate]);
+    const preview = { type: 'image', reference: 'mock://task-1/step-1' };
+    applyUserEvent(event({
+      type: 'hitl_gate_opened',
+      task_id: 'task-1',
+      payload: { gate, preview_artifact: preview },
+    }));
+    expect(useHitlStore.getState().queue).toEqual([{
+      ...gate,
+      task_id: 'task-1',
+      conversation_id: event().conversation_id,
+      preview_artifact: preview,
+    }]);
 
     applyUserEvent(event({ type: 'hitl_gate_closed', payload: { gate_id: 'gate-1' } }));
     expect(useHitlStore.getState().queue).toEqual([]);
@@ -112,6 +123,46 @@ describe('conversation SSE', () => {
     expect(invalidateArtifacts).toHaveBeenCalledOnce();
   });
 
+  it('stores clarification prompts for the active conversation', () => {
+    applyUserEvent(event({
+      type: 'clarification_required',
+      payload: {
+        clarification: {
+          field: '风格',
+          form: 'single_select',
+          question: '请选择风格',
+          options: ['治愈向', '故事向'],
+        },
+      },
+    }));
+
+    expect(useHitlStore.getState().clarifications[event().conversation_id!]).toMatchObject({
+      field: '风格',
+      question: '请选择风格',
+      options: ['治愈向', '故事向'],
+    });
+  });
+
+  it('starts a real task and clears stale execution steps', () => {
+    useTaskStore.getState().upsertStep({
+      step_id: 'stale',
+      agent_id: 'agent_1',
+      status: 'completed',
+    });
+
+    applyUserEvent(event({
+      type: 'task_started',
+      task_id: 'task-new',
+      payload: {},
+    }));
+
+    expect(useTaskStore.getState()).toMatchObject({
+      currentTaskId: 'task-new',
+      currentStatus: 'running',
+      currentSteps: [],
+    });
+  });
+
   it('renders a completed task artifact through the canonical event reducer', () => {
     const invalidateArtifacts = vi.fn();
     applyUserEvent(event({
@@ -119,13 +170,32 @@ describe('conversation SSE', () => {
       payload: {
         title: '无密钥任务已完成',
         summary: 'mock AgentResult 已返回',
-        artifact: { type: 'document', reference: 'oss://mock/result.md' },
+        primary_artifact: { type: 'document', reference: 'mock://result.md' },
       },
     }), invalidateArtifacts);
 
-    expect(queryClient.getQueryData<{ card?: { title: string } }[]>(
+    expect(queryClient.getQueryData<{ card?: { title: string; footer?: string } }[]>(
       messageQueryKey(event().conversation_id!),
     )?.[0].card?.title).toBe('无密钥任务已完成');
+    expect(queryClient.getQueryData<{ card?: { footer?: string } }[]>(
+      messageQueryKey(event().conversation_id!),
+    )?.[0].card?.footer).toBe('mock://result.md');
     expect(invalidateArtifacts).toHaveBeenCalledOnce();
+    expect(useTaskStore.getState().currentStatus).toBe('completed');
+  });
+
+  it('makes task failures visible in the owning conversation', () => {
+    applyUserEvent(event({
+      type: 'task_failed',
+      payload: { error: '上游服务不可用' },
+    }));
+
+    expect(queryClient.getQueryData<{ card?: { tag_status: string; items: string[] } }[]>(
+      messageQueryKey(event().conversation_id!),
+    )?.[0].card).toMatchObject({
+      tag_status: 'error',
+      items: ['上游服务不可用'],
+    });
+    expect(useTaskStore.getState().currentStatus).toBe('failed');
   });
 });

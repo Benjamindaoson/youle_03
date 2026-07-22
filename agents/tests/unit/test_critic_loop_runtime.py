@@ -160,7 +160,7 @@ async def test_critic_pass_records_critique(monkeypatch) -> None:
                 "step_id": "draft",
                 "agent": "agent_1",
                 "task_type": "long_writing",
-                "prompt_template": "写一段反诈脚本",
+                "prompt_template": "写一段短视频脚本",
             }
         ],
         primary="draft",
@@ -226,7 +226,7 @@ async def test_critic_retries_with_feedback(monkeypatch) -> None:
                 "step_id": "draft",
                 "agent": "agent_1",
                 "task_type": "long_writing",
-                "prompt_template": "写一段反诈脚本,目标受众老人。",
+                "prompt_template": "写一段短视频脚本,目标受众老人。",
             }
         ],
         primary="draft",

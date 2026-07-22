@@ -28,6 +28,8 @@ import {
   openPrivateConversation,
   setSkillLifecycle,
   sendConversationMessage,
+  submitHitlDecision,
+  type HitlDecisionAction,
   type SkillCard,
   type SkillDetail,
   type SkillLifecycleAction,
@@ -158,11 +160,11 @@ export type PromptItem = {
 
 const MOCK_MATERIALS: MaterialItem[] = [
   { id: 'm1', name: '商品主图.jpg', mime: 'image/jpeg', folder: '电商素材', source: 'upload' },
-  { id: 'm2', name: '反诈案例.xlsx', mime: 'application/vnd.ms-excel', folder: '反诈', source: 'upload' },
+  { id: 'm2', name: '视频素材.xlsx', mime: 'application/vnd.ms-excel', folder: '短视频', source: 'upload' },
   { id: 'm3', name: '品牌字体.zip', mime: 'application/zip', source: 'upload' },
 ];
 const MOCK_PROMPTS: PromptItem[] = [
-  { id: 'p1', name: '反诈标准开场', content: '请用 5 秒短句钩子,提醒老人警惕电信诈骗', used_count: 12 },
+  { id: 'p1', name: '短视频标准开场', content: '请用 5 秒短句钩子,快速引出主题', used_count: 12 },
   { id: 'p2', name: '电商详情图风格', content: '风格:简洁、留白、品牌色统一;文字三行内', used_count: 5 },
 ];
 
@@ -177,9 +179,15 @@ export function useMaterials(opts?: Partial<UseQueryOptions<MaterialItem[]>>) {
 export function useCreateMaterial() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (vars: { name: string; mime?: string; url?: string; folder?: string }) => {
+    mutationFn: async (vars: {
+      name: string;
+      mime?: string;
+      url?: string;
+      folder?: string;
+      source?: 'upload' | 'url';
+    }) => {
       if (USE_MOCK) {
-        return { id: `m-${Date.now()}`, ...vars, source: 'upload' as const };
+        return { id: `m-${Date.now()}`, ...vars, source: vars.source ?? 'url' };
       }
       return request('/api/materials', { method: 'POST', body: JSON.stringify(vars) });
     },
@@ -252,15 +260,15 @@ export function useOpenPrivateChat() {
 const MOCK_SKILLS: SkillCard[] = [
   {
     id: 's1',
-    skill_id: 'anti_fraud_video',
-    name: '反诈视频制作',
-    description: '5 步生成 30-90 秒反诈短视频,适合社区宣传、抖音投放',
+    skill_id: 'short_video',
+    name: '短视频制作',
+    description: '5 步生成 30-90 秒短视频,适配多个内容平台',
     domain: 'video',
-    scenario: 'anti_fraud',
+    scenario: 'short_video',
     version: '1.0',
     creator_type: 'platform',
     visibility: 'public',
-    keywords: ['反诈', '防诈骗', '老人'],
+    keywords: ['短视频', '视频制作', '内容创作'],
     lifecycle: 'built_in',
     built_in: true,
     installed: true,
@@ -364,10 +372,6 @@ export const useInstallSkill = () => useSkillLifecycle('install');
 export const useEnableSkill = () => useSkillLifecycle('enable');
 export const useDisableSkill = () => useSkillLifecycle('disable');
 
-// Compatibility aliases for callers migrated from the subscription model.
-export const useSubscribeSkill = useInstallSkill;
-export const useUnsubscribeSkill = useDisableSkill;
-
 // ── 成果库 ──
 export type ArtifactRow = {
   id: string;
@@ -387,8 +391,8 @@ const MOCK_ARTIFACTS: ArtifactRow[] = [
     source_conversation_id: 'main',
     type: 'video',
     is_final: true,
-    reference: 'oss://youle-dev/anti-fraud/2026-05-01.mp4',
-    title: '反诈视频:警惕养老投资骗局',
+    reference: 'oss://youle-dev/short-video/2026-05-01.mp4',
+    title: '城市漫游短视频',
     created_at: '2026-05-01T10:23:00Z',
   },
   {
@@ -488,55 +492,14 @@ export function useMyQuota(opts?: Partial<UseQueryOptions<QuotaSummary>>) {
   });
 }
 
-export function useMonthlyBilling(month?: string) {
-  return useQuery<{ month: string; by_quota_type: Record<string, number>; total_items: number }>({
-    queryKey: ['billing', month ?? 'current'],
-    queryFn: () =>
-      safeRequest(`/api/quota/me/billing${month ? `?month=${month}` : ''}`, {
-        month: month ?? '2026-05',
-        by_quota_type: { auto_tasks_daily: 7, video_tasks_daily: 1 },
-        total_items: 8,
-      }),
-  });
-}
-
-export function useSupportRespond(role: 'hr' | 'finance') {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (vars: { conversationId: string; content: string }) => {
-      if (USE_MOCK) {
-        return {
-          message_id: `local-${role}-${Date.now()}`,
-          role,
-          content: role === 'hr'
-            ? '我帮你看看团队里谁最合适。你这个需求偏偏向哪类(写作/作图/视频)?'
-            : '当前套餐 free,今日 Auto 任务 7/30,视频任务 1/3,群 2/5。要升级吗?',
-          quota_warning: [],
-        };
-      }
-      return request(`/api/support/${role}/respond`, {
-        method: 'POST',
-        body: JSON.stringify({ conversation_id: vars.conversationId, content: vars.content }),
-      });
-    },
-    onSuccess: (_, vars) => {
-      qc.invalidateQueries({ queryKey: ['messages', vars.conversationId] });
-      qc.invalidateQueries({ queryKey: ['quota', 'me'] });
-    },
-  });
-}
-
 export function useHitlDecision(taskId: string, gateId: string) {
   return useMutation({
     mutationFn: async (vars: {
-      action: 'approve' | 'modify';
+      action: HitlDecisionAction;
       payload?: Record<string, unknown>;
     }) => {
       if (USE_MOCK) return { ok: true, ...vars };
-      return request(`/api/tasks/${taskId}/hitl_gates/${gateId}/${vars.action}`, {
-        method: 'POST',
-        body: JSON.stringify(vars.payload ?? {}),
-      });
+      return submitHitlDecision(taskId, gateId, vars.action, vars.payload);
     },
   });
 }

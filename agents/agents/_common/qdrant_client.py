@@ -21,7 +21,7 @@ backend 写入 `workflow_traces` collection 时的 payload 形如:
       "user_rating": 0.92,           # nullable
       "duration_s": 320,
       "cost_usd": 0.045,
-      "skill_id": "anti_fraud_video", # nullable(动态 plan 时为 null)
+      "skill_id": "short_video", # nullable(动态 plan 时为 null)
       "ts": "2026-05-09T12:34:56Z",
     }
 

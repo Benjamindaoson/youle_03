@@ -12,6 +12,7 @@ import {
   fetchSkills,
   setSkillLifecycle,
   sendConversationMessage,
+  submitHitlDecision,
 } from './client';
 import { useUserStore } from '@/stores/user';
 
@@ -172,7 +173,7 @@ describe('typed API client', () => {
       );
     vi.stubGlobal('fetch', fetchMock);
 
-    await fetchSkills({ q: '反诈', domain: 'video' });
+    await fetchSkills({ q: '短视频', domain: 'video' });
     await fetchSkillDetail('skill-1');
     await setSkillLifecycle('skill-1', 'install');
     await setSkillLifecycle('skill-1', 'enable');
@@ -185,5 +186,20 @@ describe('typed API client', () => {
       expect.stringMatching(/\/api\/skills\/skill-1\/enable$/),
       expect.stringMatching(/\/api\/skills\/skill-1\/disable$/),
     ]);
+  });
+
+  it('sends video cancellation to the cancel endpoint', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ status: 'cancelled' }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await submitHitlDecision('task-1', 'gate-1', 'cancel', { reason: '用户取消' });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringMatching(/\/api\/tasks\/task-1\/hitl_gates\/gate-1\/cancel$/),
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ reason: '用户取消' }),
+      }),
+    );
   });
 });

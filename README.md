@@ -25,8 +25,8 @@ flowchart LR
     API --> PIPE["消息管线"]
     PIPE --> ORCH["LangGraph 主编排"]
     ORCH -->|"AgentTask"| REDIS[("Redis Streams")]
-    REDIS --> WORKERS["4 个 Agent Worker"]
-    WORKERS -->|"MCP"| TOOLS["7 个 MCP 工具服务"]
+    REDIS --> WORKERS["核心模式：1 个合并 Agent Worker"]
+    WORKERS -.->|"生产可选"| TOOLS["独立 Worker + MCP 工具服务"]
     WORKERS -->|"AgentResult"| REDIS
     ORCH --> PG[("PostgreSQL + Alembic")]
     API --> PG
@@ -46,6 +46,8 @@ agents/agents/              主编排与四类 Agent Worker
 agents/mcp_servers/         MCP 工具服务
 frontend/                   Next.js 15 应用、Vitest、Playwright
 backend/infrastructure/     PostgreSQL/Redis/MinIO/Qdrant/LiteLLM Compose
+compose.core.yml            仅 PostgreSQL + Redis 的低成本核心设施
+deploy/production/          可选云部署和完整设施说明
 docs/migration/             迁移矩阵、基线和最终验证报告
 openspec/                   本次整合的规格与验收任务
 test/                       仓库级 Agent handler/live 测试
@@ -59,28 +61,14 @@ test/                       仓库级 Agent handler/live 测试
 要求：Python 3.12、uv 0.11.x、Node 20+、pnpm 9.15.9、Docker Compose。
 
 ```powershell
-Copy-Item .env.example .env
-uv sync --locked --all-packages --all-extras
-docker compose -f backend/infrastructure/docker-compose.yml -f backend/infrastructure/docker-compose.mock.yml up -d
-.\.venv\Scripts\alembic.exe -c backend/alembic.ini upgrade head
+.\scripts\core.ps1 setup
+.\scripts\core.ps1 start
+.\scripts\core.ps1 status
 ```
 
-分别启动后端和前端：
+脚本会打印实际 URL，后端默认从 `8001` 开始查找空闲端口，前端默认从 `3000` 开始，不会停止不属于本项目的进程。详细说明见 [`GETTING_STARTED.md`](GETTING_STARTED.md)。
 
-```powershell
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000
-Set-Location frontend
-pnpm install --frozen-lockfile
-pnpm dev
-```
-
-- 前端工作台：`http://localhost:3000`
-- 产品页：`http://localhost:3000/website`
-- 后端存活检查：`http://localhost:8000/health`
-- 后端就绪检查：`http://localhost:8000/ready`
-- OpenAPI：`http://localhost:8000/docs`
-
-完整 Worker/MCP 进程清单在 `Procfile`。在支持 `make`/`honcho` 的环境可运行 `make up`；也可以按 `Procfile` 分别启动四个 Worker 和七个 MCP 服务。
+默认 `Procfile` 只启动后端、合并 Agent worker 和前端。四个独立 Worker、MCP、MinIO、Qdrant、LiteLLM 网关和 K8s 都属于可选生产配置，见 [`deploy/production/README.md`](deploy/production/README.md)。
 
 ### Mock 模式
 
@@ -126,10 +114,12 @@ pnpm dev
 数据库结构只由 Alembic 管理，不在启动时调用 `create_all`。
 
 ```powershell
-.\.venv\Scripts\alembic.exe -c backend/alembic.ini history
-.\.venv\Scripts\alembic.exe -c backend/alembic.ini upgrade head
-.\.venv\Scripts\alembic.exe -c backend/alembic.ini current
-.\.venv\Scripts\python.exe backend/scripts/bootstrap-skills.py
+Push-Location backend
+..\.venv\Scripts\alembic.exe history
+..\.venv\Scripts\alembic.exe upgrade head
+..\.venv\Scripts\alembic.exe current
+..\.venv\Scripts\python.exe scripts/bootstrap-skills.py
+Pop-Location
 ```
 
 后端正常启动也会幂等同步 `backend/skills/playbooks/*.yaml`；CI 在空库 migration 后单独执行 bootstrap 并检查数据库行数，避免迁移成功但 Skill 市场为空。
@@ -174,6 +164,8 @@ pnpm build
 pnpm test:e2e
 ```
 
+`next dev` 与 `next build` 共用 `.next`。本地服务正在运行时，先执行 `scripts/core.ps1 stop`，完成生产构建后再重新 `start`，避免开发服务器继续引用已被构建过程替换的静态 chunk。
+
 GitHub Actions 将后端、Agent、前端、跨语言契约和安全检查作为阻断式 job。真实模型 smoke test保持显式 opt-in，不是普通 PR 的强制条件。
 
 ## 已知限制
@@ -182,7 +174,7 @@ GitHub Actions 将后端、Agent、前端、跨语言契约和安全检查作为
 - 真实模型、阿里云短信、云 OSS 和外部发布渠道未包含公共测试凭据，必须单独验证。
 - SSE 的 durable replay 依赖 PostgreSQL；Redis 不可用时只保证当前进程内订阅者的实时 fallback。
 - `EventBus` 满队列会丢弃最旧事件；客户端应依赖持久化回放恢复短断线数据。
-- Playwright 中真实反诈视频长链路仍为 opt-in/跳过；CI 的无密钥跨模块链路使用确定性 mock AgentResult。
+- Playwright 中真实短视频长链路仍为 opt-in/跳过；CI 的无密钥跨模块链路使用确定性 mock AgentResult。
 
 ## 迁移与许可证
 

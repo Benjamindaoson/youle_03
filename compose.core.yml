@@ -1,0 +1,38 @@
+name: youle-core
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-youle}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-youle_dev}
+      POSTGRES_DB: ${POSTGRES_DB:-youle}
+    ports:
+      - "5432:5432"
+    volumes:
+      - youle_core_postgres:/var/lib/postgresql/data
+      - ./backend/infrastructure/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-youle} -d ${POSTGRES_DB:-youle}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7.2-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - youle_core_redis:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+volumes:
+  youle_core_postgres:
+  youle_core_redis:

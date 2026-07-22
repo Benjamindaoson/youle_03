@@ -54,7 +54,7 @@ await event_publisher.publish_user_event(
 
 ### 4. 事件投递与回放
 
-发布顺序为：构造稳定事件 ID → 尝试写 PostgreSQL `user_events` → Redis `youle:events:{user_id}` → 每个 backend 进程本地 fan-out。Redis 不可用时直接本地投递；持久化失败记录结构化错误但不阻断实时投递。每个订阅队列固定上限，满时丢最旧事件保留最新状态。
+发布顺序为：构造稳定事件 ID → 写 PostgreSQL `user_events` → Redis `youle:events:{user_id}` → 每个 backend 进程本地 fan-out。Redis 不可用时直接本地投递；持久化失败记录结构化错误并停止发布，避免在线客户端看到一个刷新后永久丢失的幽灵状态。每个订阅队列固定上限，满时丢最旧事件保留最新状态。
 
 SSE 路由为 `GET /api/conversations/{conversation_id}/events`：Bearer JWT 鉴权并校验 `Conversation.user_id`；先按 `Last-Event-ID` 从 PostgreSQL 回放，再消费实时队列；定时发送 heartbeat comment；客户端断开时取消等待并 unsubscribe。WebSocket 端点使用相同本地订阅，不再维护第二条 Redis channel。
 

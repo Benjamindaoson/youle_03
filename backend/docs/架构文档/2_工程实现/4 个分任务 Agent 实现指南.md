@@ -8,7 +8,7 @@
 **v3.0 关键变更**:
 - 🔄 **Agent 编号反向**(ADR-001-rev):Agent 2=文档 / Agent 3=图 / Agent 4=影音
 - 🔄 **本指南章节顺序按新编号重排**:Agent 1 → Agent 2(文档) → Agent 3(图) → Agent 4(影音)
-- 🔄 V1 hero SKU 回归:**反诈视频 + 电商详情图**(ADR-012 废弃)
+- 🔄 V1 hero SKU 回归:**短视频 + 电商详情图**(ADR-012 废弃)
 - ✨ Agent 拟人化(ADR-015):每 Agent emit 表情 + 状态变化
 - 保留:MCP-first(ADR-009)、HITL(ADR-010)、飞轮(ADR-011)
 
@@ -97,7 +97,7 @@ AgentTask:
   step_id: 步骤标识
   agent_id: agent_1 / agent_2 / agent_3 / agent_4
   task_type: long_writing / image_generate / video_compose / 等
-  scenario: anti_fraud / ecommerce_detail / 等
+  scenario: short_video / ecommerce_detail / 等
   
   prompt: 已渲染好的完整 prompt 文本
   
@@ -1383,9 +1383,9 @@ def check_boundary(task: AgentTask) -> Optional[Error]:
 
 ## 七、典型场景的 Agent 协作
 
-### 7.1 反诈视频制作(5 步,~8 分钟,V1 hero SKU)
+### 7.1 短视频制作(5 步,~8 分钟,V1 hero SKU)
 
-> v3.0:V1 hero 回归反诈视频(ADR-012 废弃)。短视频制作降级为 V1.5 Skill 市场。
+> v3.0:V1 hero 回归短视频(ADR-012 废弃)。短视频制作降级为 V1.5 Skill 市场。
 
 ```
 T+0      主编排 → Agent 1(研究员)调研 → 输出 xlsx(含案例 + 图片 URL)

@@ -39,7 +39,7 @@ class _FakeQ:
 
 def _hero_skill():
     return {
-        "skill_id": "anti_fraud_video",
+        "skill_id": "short_video",
         "version": "1.0",
         "delivery": {"primary_artifact": "compose"},
         "workflow": [
@@ -67,7 +67,7 @@ def _hero_skill():
 
 @pytest.mark.asyncio
 async def test_phased_hero_runs_with_parallel_production() -> None:
-    """反诈视频 hero phased 编译 + 跑通,且 image/tts/bgm 在同 phase 内并行。"""
+    """短视频 hero phased 编译 + 跑通,且 image/tts/bgm 在同 phase 内并行。"""
     skill = _hero_skill()
     q = _FakeQ()
     builder = build_phased_state_graph(skill, dispatcher=q.dispatch, result_waiter=q.wait)

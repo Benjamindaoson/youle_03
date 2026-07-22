@@ -7,23 +7,16 @@ import { useRef, useState } from 'react';
 import clsx from 'clsx';
 import type {
   AgentCardMessage,
-  HitlImageMessage,
-  HitlScriptMessage,
-  HitlVideoMessage,
   Message,
 } from '@/stores/conversation';
 import { ROLES } from '@/lib/agents';
 import { TaskCard } from '@/components/chat/TaskCard';
-import { ScriptApproval } from '@/components/hitl/ScriptApproval';
-import { ImageSelection } from '@/components/hitl/ImageSelection';
-import { VideoFinalReview } from '@/components/hitl/VideoFinalReview';
 import { AgentProfileCard } from '@/components/chat/AgentProfileCard';
 import { MessageContextMenu } from '@/components/chat/MessageContextMenu';
 import { highlightMentions } from '@/lib/mention';
 import { useOpenPrivateChat } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { useConversationStore } from '@/stores/conversation';
-import { removeCachedMessage } from '@/lib/query-client';
 
 export function MessageBubble({ message }: { message: Message }) {
   const meta = ROLES[message.role];
@@ -36,8 +29,6 @@ export function MessageBubble({ message }: { message: Message }) {
   const openPrivate = useOpenPrivateChat();
   const router = useRouter();
   const setQuoted = useConversationStore((s) => s.setQuoted);
-  const toggleStar = useConversationStore((s) => s.toggleStar);
-  const starred = useConversationStore((s) => s.starred.includes(message.id));
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
 
   function openProfile() {
@@ -83,15 +74,6 @@ export function MessageBubble({ message }: { message: Message }) {
         role: message.role,
       });
     },
-    onForward: () => {
-      const text = `转发自 ${meta.name}:\n${message.text || ''}`;
-      void navigator.clipboard.writeText(text);
-      alert('已复制为转发文本');
-    },
-    onStar: () => toggleStar(message.id),
-    onWithdraw: isUser
-      ? () => removeCachedMessage(message.conversation_id, message.id)
-      : undefined,
     onLocate: () => {
       const el = document.getElementById(`msg-${message.id}`);
       el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -120,7 +102,6 @@ export function MessageBubble({ message }: { message: Message }) {
       className={clsx(
         'mb-3.5 flex animate-fade-up items-start gap-2.5 transition-shadow',
         isUser ? 'flex-row-reverse' : 'flex-row',
-        starred && 'ring-1 ring-amber-300',
       )}
     >
       <span
@@ -154,7 +135,6 @@ export function MessageBubble({ message }: { message: Message }) {
         <MessageContextMenu
           x={menu.x}
           y={menu.y}
-          isUser={isUser}
           actions={menuActions}
           onClose={() => setMenu(null)}
         />
@@ -176,15 +156,9 @@ export function MessageBubble({ message }: { message: Message }) {
         )}
 
         {/* 文字气泡 */}
-        {(message.kind === 'user_text' ||
-          message.kind === 'agent_text' ||
-          message.kind === 'interaction') &&
+        {(message.kind === 'user_text' || message.kind === 'agent_text') &&
           message.text && (
-            <BubbleText
-              isUser={isUser}
-              text={message.text}
-              isInteraction={message.kind === 'interaction'}
-            />
+            <BubbleText isUser={isUser} text={message.text} />
           )}
 
         {/* TaskCard */}
@@ -195,28 +169,6 @@ export function MessageBubble({ message }: { message: Message }) {
           />
         )}
 
-        {/* HITL gates 内嵌入消息流 */}
-        {message.kind === 'hitl_script' && (
-          <ScriptApproval
-            taskId={(message as HitlScriptMessage).task_id}
-            gateId={(message as HitlScriptMessage).gate_id}
-            versions={(message as HitlScriptMessage).versions}
-          />
-        )}
-        {message.kind === 'hitl_image' && (
-          <ImageSelection
-            taskId={(message as HitlImageMessage).task_id}
-            gateId={(message as HitlImageMessage).gate_id}
-            images={(message as HitlImageMessage).images}
-          />
-        )}
-        {message.kind === 'hitl_video' && (
-          <VideoFinalReview
-            taskId={(message as HitlVideoMessage).task_id}
-            gateId={(message as HitlVideoMessage).gate_id}
-            videoUrl={(message as HitlVideoMessage).video_url}
-          />
-        )}
       </div>
     </div>
   );
@@ -225,11 +177,9 @@ export function MessageBubble({ message }: { message: Message }) {
 function BubbleText({
   isUser,
   text,
-  isInteraction,
 }: {
   isUser: boolean;
   text: string;
-  isInteraction?: boolean;
 }) {
   return (
     <div className="relative">
@@ -244,7 +194,6 @@ function BubbleText({
           isUser
             ? 'bg-wechat-bubble-user text-wechat-fg'
             : 'bg-white text-wechat-fg',
-          isInteraction && 'italic text-wechat-sub',
         )}
       >
         {highlightMentions(text)}

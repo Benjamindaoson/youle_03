@@ -23,12 +23,8 @@
 
 ## V1 必上(2 个 hero)
 
-- [`playbooks/anti_fraud_video.yaml`](playbooks/anti_fraud_video.yaml)
-- [`playbooks/ecommerce_detail_image.yaml`](playbooks/ecommerce_detail_image.yaml)
-
-## V1.5 路线
-
 - [`playbooks/short_video.yaml`](playbooks/short_video.yaml)
+- [`playbooks/ecommerce_detail_image.yaml`](playbooks/ecommerce_detail_image.yaml)
 
 ## 校验
 

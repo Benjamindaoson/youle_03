@@ -18,7 +18,7 @@ ORCHESTRATOR_INTENT_PROMPT = """\
 {
   "intent_type": "task_request | chitchat | clarification_answer | interrupt | mode_switch | team_management | quota_query",
   "domain": "text | image | video | document | mixed | none",
-  "scenario": "anti_fraud | ecommerce_detail | other | none",
+  "scenario": "short_video | ecommerce_detail | other | none",
   "entities": {},
   "confidence": 0.0
 }

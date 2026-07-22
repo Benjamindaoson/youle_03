@@ -133,8 +133,8 @@ def test_primary_artifact_validation() -> None:
         compile_to_dag(skill)
 
 
-def test_anti_fraud_skill_real() -> None:
-    """对真实 anti_fraud_video.yaml 编译,确保不报错。"""
+def test_short_video_skill_real() -> None:
+    """对真实 short_video.yaml 编译,确保不报错。"""
     from pathlib import Path
 
     import yaml
@@ -143,7 +143,7 @@ def test_anti_fraud_skill_real() -> None:
         Path(__file__).resolve().parents[2]
         / "skills"
         / "playbooks"
-        / "anti_fraud_video.yaml"
+        / "short_video.yaml"
     )
     if not yaml_path.exists():
         pytest.skip("skill yaml not found")

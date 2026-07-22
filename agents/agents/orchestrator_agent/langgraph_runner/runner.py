@@ -51,6 +51,11 @@ from agents.orchestrator_agent.langgraph_runner.runner_db_mirror import (
     mirror_state_steps_to_db,
     mirror_step_to_db,
 )
+from agents.orchestrator_agent.langgraph_runner.runner_events import (
+    primary_artifact_from_state as _primary_artifact_from_state,
+    progress_from_state as _progress_from_state,
+    task_event as _task_event,
+)
 from agents.orchestrator_agent.langgraph_runner.state import make_initial_state
 from app.schemas.ws import WSEventType
 from app.services.agent_result_stream import cleanup_task_redis
@@ -111,6 +116,13 @@ class LangGraphTaskRunner:
     def _thread_id(task_id: UUID) -> str:
         return f"task:{task_id}"
 
+    @classmethod
+    def _config(cls, task_id: UUID) -> dict[str, Any]:
+        return {
+            "configurable": {"thread_id": cls._thread_id(task_id)},
+            "recursion_limit": GRAPH_RECURSION_LIMIT,
+        }
+
     async def _build_compiled(self, skill_yaml: dict[str, Any]):
         """编译 + 注入 checkpointer。按 (skill_id, version) 缓存编译产物。
 
@@ -130,10 +142,7 @@ class LangGraphTaskRunner:
             dispatcher=self.dispatch,
             result_waiter=_wait,
         )
-        graph = builder.compile(
-            checkpointer=get_checkpointer(),
-            recursion_limit=GRAPH_RECURSION_LIMIT,
-        )
+        graph = builder.compile(checkpointer=get_checkpointer())
         # 仅当 key 完整(skill_id+version 都有)时才缓存,避免测试场景污染
         if key[0] is not None and key[1] is not None:
             _COMPILED_CACHE[key] = graph
@@ -149,7 +158,7 @@ class LangGraphTaskRunner:
         skill_yaml = await self._load_skill_yaml(task)
 
         graph = await self._build_compiled(skill_yaml)
-        config = {"configurable": {"thread_id": self._thread_id(task_id)}}
+        config = self._config(task_id)
 
         initial = make_initial_state(
             task_id=task_id,
@@ -183,7 +192,7 @@ class LangGraphTaskRunner:
             raise ValueError(f"task {task_id} not found")
         skill_yaml = await self._load_skill_yaml(task)
         graph = await self._build_compiled(skill_yaml)
-        config = {"configurable": {"thread_id": self._thread_id(task_id)}}
+        config = self._config(task_id)
 
         # 校验图当前确实处于中断状态,防止对已完成/不存在的任务 resume
         snap = await graph.aget_state(config)
@@ -230,12 +239,13 @@ class LangGraphTaskRunner:
         if task_row is not None:
             await self.publish(
                 str(task_row.user_id),
-                {
-                    "type": WSEventType.HITL_GATE_CLOSED,
-                    "task_id": str(gate.task_id),
-                    "gate_id": str(gate_id),
-                    "resolution": resolution,
-                },
+                _task_event(
+                    event_type=WSEventType.HITL_GATE_CLOSED,
+                    task_id=gate.task_id,
+                    conversation_id=task_row.conversation_id,
+                    gate_id=str(gate_id),
+                    resolution=resolution,
+                ),
             )
         # LangGraph resume:resolution=approved 继续;cancelled/rejected 终止;modified 暂作 approved + 标记
         if resolution in ("cancelled", "rejected"):
@@ -271,7 +281,7 @@ class LangGraphTaskRunner:
             raise ValueError(f"task {task_id} not found")
         skill_yaml = await self._load_skill_yaml(task)
         graph = await self._build_compiled(skill_yaml)
-        config = {"configurable": {"thread_id": self._thread_id(task_id)}}
+        config = self._config(task_id)
 
         # 找回滚点 — history 是 reverse-chronological,跳过 target_step 已完成的 snapshot,
         # 找到第一个 target_step 尚未完成的(= target_step 刚好待跑或下游中)
@@ -351,19 +361,20 @@ class LangGraphTaskRunner:
         final_state = await self._run_until_pause(
             graph,
             None,
-            {"configurable": {"thread_id": self._thread_id(task_id)}},
+            self._config(task_id),
             task_id,
             task.user_id,
         )
         await self.publish(
             str(task.user_id),
-            {
-                "type": EVENT_TASK_ROLLED_BACK,
-                "task_id": str(task_id),
-                "target_step_id": target_step_id,
-                "cleared_steps": sorted(to_clear),
-                "rollback_count": (final_state or {}).get("rollback_count"),
-            },
+            _task_event(
+                event_type=EVENT_TASK_ROLLED_BACK,
+                task_id=task_id,
+                conversation_id=task.conversation_id,
+                target_step_id=target_step_id,
+                cleared_steps=sorted(to_clear),
+                rollback_count=(final_state or {}).get("rollback_count"),
+            ),
         )
         return {"state": final_state, "cleared_steps": sorted(to_clear)}
 
@@ -374,7 +385,7 @@ class LangGraphTaskRunner:
             raise ValueError(f"task {task_id} not found")
         skill_yaml = await self._load_skill_yaml(task)
         graph = await self._build_compiled(skill_yaml)
-        config = {"configurable": {"thread_id": self._thread_id(task_id)}}
+        config = self._config(task_id)
         snap = await graph.aget_state(config)
         return {"values": snap.values, "next": list(snap.next), "tasks": [t._asdict() if hasattr(t, "_asdict") else str(t) for t in (snap.tasks or [])]}
 
@@ -384,7 +395,7 @@ class LangGraphTaskRunner:
             raise ValueError(f"task {task_id} not found")
         skill_yaml = await self._load_skill_yaml(task)
         graph = await self._build_compiled(skill_yaml)
-        config = {"configurable": {"thread_id": self._thread_id(task_id)}}
+        config = self._config(task_id)
         async for snap in graph.aget_state_history(config):
             yield {
                 "checkpoint_id": snap.config["configurable"].get("checkpoint_id"),
@@ -414,6 +425,8 @@ class LangGraphTaskRunner:
         handoffs_so_far = 0
         # 取 task 一次,缓存 conversation_id / scenario / step 元数据
         task_cache = await self.session.get(Task, task_id)
+        if task_cache is None:
+            raise ValueError(f"task {task_id} not found")
         scenario: str | None = None
         # step_id → (agent_id, depends_on list)
         step_meta: dict[str, dict[str, Any]] = {}
@@ -459,11 +472,12 @@ class LangGraphTaskRunner:
                 # backend `app/schemas/ws.py:StepStarted` 要求 agent_id;
                 # 从 step_meta(已在 _run_graph 入口构建)查,动态 plan 路径同样有 workflow.agent 字段。
                 step_started_agent = (step_meta.get(step_id) or {}).get("agent")
-                step_started_payload: dict[str, Any] = {
-                    "type": WSEventType.STEP_STARTED,
-                    "task_id": str(task_id),
-                    "step_id": step_id,
-                }
+                step_started_payload = _task_event(
+                    event_type=WSEventType.STEP_STARTED,
+                    task_id=task_id,
+                    conversation_id=task_cache.conversation_id,
+                    step_id=step_id,
+                )
                 if step_started_agent:
                     step_started_payload["agent_id"] = step_started_agent
                 await self.publish(str(user_id), step_started_payload)
@@ -478,15 +492,16 @@ class LangGraphTaskRunner:
                     )
                     await self.publish(
                         str(user_id),
-                        {
-                            "type": (
+                        _task_event(
+                            event_type=(
                                 WSEventType.STEP_COMPLETED
                                 if step_result.get("status") == "completed"
                                 else WSEventType.TASK_FAILED
                             ),
-                            "task_id": str(task_id),
-                            "step_id": step_id,
-                            "artifact": (
+                            task_id=task_id,
+                            conversation_id=task_cache.conversation_id,
+                            step_id=step_id,
+                            artifact=(
                                 {
                                     "artifact_id": str(artifact_id) if artifact_id else None,
                                     "type": step_result.get("artifact_type"),
@@ -496,7 +511,7 @@ class LangGraphTaskRunner:
                                 if step_result.get("artifact_ref")
                                 else None
                             ),
-                        },
+                        ),
                     )
                         # Agent → idle(带 conversation_id 让前端定位群成员栏)
                     current_agent = step_result.get("agent_id")
@@ -562,6 +577,7 @@ class LangGraphTaskRunner:
                 snap,
                 task_id=task_id,
                 user_id=user_id,
+                conversation_id=task_cache.conversation_id,
                 step_meta=step_meta,
             )
         else:
@@ -575,6 +591,7 @@ class LangGraphTaskRunner:
         *,
         task_id: UUID,
         user_id: UUID,
+        conversation_id: UUID,
         step_meta: dict[str, dict[str, Any]] | None = None,
     ) -> None:
         """把 LangGraph 的 __interrupt__ 反射成 hitl_gates 行(WS UI 现成)。"""
@@ -651,16 +668,17 @@ class LangGraphTaskRunner:
             #  preview_artifact{artifact_id,type,reference,metadata}}
             await self.publish(
                 str(user_id),
-                {
-                    "type": WSEventType.HITL_GATE_OPENED,
-                    "task_id": str(task_id),
-                    "gate": {
+                _task_event(
+                    event_type=WSEventType.HITL_GATE_OPENED,
+                    task_id=task_id,
+                    conversation_id=conversation_id,
+                    gate={
                         "id": str(gate_obj.id),
                         "step_id": step_id,
                         "gate_type": payload.get("gate_type", "quality_review"),
                         "timeout_seconds": int(payload.get("timeout_seconds") or 600),
                     },
-                    "preview_artifact": {
+                    preview_artifact={
                         "artifact_id": (
                             str(gate_obj.preview_artifact_id)
                             if gate_obj.preview_artifact_id
@@ -670,7 +688,7 @@ class LangGraphTaskRunner:
                         "reference": payload.get("preview_artifact_ref"),
                         "metadata": payload.get("preview_artifact_metadata") or {},
                     },
-                },
+                ),
             )
 
     async def _finalize_task_db(self, task_id: UUID, state: dict[str, Any]) -> None:
@@ -679,6 +697,7 @@ class LangGraphTaskRunner:
             return
         final_status = state.get("final_status") or "completed"
         task.status = final_status
+        task.progress = _progress_from_state(state, previous=task.progress)
         task.completed_at = datetime.now(UTC)
         if state.get("failure_reason"):
             task.error_detail = {"failure_reason": state["failure_reason"]}
@@ -733,19 +752,16 @@ class LangGraphTaskRunner:
 
         await self.publish(
             str(task.user_id),
-            {
-                "type": (
+            _task_event(
+                event_type=(
                     WSEventType.TASK_COMPLETED
                     if final_status == "completed"
                     else WSEventType.TASK_FAILED
                 ),
-                "task_id": str(task_id),
-                "primary_artifact": (
-                    {"reference": state.get("primary_artifact_ref")}
-                    if state.get("primary_artifact_ref")
-                    else None
-                ),
-            },
+                task_id=task_id,
+                conversation_id=task.conversation_id,
+                primary_artifact=_primary_artifact_from_state(state),
+            ),
         )
 
         # H-7: 跨存储一致性 — 任务完成后清理 Redis 临时 key,防止状态分叉

@@ -22,7 +22,7 @@ async def web_search_handler(task: AgentTask) -> AgentResult:
         or task.inputs.get("_prompt", "")
     )[:300]
     max_results = int(task.parameters.get("max_results", 10))
-    source_profile = task.parameters.get("source_profile", "anti_fraud_video")
+    source_profile = task.parameters.get("source_profile", "short_video")
     include_domains = task.parameters.get("include_domains")
 
     try:

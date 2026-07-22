@@ -165,7 +165,7 @@ def _workflow_video_tool() -> dict[str, Any]:
         "type": "function",
         "function": {
             "name": VIDEO_DISPATCH,
-            "description": "反诈流水线长视频 Celery 合成;仅在 video_compose 步骤使用；arguments 可置 {}.",  # noqa: E501
+            "description": "短视频 Celery 合成;仅在 video_compose 步骤使用；arguments 可置 {}.",
             "parameters": {"type": "object", "additionalProperties": True},
         },
     }

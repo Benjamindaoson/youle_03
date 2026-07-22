@@ -12,12 +12,15 @@ prev_agent 的逻辑现在是 inline closure 在 _run_until_pause 里,这里直�
 from __future__ import annotations
 
 from typing import Any
+from uuid import UUID
 
 from agents.orchestrator_agent.langgraph_runner import runner as lg_runner
 from agents.orchestrator_agent.langgraph_runner.runner_compiled_cache import (
     COMPILED_GRAPH_CACHE,
     skill_yaml_cache_key,
 )
+
+from app.schemas.ws import WSEventType
 
 
 def test_runner_compiled_cache_facade_aliases_canonical() -> None:
@@ -29,8 +32,8 @@ def test_runner_compiled_cache_facade_aliases_canonical() -> None:
 # 编译产物缓存
 # ─────────────────────────────────────────────────────────────────
 def test_cache_key_extracts_skill_id_and_version() -> None:
-    yml = {"skill_id": "anti_fraud_video", "version": "1.0", "workflow": []}
-    assert lg_runner._cache_key(yml) == ("anti_fraud_video", "1.0")
+    yml = {"skill_id": "short_video", "version": "1.0", "workflow": []}
+    assert lg_runner._cache_key(yml) == ("short_video", "1.0")
 
 
 def test_cache_key_handles_missing_fields() -> None:
@@ -43,6 +46,57 @@ def test_clear_compiled_cache_empties_dict() -> None:
     assert lg_runner._COMPILED_CACHE
     lg_runner.clear_compiled_cache()
     assert not lg_runner._COMPILED_CACHE
+
+
+def test_task_events_are_scoped_to_their_conversation() -> None:
+    task_id = UUID("00000000-0000-0000-0000-000000000010")
+    conversation_id = UUID("00000000-0000-0000-0000-000000000020")
+
+    event = lg_runner._task_event(
+        event_type=WSEventType.TASK_COMPLETED,
+        task_id=task_id,
+        conversation_id=conversation_id,
+        primary_artifact={"reference": "mock://result"},
+    )
+
+    assert event["task_id"] == str(task_id)
+    assert event["conversation_id"] == str(conversation_id)
+
+
+def test_progress_is_derived_from_completed_step_results() -> None:
+    progress = lg_runner._progress_from_state(
+        {
+            "step_results": {
+                "research": {"status": "completed"},
+                "script": {"status": "completed"},
+                "video": {"status": "failed"},
+            }
+        },
+        previous={"current": 0, "total": 5},
+    )
+
+    assert progress == {"current": 2, "total": 5}
+
+
+def test_primary_artifact_keeps_type_and_metadata() -> None:
+    artifact = lg_runner._primary_artifact_from_state(
+        {
+            "primary_artifact_ref": "mock://video",
+            "step_results": {
+                "compose": {
+                    "artifact_ref": "mock://video",
+                    "artifact_type": "video",
+                    "artifact_metadata": {"duration": 30},
+                }
+            },
+        }
+    )
+
+    assert artifact == {
+        "reference": "mock://video",
+        "type": "video",
+        "metadata": {"duration": 30},
+    }
 
 
 def test_cache_isolates_by_version() -> None:

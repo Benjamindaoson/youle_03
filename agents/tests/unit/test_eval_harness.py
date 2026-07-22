@@ -284,7 +284,7 @@ def test_repo_golden_loads_at_least_one_case() -> None:
     assert suite.cases, "expected at least one fixture in agents/eval/golden/"
     ids = {c.case_id for c in suite.cases}
     # 关键 fixture 都在
-    assert "anti_fraud_video_basic" in ids
+    assert "short_video_basic" in ids
     assert "xhs_note_basic" in ids
 
 

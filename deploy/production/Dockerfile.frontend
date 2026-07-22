@@ -1,5 +1,5 @@
 # Next.js 15 frontend(SSR)— standalone 输出,生产镜像约 ~150MB
-# 构建: 仓库根目录下 docker build -f backend/infrastructure/Dockerfile.frontend .
+# 构建: 仓库根目录下 docker build -f deploy/production/Dockerfile.frontend .
 
 FROM node:20-alpine AS deps
 WORKDIR /app

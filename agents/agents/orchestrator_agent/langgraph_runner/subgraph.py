@@ -1,7 +1,7 @@
 """Subgraph 模块化:把 Skill 按"阶段"拆成多个 LangGraph 子图。
 
 设计动机(对应 V1.5 hero subgraph):
-  反诈视频 = 调研子图 + 制作子图 + 终审子图
+  短视频 = 调研子图 + 制作子图 + 终审子图
     - 调研子图:web_search → script(独立 checkpoint,失败可单独重跑)
     - 制作子图:image_process → tts → bgm_select → video_compose
     - 终审子图:final_review HITL gate

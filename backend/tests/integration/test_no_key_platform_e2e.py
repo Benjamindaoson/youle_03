@@ -97,7 +97,7 @@ async def test_no_key_platform_journey(monkeypatch: pytest.MonkeyPatch) -> None:
     conversation = Conversation(
         id=uuid4(),
         user_id=user_id,
-        name="反诈视频制作群",
+        name="短视频制作群",
         mode="group",
         work_mode="auto",
         status="active",
@@ -108,27 +108,27 @@ async def test_no_key_platform_journey(monkeypatch: pytest.MonkeyPatch) -> None:
     # Skill matching uses the real matcher and the enabled built-in Skill metadata.
     skill_row = Skill(
         id=uuid4(),
-        skill_id="anti_fraud_video",
-        name="反诈视频制作",
-        description="面向老年人的反诈短视频",
+        skill_id="short_video",
+        name="短视频制作",
+        description="面向都市白领的城市漫游短视频",
         domain="video",
-        scenario="anti_fraud",
+        scenario="short_video",
         version="1.0",
         creator_type="platform",
         visibility="public",
         status="published",
-        keywords=["反诈", "老人"],
+        keywords=["短视频", "城市漫游"],
     )
     match = await match_skill_with_confidence(
         session=SkillSession(skill_row),  # type: ignore[arg-type]
-        user_message="制作一条老人反诈视频",
-        intent={"domain": "video", "scenario": "anti_fraud"},
+        user_message="制作一条城市漫游短视频",
+        intent={"domain": "video", "scenario": "short_video"},
     )
     assert match.skill is skill_row
     assert match.layer_used == "l1_exact"
 
     skill = load_skill_by_id(match.skill.skill_id)
-    collected = {"年份": 2026, "骗局类型": "电信诈骗", "受众": "城市老人", "时长": "60s"}
+    collected = {"主题": "城市漫游", "风格": "治愈向", "受众": "都市白领", "时长": "60s"}
     validation = validate_inputs(
         inputs_schema=skill["inputs_schema"], collected_fields=collected
     )
@@ -160,7 +160,7 @@ async def test_no_key_platform_journey(monkeypatch: pytest.MonkeyPatch) -> None:
     stream_id = await dispatcher.dispatch_task(agent_tasks[0])
     queue = dispatcher.QUEUE_BY_AGENT[agent_tasks[0].agent_id]
     assert stream_id == "1-0"
-    assert '"skill_id":"anti_fraud_video"' in redis.streams[queue][0][1]["data"]
+    assert '"skill_id":"short_video"' in redis.streams[queue][0][1]["data"]
 
     result = AgentResult(
         task_id=task_id,

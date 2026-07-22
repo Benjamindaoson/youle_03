@@ -70,7 +70,7 @@ ADR-017 把主编排收敛到 LangGraph + Skill YAML 双轨:
 
 ```python
 # YAML 路径
-skill_yaml = yaml.safe_load(open("anti_fraud_video.yaml"))
+skill_yaml = yaml.safe_load(open("short_video.yaml"))
 graph = build_state_graph(skill_yaml, dispatcher=..., result_waiter=...)
 
 # Dynamic 路径

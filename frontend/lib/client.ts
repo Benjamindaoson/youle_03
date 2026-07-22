@@ -172,3 +172,17 @@ export function setSkillLifecycle(
     method: 'POST',
   });
 }
+
+export type HitlDecisionAction = 'approve' | 'modify' | 'cancel';
+
+export function submitHitlDecision(
+  taskId: string,
+  gateId: string,
+  action: HitlDecisionAction,
+  payload: Record<string, unknown> = {},
+): Promise<unknown> {
+  return apiRequest(`/api/tasks/${taskId}/hitl_gates/${gateId}/${action}`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}

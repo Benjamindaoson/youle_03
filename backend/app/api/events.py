@@ -98,14 +98,10 @@ async def conversation_events(
 
     queue = await event_bus.subscribe(str(user_id))
     try:
-        replay_rows = (
-            await UserEventRepository(session).replay(
-                user_id=user_id,
-                conversation_id=conversation_id,
-                after_event_id=after_event_id,
-            )
-            if after_event_id is not None
-            else []
+        replay_rows = await UserEventRepository(session).replay(
+            user_id=user_id,
+            conversation_id=conversation_id,
+            after_event_id=after_event_id,
         )
         replay = [row.to_schema() for row in replay_rows]
     except Exception:

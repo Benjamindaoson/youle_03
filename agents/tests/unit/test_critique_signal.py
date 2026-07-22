@@ -70,7 +70,7 @@ def test_extract_low_score_step_returns_signal() -> None:
     }
     sigs = extract_critique_signals(
         task_id="t-1",
-        skill_id="anti_fraud_video",
+        skill_id="short_video",
         step_results=step_results,
     )
     assert len(sigs) == 1
@@ -78,7 +78,7 @@ def test_extract_low_score_step_returns_signal() -> None:
     assert s.step_id == "draft"
     assert s.score == 0.3
     assert s.threshold == 0.7
-    assert s.skill_id == "anti_fraud_video"
+    assert s.skill_id == "short_video"
     assert "开头钩子缺失" in s.issues
     assert "真实数字" in s.suggestion
 
@@ -189,7 +189,7 @@ def test_to_reflexion_payload_compatible_shape() -> None:
         task_id="t-1",
         step_id="draft",
         task_type="long_writing",
-        skill_id="anti_fraud_video",
+        skill_id="short_video",
         score=0.3,
         threshold=0.7,
         issues=["i1", "i2"],
@@ -199,7 +199,7 @@ def test_to_reflexion_payload_compatible_shape() -> None:
     p = sig.to_reflexion_payload()
     # 必填字段(reflexion_graph.process_reflexion_event 读这些)
     assert p["task_id"] == "t-1"
-    assert "anti_fraud_video::step_draft::long_writing" == p["prompt_name"]
+    assert "short_video::step_draft::long_writing" == p["prompt_name"]
     assert "score=0.30" in p["failure_reason"]
     assert "改 X" in p["failure_reason"]
     assert "draft" in p["trace_excerpt"]
@@ -208,7 +208,7 @@ def test_to_reflexion_payload_compatible_shape() -> None:
     # metadata
     assert p["metadata"]["score"] == 0.3
     assert p["metadata"]["step_id"] == "draft"
-    assert p["metadata"]["skill_id"] == "anti_fraud_video"
+    assert p["metadata"]["skill_id"] == "short_video"
 
 
 def test_prompt_name_for_dynamic_plan() -> None:
@@ -318,7 +318,7 @@ async def test_scan_and_emit_from_state_end_to_end(monkeypatch) -> None:
 
     state = {
         "task_id": "t-final",
-        "skill_id": "anti_fraud_video",
+        "skill_id": "short_video",
         "step_results": {
             "research": {
                 "step_id": "research",

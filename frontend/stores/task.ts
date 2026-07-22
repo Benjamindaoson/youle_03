@@ -10,7 +10,10 @@ type Step = {
 
 type State = {
   currentTaskId: string | null;
+  currentStatus: 'idle' | 'running' | 'completed' | 'failed';
   currentSteps: Step[];
+  start: (taskId: string) => void;
+  finish: (status: 'completed' | 'failed') => void;
   upsertStep: (step: Step) => void;
   appendChunk: (stepId: string, chunk: string) => void;
   reset: () => void;
@@ -18,7 +21,10 @@ type State = {
 
 export const useTaskStore = create<State>((set) => ({
   currentTaskId: null,
+  currentStatus: 'idle',
   currentSteps: [],
+  start: (taskId) => set({ currentTaskId: taskId, currentStatus: 'running', currentSteps: [] }),
+  finish: (status) => set({ currentStatus: status }),
   upsertStep: (step) =>
     set((s) => ({
       currentSteps: s.currentSteps.find((x) => x.step_id === step.step_id)
@@ -31,5 +37,5 @@ export const useTaskStore = create<State>((set) => ({
         x.step_id === stepId ? { ...x, streaming_chunks: (x.streaming_chunks ?? '') + chunk } : x,
       ),
     })),
-  reset: () => set({ currentTaskId: null, currentSteps: [] }),
+  reset: () => set({ currentTaskId: null, currentStatus: 'idle', currentSteps: [] }),
 }));

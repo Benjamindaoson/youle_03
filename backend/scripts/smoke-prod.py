@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Sprint 6 acceptance:反诈视频 10 次 + 电商详情图 5 次,全绿才算上线达标。
+"""Sprint 6 acceptance:短视频 10 次 + 电商详情图 5 次,全绿才算上线达标。
 
 用法:
     BASE_URL=https://staging.youle.example.com \
     JWT_TOKEN=eyJ... \
-    python scripts/smoke-prod.py [--anti-fraud N] [--detail M]
+    python scripts/smoke-prod.py [--short-video N] [--detail M]
 
 每次任务:
   1. POST /api/conversations 创建 hero 群
@@ -129,7 +129,7 @@ async def run_one(
 
 async def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--anti-fraud", type=int, default=10)
+    parser.add_argument("--short-video", type=int, default=10)
     parser.add_argument("--detail", type=int, default=5)
     args = parser.parse_args()
 
@@ -138,21 +138,22 @@ async def main() -> int:
         return 2
 
     async with httpx.AsyncClient(base_url=BASE_URL, timeout=30) as client:
-        # 反诈视频 N 次
-        af_tasks = [
+        # 短视频 N 次
+        video_tasks = [
             run_one(
                 client,
-                skill_id="anti_fraud_video",
+                skill_id="short_video",
                 fields={
-                    "年份": 2026,
-                    "骗局类型": "电信诈骗",
-                    "受众": "60 岁以上长者",
+                    "主题": "城市漫游",
+                    "风格": "治愈向",
+                    "受众": "都市白领",
+                    "时长": "60s",
                 },
-                label=f"反诈-{i+1}",
+                label=f"短视频-{i+1}",
             )
-            for i in range(args.anti_fraud)
+            for i in range(args.short_video)
         ]
-        af_results = await asyncio.gather(*af_tasks)
+        video_results = await asyncio.gather(*video_tasks)
 
         # 电商详情图 M 次
         ec_tasks = [
@@ -166,7 +167,7 @@ async def main() -> int:
         ]
         ec_results = await asyncio.gather(*ec_tasks)
 
-    all_results = af_results + ec_results
+    all_results = video_results + ec_results
     success = [r for r in all_results if r.get("status") == "completed"]
     failures = [r for r in all_results if r.get("status") not in ("completed",)]
     durations = [r["_duration_s"] for r in success]

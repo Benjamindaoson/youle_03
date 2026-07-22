@@ -7,13 +7,13 @@
 prompt_name: ORCHESTRATOR_INTENT_PROMPT
 version: v1.0.0
 cases:
-  - name: 反诈视频请求
+  - name: 短视频请求
     input:
-      message: "帮我做一个 2026 年的电信诈骗反诈视频"
+      message: "帮我做一个 2026 年的城市漫游短视频"
     expected:
       intent_type: task_request
       domain: video
-      scenario: anti_fraud
+      scenario: short_video
 ```
 
 CI 跑 `pytest tests/prompts/` — 全绿才允许 merge。

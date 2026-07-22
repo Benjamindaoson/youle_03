@@ -47,6 +47,7 @@ export function TaskCard({
 }) {
   const Icon = ICONS[card.icon];
   const isDone = card.tag_status === 'done';
+  const isError = card.tag_status === 'error';
   const [reviseOpen, setReviseOpen] = useState(false);
   const setQuoted = useConversationStore((s) => s.setQuoted);
 
@@ -76,12 +77,15 @@ export function TaskCard({
         <span className="flex-1 truncate text-[12px] font-semibold text-wechat-fg">
           {card.title}
         </span>
-        <span className="flex-shrink-0 text-[10px] font-medium text-wechat-green">
+        <span className={clsx(
+          'flex-shrink-0 text-[10px] font-medium',
+          isError ? 'text-red-600' : 'text-wechat-green',
+        )}>
           {card.tag}
         </span>
       </div>
 
-      {!isDone && card.progress !== undefined && (
+      {!isDone && !isError && card.progress !== undefined && (
         <div className="h-[3px] bg-neutral-100">
           <span
             className="block h-full bg-wechat-green transition-all"

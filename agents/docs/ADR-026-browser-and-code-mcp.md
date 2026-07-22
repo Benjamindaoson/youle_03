@@ -50,7 +50,9 @@ per-task session(配合 ADR-025,把 browser 跑在 sandbox 里)。S2 改造点�
 - 切换隔离方案零代码改动 — 改 `SANDBOX_PROVIDER` 即可
 - 预算硬约束(timeout / stdout 字节)在 sandbox 层统一执行
 
-S1 同样是进程级单 sandbox,S2 改 per-task。
+code_executor 按调用参数中的 `task_id` 复用独立 sandbox，任务之间不共享文件或执行状态。
+进程内最多保留 `CODE_EXECUTOR_MAX_SESSIONS` 个会话（默认 4），超出时释放最久未使用的会话；
+任务完成后可调用 `close_session` 主动释放。
 
 ### 4. install_package 默认禁,白名单可配
 
@@ -85,7 +87,7 @@ agents/mcp_servers/
 │   └── server.py           # FastAPI app(make_app)+ 8 个工具
 ├── code_executor/
 │   ├── __init__.py
-│   └── server.py           # FastAPI app + 6 个工具(转发到 SandboxManager)
+│   └── server.py           # FastAPI app + 7 个工具(转发到 SandboxManager)
 └── _shared/http_app.py     # 不动
 ```
 
@@ -97,6 +99,7 @@ agents/mcp_servers/
 | `BROWSER_DEFAULT_TIMEOUT_MS` | `15000` | navigate / click / wait 默认超时 |
 | `BROWSER_USER_AGENT` | `Mozilla/5.0 (compatible; YouleAgent/1.0)` | UA |
 | `CODE_EXECUTOR_DEFAULT_TIMEOUT_S` | `60` | python_exec / shell_exec 默认超时 |
+| `CODE_EXECUTOR_MAX_SESSIONS` | `4` | 进程内最多保留的 task sandbox 数量 |
 | `CODE_EXECUTOR_ALLOW_PIP` | `false` | 是否开启 install_package |
 | `CODE_EXECUTOR_PIP_WHITELIST` | `pandas,numpy,...` | 允许的包列表(逗号分隔) |
 | `SANDBOX_PROVIDER` | `local` | code_executor 用 — 见 ADR-025 |
@@ -123,7 +126,7 @@ agents/mcp_servers/
 
 ### 1. 单副本部署(concurrency=1)
 
-两个新 MCP server 都是 **进程级单 session / 单 sandbox**,多副本会串档。
+browser_use 仍是进程级单 session；code_executor 已按 `task_id` 隔离 sandbox，但会话映射仍在单进程内存中。
 **V1 部署明确要求**:
 
 ```yaml
@@ -139,7 +142,7 @@ mcp-code-executor:
 `__main__` 块已写死 `workers=1`,部署侧需要在 K8s 上锁 `replicas: 1` 直到 S2
 改成 per-task session/sandbox 后才解锁横向扩展。
 
-实际负载:V1 的 browser/code 类任务量极少(主流量是反诈视频 + 详情图,不走这两条),
+实际负载:V1 的 browser/code 类任务量极少(主流量是短视频 + 详情图,不走这两条),
 单副本足够。
 
 ### 2. 鉴权依赖网络隔离(决策)
@@ -164,7 +167,7 @@ S2 的触发条件(任一命中即引入 token):
 | Agent 通过 browser 访问恶意网站 | S2 加 URL 白名单 / 黑名单(`BROWSER_URL_ALLOW`)+ 监控 |
 | Agent pip install 恶意包 | `ALLOW_PIP=false` + 白名单 |
 | browser session 跨 task 串档 | **V1 单副本部署兜住**;S2 改 per-task session 后允许横向扩 |
-| code_executor sandbox 共享串档 | 同上 |
+| code_executor sandbox 跨 task 串档 | 按必填 `task_id` 隔离，并提供 `close_session` 释放 |
 | sandbox 用 local provider 上 production | ADR-025 文档明确;部署清单卡 `SANDBOX_PROVIDER=e2b` |
 | 截图返回 base64 体积大 | screenshot 默认非 full_page;调用方拿到 base64 应及时落 OSS |
 | MCP server 暴露到 K8s 集群外 | V1 不允许;NetworkPolicy 拦截 |
@@ -172,6 +175,6 @@ S2 的触发条件(任一命中即引入 token):
 ## S2 后续
 
 - per-task browser session(配合 ADR-025 的 task_id → sandbox 映射)
-- per-task code_executor sandbox(同上)
+- code_executor 会话映射迁移到外部协调层后再启用多副本
 - browser 加 URL 白/黑名单 + 监控
 - pip install 白名单滚动维护 + 每周扫描镜像漏洞

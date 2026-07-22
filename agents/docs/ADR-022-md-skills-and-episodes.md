@@ -39,7 +39,7 @@ ADR-019 引入了 Planner,但 Planner 只看到平铺的 "skill 列表"(YAML),�
 Planner 看到匹配场景的 MD Skill 后,把规范精华塞进 `step.prompt_template`。
 
 **YAML Playbook 是可执行工作流**,compiler 直接编译。Planner 看到匹配的
-Playbook 时,会在 rationale 里点名("可参考 anti_fraud_video 的 5 步拆法"),
+Playbook 时,会在 rationale 里点名("可参考 short_video 的 5 步拆法"),
 但 Plan 仍是新拆出来的(未来 S5 的 Skill induction 会让 Planner 凝固高频 plan
 为新 Playbook)。
 
@@ -80,7 +80,7 @@ reg = SkillRegistry.from_directory("agents/skills/")
 reg.list_md_skills()       # → list[MDSkill]
 reg.list_playbooks()       # → list[PlaybookIndex]  
 reg.find_md("xhs-note-creator")
-reg.find_playbook("anti_fraud_video")
+reg.find_playbook("short_video")
 reg.search_md("小红书")     # 子串打分(S2 升级到向量召回)
 reg.summary_for_planner()  # 给 Planner 用的统一 snapshot
 ```
@@ -99,7 +99,7 @@ reg.summary_for_planner()  # 给 Planner 用的统一 snapshot
 - seo-analyser ...
 
 # 已有 YAML Playbook(参考拆步思路,不要直接调用 — 你只能用 4 个 worker)
-- anti_fraud_video (反诈视频制作) [反诈,短视频]: 制作反诈短视频
+- short_video (短视频制作) [视频,短视频]: 制作通用短视频
 - ecommerce_detail_image ...
 ```
 
@@ -140,7 +140,7 @@ backend 写入 `workflow_traces` collection 的 payload 形如:
   "user_rating": 0.92,
   "duration_s": 320,
   "cost_usd": 0.045,
-  "skill_id": "anti_fraud_video"
+  "skill_id": "short_video"
 }
 ```
 
@@ -207,7 +207,7 @@ agents/agents/orchestrator_agent/planner/
 
 `agents/tests/unit/`:
 - `test_skill_loader.py` — frontmatter 解析 / 扩展字段 / 错误路径 / load_body 缓存 / 真仓库 SKILL*.md 全部能解析
-- `test_skill_registry.py` — 扫目录 / 缺失目录 / 坏文件跳过 / collision / search 打分 / 真仓库 anti_fraud_video + xhs-note-creator 命中
+- `test_skill_registry.py` — 扫目录 / 缺失目录 / 坏文件跳过 / collision / search 打分 / 真仓库 short_video + xhs-note-creator 命中
 - `test_qdrant_episode_retrieval.py` — 嵌入失败短路 / Qdrant 不可达 / 404 / 真实响应反序列化 / flag off / flag on
 - `test_planner_with_registry.py` — 摘要格式化 / prompt 含 MD 块 / make_plan 自动用注册表
 

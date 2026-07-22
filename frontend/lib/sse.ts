@@ -8,7 +8,7 @@ import type { UserEvent } from './ws-events';
 import type { AgentStatus, RoleKey } from './agents';
 import type { Message, WorkMode } from '@/stores/conversation';
 import { useConversationStore } from '@/stores/conversation';
-import { useHitlStore } from '@/stores/hitl';
+import { useHitlStore, type HITLGate } from '@/stores/hitl';
 import { useTaskStore } from '@/stores/task';
 import { useWsStore } from '@/stores/ws';
 import { appendCachedMessage, appendCachedMessageDelta } from '@/lib/query-client';
@@ -139,11 +139,34 @@ export function applyUserEvent(event: UserEvent, onArtifactAdded: () => void = (
       });
       break;
     case 'hitl_gate_opened':
-      hitl.push(payload.gate as never);
+      if (payload.gate && typeof payload.gate === 'object') {
+        const gate = payload.gate as Record<string, unknown>;
+        const taskId = event.task_id ?? stringValue(gate.task_id);
+        if (!taskId) break;
+        hitl.push({
+          ...gate,
+          task_id: taskId,
+          conversation_id: conversationId,
+          preview_artifact: payload.preview_artifact,
+        } as HITLGate);
+      }
       break;
     case 'hitl_gate_closed': {
       const gateId = stringValue(payload.gate_id) ?? stringValue(payload.id);
       if (gateId) hitl.resolve(gateId);
+      break;
+    }
+    case 'clarification_required': {
+      const clarification = payload.clarification;
+      if (conversationId && clarification && typeof clarification === 'object') {
+        hitl.setClarification(conversationId, clarification as never);
+      }
+      break;
+    }
+    case 'task_started': {
+      if (conversationId) hitl.clearClarification(conversationId);
+      const taskId = event.task_id ?? stringValue(payload.task_id);
+      if (taskId) task.start(taskId);
       break;
     }
     case 'artifact_added':
@@ -151,7 +174,10 @@ export function applyUserEvent(event: UserEvent, onArtifactAdded: () => void = (
       break;
     case 'task_completed': {
       if (!conversationId) break;
-      const artifact = payload.artifact as Record<string, unknown> | undefined;
+      task.finish('completed');
+      const artifact = (payload.artifact ?? payload.primary_artifact) as
+        | Record<string, unknown>
+        | undefined;
       appendCachedMessage({
         id: `task-completed-${event.id}`,
         conversation_id: conversationId,
@@ -172,6 +198,29 @@ export function applyUserEvent(event: UserEvent, onArtifactAdded: () => void = (
         },
       });
       onArtifactAdded();
+      break;
+    }
+    case 'task_failed': {
+      if (!conversationId) break;
+      task.finish('failed');
+      appendCachedMessage({
+        id: `task-failed-${event.id}`,
+        conversation_id: conversationId,
+        kind: 'agent_card',
+        role: (event.agent_id ?? 'ceo_assistant') as RoleKey,
+        text: stringValue(payload.message) ?? '任务执行失败',
+        card: {
+          icon: 'doc',
+          title: stringValue(payload.title) ?? '任务执行失败',
+          tag: '失败',
+          tag_status: 'error',
+          items: [
+            stringValue(payload.error)
+              ?? stringValue(payload.detail)
+              ?? '请检查配置后重试',
+          ],
+        },
+      });
       break;
     }
     case 'agent_status_changed':

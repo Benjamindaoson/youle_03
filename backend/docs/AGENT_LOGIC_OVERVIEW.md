@@ -107,7 +107,7 @@
 
 工作流定义在 `skills/*.yaml` 中，例如：
 
-- [`skills/anti_fraud_video.yaml`](../skills/anti_fraud_video.yaml)
+- [`skills/short_video.yaml`](../skills/short_video.yaml)
 - [`skills/ecommerce_detail_image.yaml`](../skills/ecommerce_detail_image.yaml)
 - [`skills/short_video.yaml`](../skills/short_video.yaml)
 

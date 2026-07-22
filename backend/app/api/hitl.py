@@ -7,7 +7,7 @@ from uuid import UUID
 
 from agents.orchestrator_agent.runner_factory import make_runner
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,15 +20,13 @@ router = APIRouter()
 
 
 class HITLGateOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     task_id: UUID
     step_id: str
     gate_type: str
     resolution: str | None
-
-    class Config:
-        from_attributes = True
-
 
 class ApproveBody(BaseModel):
     user_choice: dict[str, Any] | None = None

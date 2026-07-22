@@ -53,7 +53,7 @@ def test_dynamic_plan_enable_via_env(monkeypatch) -> None:
 @pytest.mark.asyncio
 async def test_make_plan_mock_returns_valid_plan() -> None:
     plan = await make_plan(
-        user_request="给我做一个反诈短视频",
+        user_request="给我做一个城市漫游短视频",
         user_id="user-001",
     )
     assert isinstance(plan, Plan)
@@ -68,7 +68,7 @@ async def test_make_plan_mock_returns_valid_plan() -> None:
 @pytest.mark.asyncio
 async def test_plan_and_compile_end_to_end() -> None:
     plan, skill_yaml, builder = await plan_and_compile(
-        user_request="给我做一个反诈短视频",
+        user_request="给我做一个城市漫游短视频",
         user_id="user-002",
         dispatcher=_noop_dispatch,
         result_waiter=_noop_wait,

@@ -4,7 +4,7 @@
 // 学习中心:浏览所有 Skill;管理已安装 / 平台预置 / 自己创建
 // V1 不含 Skill 创作 / Agent 进修 (V2)
 import { useState } from 'react';
-import { CheckCircle, GraduationCap, Layers, Lock } from 'lucide-react';
+import { CheckCircle, GraduationCap, Layers } from 'lucide-react';
 import clsx from 'clsx';
 import { useMySkills, useSkills, type SkillCard } from '@/lib/api';
 
@@ -58,15 +58,6 @@ export default function AcademyPage() {
               ))}
             </ul>
           )}
-
-          <section className="mt-8 rounded-md border border-dashed border-wechat-line bg-neutral-50 p-4">
-            <h2 className="mb-1 flex items-center gap-1.5 text-[13px] font-medium text-wechat-fg">
-              <Lock size={12} /> Skill 创作 · Agent 进修(V2)
-            </h2>
-            <p className="text-[11px] text-wechat-mute">
-              V2 开放给创作者:用户可让总裁助理从最近工作流中自动总结 Skill 草稿;通过 HR 给 Agent 喂语料让其专精领域。
-            </p>
-          </section>
         </main>
     </div>
   );

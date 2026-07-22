@@ -613,13 +613,13 @@ async def stream(
 
 def _mock_response(task_type: str, model: str) -> dict[str, Any]:
     if task_type == "web_search":
-        body = '{"results": [{"title":"mock 反诈案例","url":"https://example.com/1","snippet":"..."}]}'
+        body = '{"results": [{"title":"mock 视频素材","url":"https://example.com/1","snippet":"..."}]}'
     elif task_type in {"long_writing", "short_video_script"}:
         body = (
-            "【反诈视频脚本 - mock】\n"
-            "钩子:你接到陌生电话,对方说你涉嫌洗钱,要求转账...\n"
-            "案例:2026 年某地张大妈被骗 30 万。\n"
-            "呼吁:遇陌生电话 96110 一键查询。"
+            "【短视频脚本 - mock】\n"
+            "钩子:这座城市最舒服的一小时,藏在清晨。\n"
+            "展开:沿着街区走过咖啡店、公园与旧建筑。\n"
+            "结尾:收藏路线,周末亲自走一遍。"
         )
     elif task_type == "structured_writing":
         body = '[{"label":"主标题","content":"..."},{"label":"段二","content":"..."}]'

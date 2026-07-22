@@ -4,11 +4,6 @@
 // 严肃场景(conversation.serious_mode)关闭表情入口
 // @ 触发弹出员工/文件/提示词候选 popover
 import { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  ChevronDown,
-  Folder,
-  Scissors,
-} from 'lucide-react';
 import clsx from 'clsx';
 import { useConversationStore } from '@/stores/conversation';
 import { useMaterials, usePrompts, useSendMessage } from '@/lib/api';
@@ -186,23 +181,6 @@ export function Composer({ conversationId }: { conversationId: string }) {
             发送
           </button>
         </div>
-      </div>
-
-      <div className="flex items-center gap-0.5 border-t border-wechat-line px-3.5 py-1.5">
-        <button type="button" className="toolbar-btn" title="发送文件">
-          <Folder size={18} strokeWidth={1.8} />
-        </button>
-        <button type="button" className="toolbar-btn" title="截图">
-          <Scissors size={18} strokeWidth={1.8} />
-        </button>
-        <button
-          type="button"
-          className="toolbar-btn"
-          title="截图选项"
-          onClick={() => undefined}
-        >
-          <ChevronDown size={9} className="text-wechat-mute" />
-        </button>
       </div>
     </div>
   );

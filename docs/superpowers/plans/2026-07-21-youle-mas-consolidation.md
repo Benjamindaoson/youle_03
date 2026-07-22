@@ -63,7 +63,7 @@ Run and record exit codes:
 Set-Location backend
 ..\.venv\Scripts\alembic.exe upgrade head
 Set-Location ..
-docker compose -f backend/infrastructure/docker-compose.yml -f backend/infrastructure/docker-compose.mock.yml config
+docker compose -f deploy/production/docker-compose.yml -f deploy/production/docker-compose.mock.yml config
 ```
 
 Expected: actual results are copied to `BASELINE_REPORT.md`; missing frontend and unavailable Docker daemon are reported as baseline facts, not migration regressions.
@@ -374,7 +374,7 @@ git commit -m "feat: integrate group chat agent presence and skill marketplace"
 - Create: `agents/tests/unit/test_document_agent_contract.py`
 - Create: `agents/tests/unit/test_image_agent_contract.py`
 - Create: `agents/tests/unit/test_av_agent_contract.py`
-- Modify: `frontend/e2e/anti-fraud-happy-path.spec.ts`
+- Modify: `frontend/e2e/short-video-happy-path.spec.ts`
 - Modify: `backend/scripts/check-contracts.py`
 
 **Interfaces:**
@@ -433,8 +433,8 @@ Set-Location ..\backend
 ..\.venv\Scripts\alembic.exe upgrade head
 ..\.venv\Scripts\alembic.exe current
 Set-Location ..
-docker compose -f backend/infrastructure/docker-compose.yml -f backend/infrastructure/docker-compose.mock.yml config
-docker compose -f backend/infrastructure/docker-compose.yml -f backend/infrastructure/docker-compose.mock.yml up -d --build
+docker compose -f deploy/production/docker-compose.yml -f deploy/production/docker-compose.mock.yml config
+docker compose -f deploy/production/docker-compose.yml -f deploy/production/docker-compose.mock.yml up -d --build
 ```
 
 - [ ] **Step 3: Perform ship-readiness review**

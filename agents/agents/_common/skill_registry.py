@@ -97,7 +97,7 @@ class SkillRegistry:
         reg = SkillRegistry.from_directory(Path("agents/skills"))
         for s in reg.list_md_skills(): ...
         s = reg.find_md("xhs-note-creator")  # 命中 md_skills/SKILL_xhs-note-creator.md
-        pb = reg.find_playbook("anti_fraud_video")
+        pb = reg.find_playbook("short_video")
         snapshot = reg.summary_for_planner()  # 给 planner_agent.make_plan 用
     """
 

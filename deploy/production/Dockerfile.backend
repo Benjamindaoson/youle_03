@@ -1,5 +1,5 @@
 # Backend(主编排 + REST/WS API)— 不含 GPU,生产镜像
-# 构建: 仓库根目录下 docker build -f backend/infrastructure/Dockerfile.backend .
+# 构建: 仓库根目录下 docker build -f deploy/production/Dockerfile.backend .
 
 FROM python:3.12-slim AS builder
 

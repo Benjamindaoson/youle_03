@@ -26,7 +26,7 @@ def test_route_explicit_at_finance() -> None:
 
 
 def test_route_normal_task_returns_none() -> None:
-    assert route_support_agent("task_request", "做一个反诈视频") is None
+    assert route_support_agent("task_request", "做一个短视频") is None
 
 
 def test_warning_at_80_percent() -> None:

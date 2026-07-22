@@ -12,7 +12,7 @@ from agents.orchestrator_agent.interrupt import (
     handle_interrupt,
 )
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth import get_current_user_id
@@ -29,14 +29,12 @@ router = APIRouter()
 class TaskOut(BaseModel):
     """兼容旧响应形状;详情用 `TaskDetailOut`。"""
 
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     status: str
     skill_id: UUID | None
     progress: dict[str, Any]
-
-    class Config:
-        from_attributes = True
-
 
 class TaskDetailOut(TaskOut):
     orchestration_run_id: str | None = None

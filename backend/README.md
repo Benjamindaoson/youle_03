@@ -10,8 +10,8 @@ cd backend && uv sync
 # cp ../.env.example ../.env
 
 # 启基础设施 — 须在仓库根执行，或改用 -f 绝对路径
-docker compose -f backend/infrastructure/docker-compose.yml \
-  -f backend/infrastructure/docker-compose.mock.yml up -d
+docker compose -f deploy/production/docker-compose.yml \
+  -f deploy/production/docker-compose.mock.yml up -d
 
 cd backend && uv run alembic upgrade head
 

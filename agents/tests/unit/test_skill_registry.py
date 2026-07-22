@@ -39,8 +39,8 @@ def _write_yaml(d: Path, fname: str, *, skill_id: str, name: str, desc: str = ""
     p.write_text(
         f"skill_id: {skill_id}\nname: {name}\ndescription: {desc}\n"
         "domain: video\n"
-        "scenario: anti_fraud\n"
-        "keywords: [反诈, 短视频]\n"
+        "scenario: short_video\n"
+        "keywords: [短视频, 短视频]\n"
         "workflow:\n"
         "  - step_id: a\n"
         "    agent: agent_1\n"
@@ -148,7 +148,7 @@ def test_real_repo_skills_load() -> None:
     assert pb, "expected YAML playbooks under agents/skills/"
     # 关键 playbook 必须命中
     pb_ids = {p.skill_id for p in pb}
-    assert "anti_fraud_video" in pb_ids
+    assert "short_video" in pb_ids
     # 关键 MD skill 必须命中
     md_ids = {m.skill_id for m in md}
     assert "xhs-note-creator" in md_ids

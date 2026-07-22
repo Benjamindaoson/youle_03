@@ -23,12 +23,12 @@ def _skill(*, built_in: bool = False, skill_id: str = "market_skill") -> Skill:
     return Skill(
         id=uuid4(),
         skill_id=skill_id,
-        name="反诈内容制作" if skill_id == "anti_fraud_video" else "市场技能",
+        name="短视频内容制作" if skill_id == "short_video" else "市场技能",
         description="生成内容",
         version="1.0",
         creator_type="platform" if built_in else "user",
         visibility="public",
-        keywords=["反诈"],
+        keywords=["短视频"],
         yaml_content="skill_id: market_skill",
         status="published",
     )
@@ -72,7 +72,7 @@ def test_skill_lifecycle_states(
 
 
 def test_skill_search_matches_name_description_id_and_keywords() -> None:
-    statement = select(Skill).where(_skill_search_clause("反诈"))
+    statement = select(Skill).where(_skill_search_clause("短视频"))
     sql = str(statement.compile(dialect=postgresql.dialect()))
 
     assert "skills.name ILIKE" in sql
@@ -82,10 +82,10 @@ def test_skill_search_matches_name_description_id_and_keywords() -> None:
 
 
 def test_detail_metadata_comes_from_canonical_yaml_without_prompt_bodies() -> None:
-    metadata = _canonical_skill_metadata("anti_fraud_video")
+    metadata = _canonical_skill_metadata("short_video")
 
     assert metadata["validated"] is True
-    assert metadata["version"] == "1.1"
+    assert metadata["version"] == "1.0"
     assert "agent_1" in metadata["required_agents"]
     assert "mcp://search/web_search" in metadata["required_mcp_tools"]
     assert "mcp:search" in metadata["permissions"]

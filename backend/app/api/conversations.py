@@ -9,7 +9,7 @@ from typing import Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -37,15 +37,13 @@ class ConversationCreate(BaseModel):
 
 
 class ConversationOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     name: str
     mode: ConversationMode
     work_mode: WorkMode | None
     status: str
-
-    class Config:
-        from_attributes = True
-
 
 class SwitchWorkModeRequest(BaseModel):
     target: WorkMode

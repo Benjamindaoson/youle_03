@@ -195,7 +195,7 @@ class _MockClient:
         max_tokens: int | None = None,
     ) -> LLMResponse:
         log.debug("mock.complete", task_type=task_type)
-        body = "{\"intent_type\":\"task_request\",\"domain\":\"video\",\"scenario\":\"anti_fraud\",\"confidence\":0.9}"
+        body = "{\"intent_type\":\"task_request\",\"domain\":\"video\",\"scenario\":\"short_video\",\"confidence\":0.9}"
         if (response_format or {}).get("type") != "json_object":
             body = f"[mock-{task_type}] 这是 mock 模型返回的固定文本。"
         return LLMResponse(

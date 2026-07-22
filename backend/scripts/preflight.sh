@@ -126,11 +126,11 @@ fi
 # ── 6. 配额 / HITL gate / 飞轮信号配置 ──
 echo ""
 echo "[6/8] 关键配置"
-if [[ -f "${ROOT}/backend/skills/playbooks/anti_fraud_video.yaml" ]] \
-   && grep -q "hitl_gate" "${ROOT}/backend/skills/playbooks/anti_fraud_video.yaml"; then
-  ok "反诈视频 Skill 含 HITL gate"
+if [[ -f "${ROOT}/backend/skills/playbooks/short_video.yaml" ]] \
+   && grep -q "hitl_gate" "${ROOT}/backend/skills/playbooks/short_video.yaml"; then
+  ok "短视频 Skill 含 HITL gate"
 else
-  err "反诈视频 Skill 没找到 HITL gate(铁律 14)"
+  err "短视频 Skill 没找到 HITL gate(铁律 14)"
 fi
 if [[ -f "${ROOT}/backend/skills/playbooks/ecommerce_detail_image.yaml" ]]; then
   ok "电商详情图 Skill 存在"
@@ -154,7 +154,7 @@ required_manifests=(
   "kustomization.yaml"
   "heartbeat-consumer.yaml"
 )
-K8S="${ROOT}/infrastructure/k8s"
+K8S="${ROOT}/../deploy/production/k8s"
 for m in "${required_manifests[@]}"; do
   if [[ -f "${K8S}/${m}" ]]; then
     ok "k8s/${m}"

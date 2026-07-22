@@ -5,7 +5,7 @@
 - 后续图 asyncio.gather 并行生成(无阻塞等待)
 - 全部通过 _normalize_image_artifact 规范化(URL/base64/oss 三类)
 - 写 manifest.json 记录所有 ref + metadata
-- 支持 anti_fraud / ecommerce / default 三种预设风格提示
+- 支持 ecommerce / default 两种预设风格提示
 """
 
 from __future__ import annotations
@@ -28,10 +28,6 @@ from agents.image_agent.handlers.extras import _normalize_image_artifact
 log = structlog.get_logger(__name__)
 
 _SET_TYPE_STYLE_HINTS: dict[str, str] = {
-    "anti_fraud": (
-        "深色背景警示色调,深蓝/深红主色调,高对比度白字,"
-        "96110 标识,庄重紧迫氛围,无欢快元素"
-    ),
     "ecommerce": (
         "白底留白产品图,主体居中,卖点文字清晰,"
         "电商橙/红点缀,干净专业高转化率"

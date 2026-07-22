@@ -64,8 +64,10 @@ pnpm test:e2e
 数据库变更还必须在空 PostgreSQL 数据库执行：
 
 ```powershell
-.\.venv\Scripts\alembic.exe -c backend/alembic.ini upgrade head
-.\.venv\Scripts\alembic.exe -c backend/alembic.ini current
+Push-Location backend
+..\.venv\Scripts\alembic.exe upgrade head
+..\.venv\Scripts\alembic.exe current
+Pop-Location
 ```
 
 不能运行某项检查时，在 PR 中写明命令、错误和环境阻塞，不得写成已通过。
