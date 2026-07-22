@@ -1,6 +1,5 @@
 {
-  "anti_fraud_video": {
-    "include_domains": ["gov.cn", "people.com.cn"],
+  "short_video": {
     "exclude_domains": [
       "x.com",
       "twitter.com",

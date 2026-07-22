@@ -50,8 +50,6 @@ class UserEventRepository:
                     stream_scope, UserEventRecord.id == after_event_id
                 )
             )
-            if cursor is None:
-                return []
 
         statement = select(UserEventRecord).where(stream_scope)
         if cursor is not None:

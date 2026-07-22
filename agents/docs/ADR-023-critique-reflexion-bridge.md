@@ -105,14 +105,14 @@ await scan_and_emit_from_state(final_state)
 ```json
 {
   "task_id": "t-1",
-  "prompt_name": "anti_fraud_video::step_script::long_writing",
+  "prompt_name": "short_video::step_script::long_writing",
   "failure_reason": "[critic_low_score] score=0.35 < threshold=0.70\nissues: 开头钩子无冲突感; ...\nsuggestion: 加真实数字开场",
   "trace_excerpt": "step_id: script\ntask_type: long_writing\nartifact_ref: oss://script.txt\n...\n--- critic issues ---\n- 开头钩子无冲突感",
   "source": "critic_low_score",
   "metadata": {
     "step_id": "script",
     "task_type": "long_writing",
-    "skill_id": "anti_fraud_video",
+    "skill_id": "short_video",
     "score": 0.35,
     "threshold": 0.7,
     "n_issues": 1

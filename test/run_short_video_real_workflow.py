@@ -34,7 +34,6 @@ def load_env(path: Path) -> None:
 load_env(ROOT / ".env")
 load_env(AGENTS_ROOT / ".env")
 os.environ["DEBUG"] = "false"
-os.environ["LITELLM_MOCK"] = "false"
 os.environ["YOULE_AUTO_APPROVE_HITL"] = "true"
 os.environ.setdefault("NO_PROXY", "localhost,127.0.0.1,::1")
 os.environ.setdefault("no_proxy", "localhost,127.0.0.1,::1")
@@ -90,24 +89,24 @@ async def main() -> None:
         AgentConsumer(
             agent_id="agent_1",
             handlers={"web_search": web_search_handler, "long_writing": long_writing_handler},
-            consumer_name=f"real-anti-fraud-agent1-{uuid4().hex}",
+            consumer_name=f"real-short-video-agent1-{uuid4().hex}",
         ),
         AgentConsumer(
             agent_id="agent_3",
             handlers={"image_download": image_download_handler},
-            consumer_name=f"real-anti-fraud-agent3-{uuid4().hex}",
+            consumer_name=f"real-short-video-agent3-{uuid4().hex}",
         ),
         AgentConsumer(
             agent_id="agent_4",
             handlers={"bgm_select": bgm_select_handler, "video_compose": video_compose_handler},
-            consumer_name=f"real-anti-fraud-agent4-{uuid4().hex}",
+            consumer_name=f"real-short-video-agent4-{uuid4().hex}",
         ),
     ]
     for consumer in consumers:
         await consumer._r()
     consumer_tasks = [asyncio.create_task(consumer.start()) for consumer in consumers]
 
-    skill_path = ROOT / "backend" / "skills" / "anti_fraud_video.yaml"
+    skill_path = ROOT / "backend" / "skills" / "playbooks" / "short_video.yaml"
     skill_yaml_text = skill_path.read_text(encoding="utf-8")
     skill_yaml = yaml.safe_load(skill_yaml_text)
 
@@ -121,18 +120,18 @@ async def main() -> None:
             user = User(
                 id=user_id,
                 phone=f"135{str(user_id.int)[-8:]}",
-                nickname="real-anti-fraud-live",
+                nickname="real-short-video-live",
                 plan="team",
             )
             session.add(user)
 
             existing_skill = (
-                await session.execute(select(Skill).where(Skill.skill_id == "anti_fraud_video"))
+                await session.execute(select(Skill).where(Skill.skill_id == "short_video"))
             ).scalar_one_or_none()
             if existing_skill is None:
                 skill = Skill(
                     id=uuid4(),
-                    skill_id="anti_fraud_video",
+                    skill_id="short_video",
                     name=skill_yaml["name"],
                     description=skill_yaml.get("description"),
                     domain=skill_yaml.get("domain"),
@@ -161,17 +160,17 @@ async def main() -> None:
             conv = Conversation(
                 id=conv_id,
                 user_id=user_id,
-                name="反诈视频真实全链路测试群",
+                name="短视频真实全链路测试群",
                 mode="group",
                 work_mode="auto",
                 skill_id=skill.id,
                 brief={
                     "字段": {
-                        "年份": 2026,
-                        "骗局类型": "电信诈骗",
-                        "受众": "城市老人",
+                        "主题": "城市漫游",
+                        "风格": "治愈向",
+                        "受众": "都市白领",
                         "时长": "60s",
-                        "开头钩子": "一个电话，可能掏空老人半辈子的积蓄。",
+                        "开头钩子": "清晨七点，这座城市刚刚醒来。",
                     },
                 },
             )
@@ -185,8 +184,8 @@ async def main() -> None:
                 conv_id,
                 SendMessageRequest(
                     content=(
-                        "请直接开干，帮我做一个60秒反诈视频，主题是2026年电信诈骗，"
-                        "给城市老人看，要求有真实案例调研、脚本、配图、配乐和最终视频。"
+                        "请直接开干，帮我做一个60秒城市漫游短视频，"
+                        "给都市白领看，要求有素材调研、脚本、配图、配乐和最终视频。"
                     )
                 ),
                 session,

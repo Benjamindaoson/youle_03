@@ -44,7 +44,7 @@ pytestmark = pytest.mark.skipif(
 
 
 @pytest.mark.asyncio
-async def test_message_prompt_starts_anti_fraud_video_workflow(monkeypatch):
+async def test_message_prompt_starts_short_video_workflow(monkeypatch):
     from app.api import messages as messages_api
     from app.api.messages import SendMessageRequest, send_message
     from app.db import SessionLocal, engine
@@ -63,11 +63,11 @@ async def test_message_prompt_starts_anti_fraud_video_workflow(monkeypatch):
         return Intent(
             intent_type="task_request",
             domain="video",
-            scenario="anti_fraud",
+            scenario="short_video",
             entities={
-                "年份": 2026,
-                "骗局类型": "电信诈骗",
-                "受众": "城市老人",
+                "主题": "城市漫游",
+                "风格": "治愈向",
+                "受众": "都市白领",
                 "时长": "60s",
             },
             confidence=0.99,
@@ -84,7 +84,7 @@ async def test_message_prompt_starts_anti_fraud_video_workflow(monkeypatch):
     monkeypatch.setattr(messages_api, "understand_intent", fake_understand_intent)
     monkeypatch.setattr(messages_api, "make_runner", lambda session: RecordingRunner(session))
 
-    skill_path = ROOT / "backend" / "skills" / "anti_fraud_video.yaml"
+    skill_path = ROOT / "backend" / "skills" / "playbooks" / "short_video.yaml"
     skill_yaml_text = skill_path.read_text(encoding="utf-8")
     skill_yaml = yaml.safe_load(skill_yaml_text)
 
@@ -96,12 +96,12 @@ async def test_message_prompt_starts_anti_fraud_video_workflow(monkeypatch):
         user = User(id=user_id, phone=f"139{str(user_id.int)[-8:]}", nickname="message-flow-test", plan="free")
         session.add(user)
         existing_skill = (
-            await session.execute(select(Skill).where(Skill.skill_id == "anti_fraud_video"))
+            await session.execute(select(Skill).where(Skill.skill_id == "short_video"))
         ).scalar_one_or_none()
         if existing_skill is None:
             skill = Skill(
                 id=skill_db_id,
-                skill_id="anti_fraud_video",
+                skill_id="short_video",
                 name=skill_yaml["name"],
                 description=skill_yaml.get("description"),
                 domain=skill_yaml.get("domain"),
@@ -130,7 +130,7 @@ async def test_message_prompt_starts_anti_fraud_video_workflow(monkeypatch):
         conv = Conversation(
             id=conv_id,
             user_id=user_id,
-            name="反诈视频测试群",
+            name="短视频测试群",
             mode="group",
             work_mode="auto",
             skill_id=skill_db_id,
@@ -141,7 +141,7 @@ async def test_message_prompt_starts_anti_fraud_video_workflow(monkeypatch):
         response = await send_message(
             conv_id,
             SendMessageRequest(
-                content="帮我做一个60秒反诈视频，主题是电信诈骗，给城市老人看，年份2026。"
+                content="帮我做一个60秒城市漫游短视频，治愈风，给都市白领看。"
             ),
             session,
         )
@@ -149,22 +149,22 @@ async def test_message_prompt_starts_anti_fraud_video_workflow(monkeypatch):
         task = await session.get(Task, response.payload["task_id"])
 
     assert response.decision == "task_started"
-    assert response.payload["skill_id"] == "anti_fraud_video"
+    assert response.payload["skill_id"] == "short_video"
     assert response.payload["step_count"] == 5
     assert started_task_ids == [response.payload["task_id"]]
     assert task is not None
     assert task.skill_id == skill_db_id
     assert task.skill_version == "1.0"
     assert task.collected_fields == {
-        "年份": 2026,
-        "骗局类型": "电信诈骗",
-        "受众": "城市老人",
+        "主题": "城市漫游",
+        "风格": "治愈向",
+        "受众": "都市白领",
         "时长": "60s",
     }
 
 
 @pytest.mark.asyncio
-async def test_message_prompt_runs_anti_fraud_until_hitl_with_real_runner(monkeypatch):
+async def test_message_prompt_runs_short_video_until_hitl_with_real_runner(monkeypatch):
     from agents._common.consumer import AgentConsumer
     from agents.image_agent.handlers.image_download import image_download_handler
     from agents.text_agent.handlers.long_writing import long_writing_handler
@@ -188,11 +188,11 @@ async def test_message_prompt_runs_anti_fraud_until_hitl_with_real_runner(monkey
         return Intent(
             intent_type="task_request",
             domain="video",
-            scenario="anti_fraud",
+            scenario="short_video",
             entities={
-                "年份": 2026,
-                "骗局类型": "电信诈骗",
-                "受众": "城市老人",
+                "主题": "城市漫游",
+                "风格": "治愈向",
+                "受众": "都市白领",
                 "时长": "60s",
             },
             confidence=0.99,
@@ -212,9 +212,9 @@ async def test_message_prompt_runs_anti_fraud_until_hitl_with_real_runner(monkey
             return {
                 "results": [
                     {
-                        "title": "2026 电信诈骗案例",
-                        "url": "https://example.com/fraud",
-                        "snippet": "涉案金额高，适合反诈宣传。",
+                        "title": "2026 城市漫游案例",
+                        "url": "https://example.com/short-video",
+                        "snippet": "适合城市漫游主题的街区与步道素材。",
                         "image_url": "https://example.com/a.jpg",
                     }
                 ]
@@ -243,7 +243,7 @@ async def test_message_prompt_runs_anti_fraud_until_hitl_with_real_runner(monkey
     await agent3._r()
     agent_tasks = [asyncio.create_task(agent1.start()), asyncio.create_task(agent3.start())]
 
-    skill_path = ROOT / "backend" / "skills" / "anti_fraud_video.yaml"
+    skill_path = ROOT / "backend" / "skills" / "playbooks" / "short_video.yaml"
     skill_yaml_text = skill_path.read_text(encoding="utf-8")
     skill_yaml = yaml.safe_load(skill_yaml_text)
 
@@ -254,12 +254,12 @@ async def test_message_prompt_runs_anti_fraud_until_hitl_with_real_runner(monkey
             user = User(id=user_id, phone=f"137{str(user_id.int)[-8:]}", nickname="message-real-runner", plan="free")
             session.add(user)
             existing_skill = (
-                await session.execute(select(Skill).where(Skill.skill_id == "anti_fraud_video"))
+                await session.execute(select(Skill).where(Skill.skill_id == "short_video"))
             ).scalar_one_or_none()
             if existing_skill is None:
                 skill = Skill(
                     id=uuid4(),
-                    skill_id="anti_fraud_video",
+                    skill_id="short_video",
                     name=skill_yaml["name"],
                     description=skill_yaml.get("description"),
                     domain=skill_yaml.get("domain"),
@@ -277,7 +277,7 @@ async def test_message_prompt_runs_anti_fraud_until_hitl_with_real_runner(monkey
             else:
                 skill = existing_skill
                 skill.yaml_content = skill_yaml_text
-                skill.scenario = "anti_fraud"
+                skill.scenario = "short_video"
                 skill.domain = "video"
                 skill.visibility = "public"
                 skill.status = "published"
@@ -285,7 +285,7 @@ async def test_message_prompt_runs_anti_fraud_until_hitl_with_real_runner(monkey
             conv = Conversation(
                 id=conv_id,
                 user_id=user_id,
-                name="反诈视频真实 runner 测试群",
+                name="短视频真实 runner 测试群",
                 mode="group",
                 work_mode="auto",
                 skill_id=skill.id,
@@ -296,7 +296,7 @@ async def test_message_prompt_runs_anti_fraud_until_hitl_with_real_runner(monkey
             response = await send_message(
                 conv_id,
                 SendMessageRequest(
-                    content="帮我做一个60秒反诈视频，主题是电信诈骗，给城市老人看，年份2026。"
+                    content="帮我做一个60秒城市漫游短视频，治愈风，给都市白领看。"
                 ),
                 session,
             )
@@ -320,16 +320,16 @@ async def test_message_prompt_runs_anti_fraud_until_hitl_with_real_runner(monkey
 
     step_status = {step.step_id: step.status for step in steps}
     assert response.decision == "task_started"
-    assert response.payload["skill_id"] == "anti_fraud_video"
+    assert response.payload["skill_id"] == "short_video"
     assert task is not None
     assert task.status == "executing"
     assert step_status["research"] == "completed"
     assert "script" in step_status or "image_process" in step_status
-    assert gates, "real runner should pause on a HITL gate after early anti_fraud steps"
+    assert gates, "real runner should pause on a HITL gate after early short_video steps"
 
 
 @pytest.mark.asyncio
-async def test_message_prompt_completes_full_anti_fraud_workflow(monkeypatch):
+async def test_message_prompt_completes_full_short_video_workflow(monkeypatch):
     from agents._common.consumer import AgentConsumer
     from agents.av_agent.handlers import bgm_select as bgm_module
     from agents.av_agent.handlers import video_compose as video_compose_module
@@ -358,11 +358,11 @@ async def test_message_prompt_completes_full_anti_fraud_workflow(monkeypatch):
         return Intent(
             intent_type="task_request",
             domain="video",
-            scenario="anti_fraud",
+            scenario="short_video",
             entities={
-                "年份": 2026,
-                "骗局类型": "电信诈骗",
-                "受众": "城市老人",
+                "主题": "城市漫游",
+                "风格": "治愈向",
+                "受众": "都市白领",
                 "时长": "60s",
             },
             confidence=0.99,
@@ -382,15 +382,15 @@ async def test_message_prompt_completes_full_anti_fraud_workflow(monkeypatch):
             return {
                 "results": [
                     {
-                        "title": "2026 电信诈骗案例",
-                        "url": "https://example.com/fraud",
-                        "snippet": "涉案金额高，适合反诈宣传。",
+                        "title": "2026 城市漫游案例",
+                        "url": "https://example.com/short-video",
+                        "snippet": "适合城市漫游主题的街区与步道素材。",
                         "image_url": "https://example.com/a.jpg",
                     },
                     {
-                        "title": "养老投资诈骗",
-                        "url": "https://example.com/fraud-2",
-                        "snippet": "以高收益诱导老人转账。",
+                        "title": "滨江步道主题",
+                        "url": "https://example.com/short-video-2",
+                        "snippet": "适合清晨拍摄，光线柔和且步行友好。",
                         "image_url": "https://example.com/b.jpg",
                     },
                 ]
@@ -492,7 +492,7 @@ async def test_message_prompt_completes_full_anti_fraud_workflow(monkeypatch):
         await consumer._r()
     consumer_tasks = [asyncio.create_task(consumer.start()) for consumer in consumers]
 
-    skill_path = ROOT / "backend" / "skills" / "anti_fraud_video.yaml"
+    skill_path = ROOT / "backend" / "skills" / "playbooks" / "short_video.yaml"
     skill_yaml_text = skill_path.read_text(encoding="utf-8")
     skill_yaml = yaml.safe_load(skill_yaml_text)
 
@@ -503,12 +503,12 @@ async def test_message_prompt_completes_full_anti_fraud_workflow(monkeypatch):
             user = User(id=user_id, phone=f"136{str(user_id.int)[-8:]}", nickname="message-full-runner", plan="free")
             session.add(user)
             existing_skill = (
-                await session.execute(select(Skill).where(Skill.skill_id == "anti_fraud_video"))
+                await session.execute(select(Skill).where(Skill.skill_id == "short_video"))
             ).scalar_one_or_none()
             if existing_skill is None:
                 skill = Skill(
                     id=uuid4(),
-                    skill_id="anti_fraud_video",
+                    skill_id="short_video",
                     name=skill_yaml["name"],
                     description=skill_yaml.get("description"),
                     domain=skill_yaml.get("domain"),
@@ -526,7 +526,7 @@ async def test_message_prompt_completes_full_anti_fraud_workflow(monkeypatch):
             else:
                 skill = existing_skill
                 skill.yaml_content = skill_yaml_text
-                skill.scenario = "anti_fraud"
+                skill.scenario = "short_video"
                 skill.domain = "video"
                 skill.visibility = "public"
                 skill.status = "published"
@@ -534,7 +534,7 @@ async def test_message_prompt_completes_full_anti_fraud_workflow(monkeypatch):
             conv = Conversation(
                 id=conv_id,
                 user_id=user_id,
-                name="反诈视频完整工作流测试群",
+                name="短视频完整工作流测试群",
                 mode="group",
                 work_mode="auto",
                 skill_id=skill.id,
@@ -545,7 +545,7 @@ async def test_message_prompt_completes_full_anti_fraud_workflow(monkeypatch):
             response = await send_message(
                 conv_id,
                 SendMessageRequest(
-                    content="帮我做一个60秒反诈视频，主题是电信诈骗，给城市老人看，年份2026。"
+                    content="帮我做一个60秒城市漫游短视频，治愈风，给都市白领看。"
                 ),
                 session,
             )

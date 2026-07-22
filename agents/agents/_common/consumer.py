@@ -48,6 +48,8 @@ RETRY_BASE_SLEEP = float(os.getenv("AGENT_RETRY_BASE_SLEEP", "1.0"))
 HEARTBEAT_INTERVAL = float(os.getenv("AGENT_HEARTBEAT_INTERVAL", "20"))
 IDEMPOTENCY_DONE_TTL = int(os.getenv("AGENT_IDEMPOTENCY_DONE_TTL", "604800"))  # 7d
 REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
+REDIS_READ_BLOCK_MS = 5000
+REDIS_SOCKET_TIMEOUT = float(os.getenv("AGENT_REDIS_SOCKET_TIMEOUT", "10"))
 
 # Hard cap 防御:即使 task 设了夸张的 timeout_seconds,也不能让 worker 槽位锁太久
 MAX_TASK_TIMEOUT_SEC = int(os.getenv("AGENT_MAX_TASK_TIMEOUT", "1800"))   # 30 分钟
@@ -101,7 +103,11 @@ class AgentConsumer:
 
     async def _r(self) -> aioredis.Redis:
         if self._redis is None:
-            self._redis = aioredis.from_url(REDIS_URL, decode_responses=True)
+            self._redis = aioredis.from_url(
+                REDIS_URL,
+                decode_responses=True,
+                socket_timeout=REDIS_SOCKET_TIMEOUT,
+            )
             try:
                 await self._redis.xgroup_create(self.queue, self.group, id="$", mkstream=True)
             except aioredis.ResponseError as e:
@@ -146,7 +152,7 @@ class AgentConsumer:
                         self.consumer_name,
                         streams={self.queue: ">"},
                         count=1,
-                        block=5000,
+                        block=REDIS_READ_BLOCK_MS,
                     )
                 except asyncio.CancelledError:
                     break
@@ -245,10 +251,19 @@ class AgentConsumer:
         # 幂等检查:同 idempotency_key 已完成 → 直接 ack 不重做
         idempo_key = (task.idempotency_key or "").strip()
         done_redis_key = f"agent:idempotent_done:{idempo_key}" if idempo_key else ""
-        if idempo_key and await redis.get(done_redis_key):
-            await redis.xack(self.queue, self.group, msg_id)
+        cached_result = await redis.get(done_redis_key) if idempo_key else None
+        if cached_result:
+            pl = redis.pipeline(transaction=True)
+            pl.xadd(
+                f"agent_results:{task.task_id}",
+                {"data": cached_result},
+                maxlen=RESULT_MAXLEN,
+                approximate=True,
+            )
+            pl.xack(self.queue, self.group, msg_id)
+            await pl.execute()
             log.info(
-                "agent.consumer.idempotent_duplicate_skipped",
+                "agent.consumer.idempotent_result_replayed",
                 task_id=str(task.task_id),
                 step_id=task.step_id,
                 idempotency_key=idempo_key,

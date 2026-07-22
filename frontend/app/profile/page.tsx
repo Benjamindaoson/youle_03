@@ -2,7 +2,7 @@
 
 // 个人主页(v4 §37 #327-331)
 import { useState } from 'react';
-import { Camera, Crown, ListTodo, Package } from 'lucide-react';
+import { Crown, ListTodo, Package } from 'lucide-react';
 import { QuotaWidget } from '@/components/layout/QuotaWidget';
 import {
   useMyQuota,
@@ -42,18 +42,11 @@ export default function ProfilePage() {
         <div className="mx-auto w-full max-w-2xl space-y-5 p-6">
           {/* 用户信息 */}
           <section className="flex items-center gap-4 rounded-md border border-wechat-line bg-white p-4">
-            <button
-              type="button"
-              className="relative h-16 w-16 overflow-hidden rounded-full bg-wechat-green-soft"
-              title="点击更换头像"
-            >
+            <div className="relative h-16 w-16 overflow-hidden rounded-full bg-wechat-green-soft">
               <span className="grid h-full w-full place-items-center text-[18px] font-semibold text-wechat-green">
                 {profile?.nickname?.slice(0, 2) ?? '老板'}
               </span>
-              <span className="absolute bottom-0 right-0 grid h-5 w-5 place-items-center rounded-full bg-white">
-                <Camera size={11} className="text-wechat-fg" />
-              </span>
-            </button>
+            </div>
             <div className="flex-1">
               {editingName ? (
                 <input
@@ -112,7 +105,7 @@ export default function ProfilePage() {
             <h2 className="mb-2 text-[12px] font-medium text-wechat-sub">偏好画像</h2>
             <p className="text-[11px] text-wechat-mute">
               你连续 3 次同样选择系统会自动记为偏好,后续任务自动套用,不再重复问。
-              对总裁助理说“以后做反诈视频默认用城市老人受众”也能直接录入。
+              对总裁助理说“以后做短视频默认用都市白领受众”也能直接录入。
             </p>
             <div className="mt-3 text-[11px] text-wechat-sub">
               {quota ? `当前已使用 ${quota.auto_tasks_daily.used} 次任务,沉淀中…` : ''}

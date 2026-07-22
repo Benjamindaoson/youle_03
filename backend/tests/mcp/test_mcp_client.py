@@ -17,7 +17,7 @@ async def test_call_tool_happy_path() -> None:
             return_value=Response(200, json={"results": [{"title": "x", "url": "y"}]})
         )
         out = await client.call_tool(
-            server="search", tool="web_search", arguments={"query": "反诈"}
+            server="search", tool="web_search", arguments={"query": "短视频"}
         )
         assert out["results"][0]["title"] == "x"
     await client.aclose()

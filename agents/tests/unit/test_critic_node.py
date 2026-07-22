@@ -157,8 +157,8 @@ async def test_evaluate_mock_returns_pass() -> None:
     c = await evaluate(
         step_def={},
         task_type="long_writing",
-        rendered_prompt="写一段反诈视频脚本",
-        produced_artifact_text="这是一段反诈视频脚本,开头钩子...",
+        rendered_prompt="写一段短视频脚本",
+        produced_artifact_text="这是一段短视频脚本,开头钩子...",
         produced_artifact_type="text",
     )
     assert c.passed() is True
@@ -183,7 +183,7 @@ async def test_evaluate_respects_step_threshold() -> None:
 
 # ─── build_retry_prompt ───
 def test_build_retry_prompt_appends_block() -> None:
-    original = "写一段反诈脚本"
+    original = "写一段短视频脚本"
     critique = CritiqueResult(
         score=0.5,
         threshold_used=0.7,
@@ -191,7 +191,7 @@ def test_build_retry_prompt_appends_block() -> None:
         suggestion="加一个真实数字开头",
     )
     out = build_retry_prompt(original_prompt=original, critique=critique)
-    assert "写一段反诈脚本" in out
+    assert "写一段短视频脚本" in out
     assert "[Critic 反馈" in out
     assert "开头无冲突" in out
     assert "加一个真实数字开头" in out
@@ -200,7 +200,7 @@ def test_build_retry_prompt_appends_block() -> None:
 
 def test_build_retry_prompt_strips_prior_block() -> None:
     """连续两轮 critic 不应让反馈累加,旧反馈段被替换。"""
-    original = "写一段反诈脚本"
+    original = "写一段短视频脚本"
     c1 = CritiqueResult(score=0.5, threshold_used=0.7, issues=["问题1"], suggestion="改 A")
     c2 = CritiqueResult(score=0.6, threshold_used=0.7, issues=["问题2"], suggestion="改 B")
 
@@ -214,7 +214,7 @@ def test_build_retry_prompt_strips_prior_block() -> None:
     assert "问题2" in twice
     assert "改 B" in twice
     # 用户原 prompt 仍在
-    assert "写一段反诈脚本" in twice
+    assert "写一段短视频脚本" in twice
 
 
 # ─── default-on task_types 完整性 ───

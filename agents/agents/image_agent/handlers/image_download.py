@@ -1,4 +1,4 @@
-"""Agent 3 image_download — 反诈视频:从研究 xlsx 的图片 URL 下载,质检。"""
+"""Agent 3 image_download — 从研究结果下载图片并质检。"""
 
 from __future__ import annotations
 
@@ -73,9 +73,9 @@ async def _cards_from_research_ref(task: AgentTask, ref: str | None, count: int 
         if not rows:
             rows = [
                 {
-                    "title": f"反诈提醒 {i + 1}",
-                    "snippet": "不要轻信陌生电话、中奖信息、投资链接和验证码索要。遇到疑似诈骗，先挂断，再拨打 96110 核实。",
-                    "url": "https://www.gov.cn/",
+                    "title": f"视频素材 {i + 1}",
+                    "snippet": "围绕主题整理的背景资料与关键事实，可用于脚本和画面设计。",
+                    "url": "https://example.com/",
                 }
                 for i in range(count)
             ]
@@ -129,8 +129,8 @@ def _case_card_png(row: dict[str, Any], idx: int) -> bytes:
     try:
         from PIL import Image, ImageDraw
 
-        title = str(row.get("title") or row.get("标题") or f"反诈案例 {idx + 1}")[:80]
-        snippet = str(row.get("snippet") or row.get("摘要") or "警惕陌生来电、陌生链接和转账要求。")[:180]
+        title = str(row.get("title") or row.get("标题") or f"视频素材 {idx + 1}")[:80]
+        snippet = str(row.get("snippet") or row.get("摘要") or "围绕主题整理的背景资料与关键信息。")[:180]
         amount = str(row.get("涉案金额") or "")
         source = str(row.get("url") or row.get("来源URL") or "")
 
@@ -147,7 +147,7 @@ def _case_card_png(row: dict[str, Any], idx: int) -> bytes:
         font_title = _font(58)
         font_body = _font(40)
         font_small = _font(30)
-        draw.text((80, 72), "反诈案例速览", font=font_badge, fill=(255, 255, 255))
+        draw.text((80, 72), "视频素材速览", font=font_badge, fill=(255, 255, 255))
 
         y = 410
         for line in _wrap_text(title, 14)[:4]:
@@ -167,7 +167,7 @@ def _case_card_png(row: dict[str, Any], idx: int) -> bytes:
             draw.text((120, y + 60), line, font=font_small, fill=(226, 232, 240))
             y += 44
 
-        draw.text((130, 1628), "不转账 不透露验证码 先打 96110", font=font_body, fill=(255, 255, 255))
+        draw.text((130, 1628), "城市漫游 · 发现日常灵感", font=font_body, fill=(255, 255, 255))
         buf = io.BytesIO()
         img.save(buf, format="PNG")
         return buf.getvalue()

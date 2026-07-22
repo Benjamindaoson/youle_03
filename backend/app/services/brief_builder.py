@@ -124,8 +124,10 @@ def merge_brief_into_skill_inputs(
     brief_fields = (brief or {}).get("字段") or {}
     aliases: dict[str, list[str]] = {
         "年份": ["年度", "year", "年"],
-        "骗局类型": ["诈骗类型", "scam_type", "骗局"],
+        "主题": ["话题", "topic", "内容主题"],
         "受众": ["目标人群", "audience", "群体"],
+        "平台": ["发布平台", "platform"],
+        "时长": ["视频时长", "duration"],
         "商品类型": ["品类", "product_type"],
         "风格": ["视觉风格", "style"],
     }

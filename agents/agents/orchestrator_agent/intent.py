@@ -10,6 +10,7 @@
 from __future__ import annotations
 
 import json
+import re
 import time
 from typing import Any, Literal
 
@@ -41,6 +42,38 @@ class Intent(BaseModel):
     confidence: float = 0.0
 
 
+_EXPLICIT_ENTITY_NAMES = (
+    "主题",
+    "风格",
+    "受众",
+    "时长",
+    "平台",
+    "开头钩子",
+    "商品图",
+    "卖点",
+    "风格基调",
+    "字数",
+    "页数",
+    "风格关键词",
+)
+_EXPLICIT_ENTITY_RE = re.compile(
+    rf"(?:^|[。.!！]\s*)({'|'.join(_EXPLICIT_ENTITY_NAMES)})\s*[：:]\s*(.+)$"
+)
+
+
+def _extract_explicit_entities(user_message: str) -> dict[str, str]:
+    """Extract user-labelled fields without spending another model call."""
+    entities: dict[str, str] = {}
+    for segment in re.split(r"[；;\n]+", user_message):
+        match = _EXPLICIT_ENTITY_RE.search(segment.strip())
+        if not match:
+            continue
+        value = match.group(2).strip().rstrip("。.!！ ")
+        if value:
+            entities[match.group(1)] = value
+    return entities
+
+
 async def understand_intent(
     *,
     user_message: str,
@@ -48,7 +81,7 @@ async def understand_intent(
     conversation_context: dict[str, Any] | None = None,
 ) -> Intent:
     history = recent_history or []
-    context_blob = conversation_context or {}
+    context_blob = dict(conversation_context or {})
 
     # 若调用方传入了会话摘要,前置注入让 LLM 了解对话背景
     memory_summary = context_blob.pop("memory_summary", "") if isinstance(context_blob, dict) else ""
@@ -82,4 +115,8 @@ async def understand_intent(
     except json.JSONDecodeError:
         log.warning("intent.parse_failed", content=resp.content[:200])
         data = {"intent_type": "chitchat", "confidence": 0.0}
+    data["entities"] = {
+        **(data.get("entities") or {}),
+        **_extract_explicit_entities(user_message),
+    }
     return Intent.model_validate(data)

@@ -60,7 +60,7 @@ async def test_agent1_web_search() -> None:
         task_type="web_search",
         user_id=uuid4(),
         conversation_id=uuid4(),
-        inputs={"_prompt": "2026 年电信诈骗案例"},
+        inputs={"_prompt": "2026 年城市漫游案例"},
         parameters={"max_results": 5},
     )
     result = await web_search_handler(task)
@@ -81,7 +81,7 @@ async def test_agent1_long_writing() -> None:
         task_type="long_writing",
         user_id=uuid4(),
         conversation_id=uuid4(),
-        inputs={"_prompt": "写一段反诈视频脚本"},
+        inputs={"_prompt": "写一段短视频脚本"},
     )
     result = await long_writing_handler(task)
     assert result.status == "completed"
@@ -141,7 +141,7 @@ async def test_agent4_tts_generate() -> None:
         task_type="tts_generate",
         user_id=uuid4(),
         conversation_id=uuid4(),
-        inputs={"text": "你好,这是反诈宣传"},
+        inputs={"text": "你好,这是短视频宣传"},
         parameters={"voice": "female_warm"},
     )
     result = await tts_generate_handler(task)

@@ -2,15 +2,15 @@
 
 # Golden 文件格式(YAML)
 ```yaml
-case_id: anti_fraud_video_basic
-description: 反诈视频 happy path
+case_id: short_video_basic
+description: 短视频 happy path
 tags: [video, hero]
 input:
-  user_request: 给我做一个反诈短视频
+  user_request: 给我做一个城市漫游短视频
   collected_fields:
-    年份: 2026
-    骗局类型: 电信诈骗
-    受众: 城市老人
+    主题: 城市漫游
+    风格: 治愈向
+    受众: 都市白领
     时长: 60s
 expected:
   must_have_steps: [research, script, image_process, bgm, video_compose]

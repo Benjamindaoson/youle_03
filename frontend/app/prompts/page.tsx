@@ -54,7 +54,7 @@ export default function PromptsPage() {
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="名称(如:反诈标准开场)"
+              placeholder="名称(如:短视频标准开场)"
               className="rounded-sm border border-wechat-line bg-white px-2 py-1 text-[13px] outline-none focus:border-wechat-green"
             />
             <textarea

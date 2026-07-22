@@ -50,7 +50,7 @@ def _simplify_query(query: str) -> str:
     years = [token for token in ("2026", "2025", "2024") if token in query]
     keywords = [
         token
-        for token in ("电信诈骗", "投资理财", "网恋诈骗", "网络洗钱", "传销", "案件", "新闻", "图片")
+        for token in ("城市漫游", "旅行", "美食", "生活方式", "短视频", "新闻", "图片")
         if token in query
     ]
     simplified = " ".join([*years, *keywords])
@@ -60,7 +60,7 @@ def _simplify_query(query: str) -> str:
 async def web_search(arguments: dict[str, Any]) -> dict[str, Any]:
     query = arguments.get("query", "").strip()
     max_results = int(arguments.get("max_results", 5))
-    source_profile = arguments.get("source_profile") or "anti_fraud_video"
+    source_profile = arguments.get("source_profile") or "short_video"
     source_config = SOURCE_CONFIG.get(source_profile, {}) if source_profile else {}
     include_domains = list(arguments.get("include_domains") or source_config.get("include_domains") or [])
     exclude_domains = list(arguments.get("exclude_domains") or source_config.get("exclude_domains") or [])

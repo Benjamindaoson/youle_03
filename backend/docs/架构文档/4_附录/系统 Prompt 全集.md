@@ -1,13 +1,13 @@
 # 系统 Prompt 全集
 
-**版本**:v3.0(对齐 ADR-001-rev / 009-016;V1 hero = 反诈 + 电商详情图)
+**版本**:v3.0(对齐 ADR-001-rev / 009-016;V1 hero = 短视频 + 电商详情图)
 **日期**:2026-05-05
 **面向**:智能体团队 / 后端 / 提示词工程师
 **地位**:所有 LLM 调用的 system prompt 唯一来源。任何 prompt 修改必须先改本文档,代码引用 prompt 常量(不内联文本)。
 
 **v3.0 关键变更**:
 - 🔄 Agent 编号反向(ADR-001-rev),角色描述 prompt 中 Agent 编号同步
-- 🔄 V1 hero SKU 回归反诈视频 + 电商详情图(ADR-012 废弃)
+- 🔄 V1 hero SKU 回归短视频 + 电商详情图(ADR-012 废弃)
 - ✨ **新增 HR / 财务经理 system prompt**(ADR-013)
 - ✨ **新增 Agent 互动消息生成 prompt**(ADR-015)
 - ✨ **新增三模式管理器 system prompt**(ADR-014:Plan / Ask / Auto)
@@ -76,7 +76,7 @@ QUOTA_EXHAUSTED_MESSAGES         # 配额耗尽提示
 
 ## intent_type 含义
 - create_task:新任务(用户说"做支讲复利的科普短视频"、"做朴朴风电商图")
-- modify_task:修改进行中任务(用户说"换成电信诈骗"、"再来一版")
+- modify_task:修改进行中任务(用户说"换成城市漫游"、"再来一版")
 - query:查询(用户说"上次做的视频呢"、"我有几个群")
 - feedback:反馈(用户说"这个不行"、"挺好"、"重做")
 - chitchat:闲聊(用户说"你好"、"今天天气真好")
@@ -110,7 +110,7 @@ QUOTA_EXHAUSTED_MESSAGES         # 配额耗尽提示
 
 ```python
 scenario_options = ", ".join(s.scenario for s in available_skills) + ", null"
-# 例如: "anti_fraud, ecommerce_detail, null"
+# 例如: "short_video, ecommerce_detail, null"
 
 available_skills = "\n".join(
     f"- {s.scenario}: {s.name} ({s.description[:50]})"
@@ -124,8 +124,8 @@ available_skills = "\n".join(
 - input: "做支讲复利效应的科普视频,小红书风格,30 秒"
   expected:
     intent_type: create_task
-    scenario: anti_fraud
-    entities: {年份: 2026, 骗局类型: 投资理财}
+    scenario: short_video
+    entities: {年份: 2026, 内容类型: 投资理财}
     confidence: ">= 0.9"
 
 - input: "我想做点东西"
@@ -205,7 +205,7 @@ available_skills = "\n".join(
 - B 微调当前:让正在执行的 Agent 改一下当前步骤
   例:"标题再夸张点"、"这张图换个角度"
 - C 修改参数:改已经填好的核心字段(可能影响已完成步骤)
-  例:"骗局类型改成电信诈骗"、"受众换成农村老人"
+  例:"内容类型改成城市漫游"、"受众换成农村老人"
 - D 改方向:整个任务方向变了,需要 fork 新任务
   例:"算了不做短视频了,改做小红书图文"、"换个完全不同的主题"
 - E 暂停:用户想停下
@@ -267,7 +267,7 @@ available_skills = "\n".join(
 
 ## 规则
 1. **只填用户明确说出的内容,不要猜**
-2. 字段名用中文,与 Skill inputs_schema 对齐(常见:产品、受众、风格、卖点、时长、骗局类型、年份、场景)
+2. 字段名用中文,与 Skill inputs_schema 对齐(常见:产品、受众、风格、卖点、时长、内容类型、年份、场景)
 3. 完成度评估标准:
    - 0.0-0.3:仅有领域,具体字段全空
    - 0.4-0.6:有 1-2 个核心字段

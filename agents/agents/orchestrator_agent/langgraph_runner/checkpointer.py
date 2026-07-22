@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 
 import structlog
+from langgraph.checkpoint.memory import InMemorySaver
 
 from app.config import settings
 
@@ -32,8 +33,6 @@ async def init_postgres_checkpointer(database_url: str | None = None):
         or os.getenv("LANGGRAPH_CHECKPOINT_INMEMORY", "").lower() == "true"
     )
     if not url or url.startswith("sqlite") or force_in_memory:
-        from langgraph.checkpoint.memory import InMemorySaver
-
         if not settings.is_dev and not force_in_memory:
             raise RuntimeError(
                 "非 dev 环境必须提供 Postgres 类 DATABASE_URL / LANGGRAPH_CHECKPOINT_URL 作为 LangGraph checkpoint;"

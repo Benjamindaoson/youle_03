@@ -28,7 +28,7 @@ import structlog
 import yaml as _yaml_module
 from agents.orchestrator_agent.clarification import MAX_CLARIFICATION_ROUNDS, generate_clarification
 from agents.orchestrator_agent.input_validator import validate_inputs
-from agents.orchestrator_agent.intent import understand_intent
+from agents.orchestrator_agent.intent import Intent, understand_intent
 from agents.orchestrator_agent.interrupt import (
     InterruptClassification,
     classify_interrupt,
@@ -78,6 +78,14 @@ _DISPLAY_TO_ID: dict[str, str] = {
     "HR": "hr",
     "财务经理": "finance_manager",
 }
+
+
+def _coerce_pending_clarification_intent(
+    intent: Intent, *, pending: bool
+) -> Intent:
+    if pending and intent.entities and intent.intent_type in {"task_request", "chitchat"}:
+        return intent.model_copy(update={"intent_type": "clarification_answer"})
+    return intent
 
 
 async def _publish_clarification_ws(
@@ -219,6 +227,16 @@ async def _create_and_launch_task(
     await session.commit()
     await session.refresh(task)
 
+    await ws_manager.publish(
+        str(conv.user_id),
+        {
+            "type": WSEventType.TASK_STARTED,
+            "conversation_id": str(conv.id),
+            "task_id": str(task.id),
+            "skill_id": skill_yaml_id,
+            "step_count": len(skill_yaml.get("workflow", [])),
+        },
+    )
     asyncio.create_task(_run_task_background(task.id))
 
     log.info("send_message_handlers.task_started", task_id=str(task.id), skill=skill_yaml_id)
@@ -490,6 +508,17 @@ async def dispatch_send_message(
             "memory_summary": memory_ctx,
         },
     )
+    pending_clarification_raw: str | None = None
+    try:
+        redis = await get_redis()
+        pending_clarification_raw = await redis.get(
+            _CLARIF_KEY.format(user.id, conv.id)
+        )
+    except Exception as e:
+        log.warning("send_message_handlers.clarification_lookup_failed", err=str(e))
+    intent = _coerce_pending_clarification_intent(
+        intent, pending=bool(pending_clarification_raw)
+    )
 
     if conv.mode == "main_session":
         support_role = route_support_agent(intent.intent_type, body.content)
@@ -561,7 +590,9 @@ async def dispatch_send_message(
 
     if intent.intent_type == "clarification_answer":
         redis = await get_redis()
-        ctx_raw = await redis.get(_CLARIF_KEY.format(user.id, conv.id))
+        ctx_raw = pending_clarification_raw or await redis.get(
+            _CLARIF_KEY.format(user.id, conv.id)
+        )
         if ctx_raw:
             ctx = json.loads(ctx_raw)
             new_collected = {**ctx["collected"], **(intent.entities or {})}

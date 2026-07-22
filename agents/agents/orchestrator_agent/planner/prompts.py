@@ -4,7 +4,7 @@ Prompt 设计原则:
 1. **明确 schema**:Plan JSON 字段、可选值、约束都写死,LLM 不能自由发挥结构。
 2. **铁律内化**:把 Skill YAML 工作流的核心约束(4 个 worker、ADR-002 不互调、
    MCP 工具白名单、HITL gate)告诉 Planner,避免产出违法 plan。
-3. **示例驱动**:给一个 anti_fraud_video 的 plan 例子,Planner 照葫芦画瓢。
+3. **示例驱动**:给一个 short_video 的 plan 例子,Planner 照葫芦画瓢。
 4. **可解释**:必填 `rationale`,审计与飞轮信号都用得到。
 
 注:这里的 prompts 故意不用 Jinja —— 模板替换在 planner_agent.py 用 .format()
@@ -122,7 +122,7 @@ REPLANNER_SYSTEM_PROMPT = """你是 Youle 多智能体平台的复核规划官(R
 
 # 一份示范 Plan,放进 user prompt 末尾,帮助 Planner 校准格式
 EXAMPLE_PLAN_JSON = """{
-  "plan_id": "demo-anti-fraud-001",
+  "plan_id": "demo-short-video-001",
   "rationale": "5 步拆解短视频:研究 → 脚本(HITL) → 图片(HITL) → 配乐 → 合成(HITL)",
   "primary_artifact": "video_compose",
   "steps": [
@@ -133,14 +133,14 @@ EXAMPLE_PLAN_JSON = """{
       "persona": "researcher",
       "depends_on": [],
       "timeout": 120,
-      "prompt_template": "搜索 {{年份}} {{骗局类型}} 案件 10 条,带图片",
+      "prompt_template": "围绕 {{主题}} 搜索 10 条可靠素材,尽量带图片",
       "inputs": {},
-      "parameters": {"source_profile": "anti_fraud", "include_domains": ["gov.cn"]},
+      "parameters": {"source_profile": "short_video"},
       "routing_hints": {"primary": "deepseek-v4-pro", "fallback": ["claude-sonnet-4-6"]},
       "mcp_tools": ["mcp://search/web_search", "mcp://search/web_fetch"],
       "hitl_gate": null,
       "budget_tokens": 8000,
-      "expected_artifact": "案例表格(标题/摘要/金额/图片URL)"
+      "expected_artifact": "素材表格(标题/摘要/来源/图片URL)"
     },
     {
       "step_id": "script",

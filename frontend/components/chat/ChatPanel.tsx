@@ -14,6 +14,7 @@ import { useMembers } from '@/lib/api';
 import { useConversationEvents } from '@/lib/sse';
 import { useUserStore } from '@/stores/user';
 import { MOCK_MODE } from '@/lib/client';
+import { PendingInteractions } from '@/components/chat/PendingInteractions';
 
 export function ChatPanel({ conversationId }: { conversationId: string }) {
   const setCurrent = useConversationStore((s) => s.setCurrent);
@@ -44,6 +45,7 @@ export function ChatPanel({ conversationId }: { conversationId: string }) {
       <div className="flex-1 overflow-y-auto px-8 py-4">
         <MessageList conversationId={conversationId} />
       </div>
+      <PendingInteractions conversationId={conversationId} />
       <Composer conversationId={conversationId} />
     </div>
   );

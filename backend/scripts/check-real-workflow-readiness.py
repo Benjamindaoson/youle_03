@@ -1,4 +1,4 @@
-"""Check whether local env is ready for a real anti_fraud_video workflow run."""
+"""Check whether local env is ready for a real short-video workflow run."""
 
 from __future__ import annotations
 

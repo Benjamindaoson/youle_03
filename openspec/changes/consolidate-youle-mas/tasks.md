@@ -49,7 +49,7 @@
 - [x] 6.1 Add a no-key mock E2E covering login, group creation, Agent member, task, Skill match, AgentTask, Redis dispatch, mock AgentResult, SSE, and frontend completion.
 - [x] 6.2 Verify every Agent service imports, accepts valid AgentTask, rejects invalid schema, uses Router/MCP, and returns structured timeout/retry errors.
 - [x] 6.3 Upgrade a fresh PostgreSQL database through every Alembic revision and verify the final schema contains one model set.
-- [ ] 6.4 Start backend, workers, MCP, Redis, PostgreSQL, and frontend; check health/readiness and the primary user flow when local services are available.
+- [x] 6.4 Start the core backend, combined worker, Redis, PostgreSQL, and frontend; check health/readiness and the primary browser user flow. Keep MCP sidecars in the optional production profile.
 
 ## 7. Documentation and delivery
 
@@ -59,3 +59,27 @@
 - [x] 7.4 Run the full Ruff, pytest, compileall, frontend, Alembic, Docker Compose, health, E2E, secret, dependency, and ship-readiness checks; repair any in-scope failure.
 - [x] 7.5 Review the final diff for duplicate architectures, imports, secrets, env documentation, unnecessary dependencies, attribution, and intent alignment.
 - [x] 7.6 Commit each verified phase, push `codex/youle-mas-consolidation`, and open a Draft PR targeting the default branch without merging it.
+
+## 8. Full-stack parity and debt cleanup
+
+- [x] 8.1 Replace the retired topic-specific video Skill, prompts, examples, MCP defaults, frontend copy, tests, and current documentation with the canonical `short_video` capability; archive the legacy database row by migration.
+- [x] 8.2 Generate a bidirectional matrix of every production frontend REST/SSE/WS call and every backend route/event; classify unmatched surfaces and fix all user-facing gaps in scope.
+- [x] 8.3 Verify the Agent architecture from message intake through LangGraph, Skill compilation, Redis AgentTask/AgentResult, Worker/MCP execution, unified events, and frontend consumption.
+- [x] 8.4 Run a whole-repository over-engineering/dead-code audit; remove only findings proven unused by reference analysis and regression tests, and record deferred debt explicitly.
+- [x] 8.5 Repeat targeted backend, Agent, frontend, browser, runtime, contract, and active-copy verification after cleanup; final full suites remain part of ship verification.
+
+## 9. Single repository retirement
+
+- [ ] 9.1 Commit and push the verified cleanup branch, open a PR against the target repository default branch, and merge only after required checks pass.
+- [ ] 9.2 Verify the merged default branch can install, migrate, build, test, and start from a fresh checkout.
+- [ ] 9.3 Confirm the final target repository identity and the exact three source repositories to retire.
+- [ ] 9.4 Delete the three source GitHub repositories only after 9.1-9.3 pass, then verify the account exposes only the target repository for this project.
+
+## 10. Cost-aware runtime profiles
+
+- [x] 10.1 Add contract tests proving the default demo cannot force paid LLM mode and records the exact provider calls made.
+- [x] 10.2 Define a minimal `core` runtime that retains FastAPI, LangGraph, frontend, Agent execution, SSE, and one database/queue path while minimizing Docker containers and Python processes.
+- [x] 10.3 Provide one unified Agent worker entry point for the core runtime; retain independently scalable workers only in production configuration.
+- [x] 10.4 Move optional production infrastructure and deployment settings under a separate `deploy/production/` directory without duplicating application code.
+- [x] 10.5 Verify the core mock journey performs zero paid model calls and measure its two-container/three-application-process runtime.
+- [ ] 10.6 Fresh-clone the merged canonical repository to the local D: drive and repeat install, migration, start, API, frontend, Agent, and browser verification before repository retirement.

@@ -103,7 +103,7 @@ interface StepCompleted {
     "artifact_id": "8b2f1c4e-5d6a-4f23-9e7c-3a8b9d2f1c4e",
     "type": "structured",
     "reference": "oss://youle-prod/artifacts/550e8400/research.json",
-    "metadata": {"row_count": 10, "source_profile": "anti_fraud_video"}
+    "metadata": {"row_count": 10, "source_profile": "short_video"}
   }
 }
 ```
@@ -496,7 +496,7 @@ interface Plan {
 
 ```json
 {
-  "plan_id": "p-anti-fraud-001",
+  "plan_id": "p-short-video-001",
   "rationale": "5 步:研究 → 脚本 → 图片 → 配乐 → 合成",
   "primary_artifact": "video_compose",
   "source": "planner",
@@ -508,8 +508,8 @@ interface Plan {
     {
       "step_id": "research", "agent": "agent_1", "task_type": "web_search",
       "persona": "researcher", "depends_on": [], "timeout": 120,
-      "prompt_template": "搜索 {{年份}} {{骗局类型}} 案件 10 条",
-      "inputs": {}, "parameters": {"source_profile": "anti_fraud"},
+      "prompt_template": "搜索 {{年份}} {{内容类型}} 案件 10 条",
+      "inputs": {}, "parameters": {"source_profile": "short_video"},
       "routing_hints": {"primary": "deepseek-v4-pro"},
       "mcp_tools": ["mcp://search/web_search"],
       "hitl_gate": null, "budget_tokens": 8000,
@@ -711,9 +711,9 @@ type ArtifactType =
 
 ## Part 7: 前端集成模式
 
-### 7.1 端到端事件时序(反诈视频 happy path)
+### 7.1 端到端事件时序(短视频 happy path)
 
-> 5 步反诈视频任务,启用 Critic Loop + 2 个 HITL gate。
+> 5 步短视频任务,启用 Critic Loop + 2 个 HITL gate。
 
 ```
 T=0.00s   后端创建 task
@@ -817,7 +817,7 @@ function deriveSkillProgress(taskSnapshot: TaskStateSnapshot): SkillProgress {
 }
 ```
 
-并行 fan-out 场景下(如反诈视频的 image_process + bgm)`running` 会同时出现多个 step_id;UI 应支持多 step 同时高亮,而非单线性进度条。
+并行 fan-out 场景下(如短视频的 image_process + bgm)`running` 会同时出现多个 step_id;UI 应支持多 step 同时高亮,而非单线性进度条。
 
 ### 7.5 完整 `.d.ts`(可直接 copy 到 `frontend/lib/agent-events.d.ts`)
 

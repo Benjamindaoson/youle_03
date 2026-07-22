@@ -132,7 +132,7 @@ TASK_CASES = [
         "agents.text_agent.handlers.web_search.web_search_handler",
         "agent_1",
         "web_search",
-        {"_prompt": "search anti fraud"},
+        {"_prompt": "search anti short-video"},
         {"max_results": 3},
         "completed",
         "structured",
@@ -243,8 +243,8 @@ TASK_CASES = [
         {
             "image_ref": "oss://test/base.png",
             "layers": [
-                {"type": "badge", "content": "96110", "position": "bottom-right"},
-                {"type": "text", "content": "反诈提醒", "position": "top-left",
+                {"type": "badge", "content": "官方提醒", "position": "bottom-right"},
+                {"type": "text", "content": "视频提醒", "position": "top-left",
                  "style": {"font_size": 32, "color": [255, 255, 255], "bg_color": [220, 38, 38, 200]}},
             ],
         },

@@ -135,7 +135,7 @@ CI 分为：
 
 - 本机 Docker daemon 不可用：未在本机启动 PostgreSQL、Redis、MinIO、Qdrant、LiteLLM mock、全体 Worker/MCP，也未本地实际执行空库 migration。
 - 真实模型、阿里云短信、云 OSS、TTS/视频和发布渠道没有公共凭据，未验证。
-- Playwright 的真实反诈视频长链路继续 opt-in；普通 PR 使用确定性无密钥 E2E。
+- Playwright 的真实短视频长链路继续 opt-in；普通 PR 使用确定性无密钥 E2E。
 - 项目所有者尚未为四个来源仓库提供根许可证；本次只补齐已识别的第三方 notices，未擅自添加项目 LICENSE。
 
 ## 风险与下一阶段

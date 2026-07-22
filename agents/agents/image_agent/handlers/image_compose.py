@@ -2,7 +2,7 @@
 
 支持的 layer 类型:
   text        — 任意文字,自定义位置/颜色/字号/背景
-  badge       — 圆角色块徽章(默认红色 96110 反诈标识)
+  badge       — 圆角色块徽章(默认使用主题强调色)
   price_tag   — 电商价格标签(橙色块 + 价格 + 副标签)
   watermark   — 半透明水印(支持单次或平铺)
 
@@ -108,7 +108,7 @@ def _apply_text_layer(draw, img_size: tuple[int, int], layer: dict) -> None:
 
 def _apply_badge_layer(draw, img_size: tuple[int, int], layer: dict) -> None:
     w, h = img_size
-    text = str(layer.get("content", "96110"))
+    text = str(layer.get("content", "城市漫游"))
     style = layer.get("style", {})
     font_size = int(style.get("font_size", 32))
     font = _load_font(font_size)

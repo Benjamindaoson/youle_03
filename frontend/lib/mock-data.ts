@@ -31,8 +31,8 @@ export const MOCK_CONVERSATIONS: ConversationSummary[] = [
     avatar_text: 'HR',
   },
   {
-    id: 'anti-fraud',
-    name: '反诈视频制作群',
+    id: 'short-video',
+    name: '短视频制作群',
     kind: 'group',
     work_mode: 'auto',
     preview: '小研: 这个模板不错',
@@ -60,7 +60,7 @@ export const MOCK_MEMBERS: Record<string, AgentMember[]> = {
     { id: 'hr',              status: 'idle' },
     { id: 'finance_manager', status: 'idle' },
   ],
-  'anti-fraud': [
+  'short-video': [
     { id: 'ceo_assistant', status: 'working' },
     { id: 'agent_1',       status: 'working' },
     { id: 'agent_2',       status: 'idle' },
@@ -75,34 +75,33 @@ export const MOCK_MEMBERS: Record<string, AgentMember[]> = {
     { id: 'agent_4',       status: 'idle' },
   ],
 };
-
 export const MOCK_MESSAGES: Record<string, Message[]> = {
-  'anti-fraud': [
+  'short-video': [
     {
       id: 'm1',
-      conversation_id: 'anti-fraud',
+      conversation_id: 'short-video',
       kind: 'user_text',
       role: 'user',
-      text: '@研究员 做反诈视频,2026 案例',
+      text: '@研究员 做一条城市漫游短视频',
     },
     {
       id: 'm2',
-      conversation_id: 'anti-fraud',
+      conversation_id: 'short-video',
       kind: 'agent_text',
       role: 'agent_1',
       time: '14:36',
-      text: '明白,先确认两点:受众?案例侧重?',
+      text: '明白,先确认两点:受众?内容风格?',
     },
     {
       id: 'm3',
-      conversation_id: 'anti-fraud',
+      conversation_id: 'short-video',
       kind: 'user_text',
       role: 'user',
-      text: '城市老人 + 投资理财',
+      text: '都市白领 + 治愈风',
     },
     {
       id: 'm4',
-      conversation_id: 'anti-fraud',
+      conversation_id: 'short-video',
       kind: 'agent_card',
       role: 'agent_1',
       time: '14:38',
@@ -112,10 +111,10 @@ export const MOCK_MESSAGES: Record<string, Message[]> = {
         tag: '研究报告 · md',
         tag_status: 'done',
         items: [
-          '8 个高质量案例',
-          '上海老人虚拟币案例,损失 80 万——核心案例',
-          '杭州高息理财 App,涉案 2.3 亿——第二案例',
-          '4 个共性特征:AI 投顾包装 / 小额引诱 / 老带新 / 锁仓',
+          '8 个高质量城市素材',
+          '老街清晨光影——核心场景',
+          '滨江步道与社区咖啡店——补充场景',
+          '4 个共性特征:松弛 / 步行友好 / 生活感 / 易拍摄',
         ],
         footer: '在右栏查看执行细节',
         word_count: '2,140 字',
@@ -123,7 +122,7 @@ export const MOCK_MESSAGES: Record<string, Message[]> = {
     } as Message,
     {
       id: 'm5',
-      conversation_id: 'anti-fraud',
+      conversation_id: 'short-video',
       kind: 'agent_text',
       role: 'agent_1',
       time: '14:38',
@@ -131,119 +130,22 @@ export const MOCK_MESSAGES: Record<string, Message[]> = {
     },
     {
       id: 'm6',
-      conversation_id: 'anti-fraud',
+      conversation_id: 'short-video',
       kind: 'agent_card',
       role: 'agent_1',
       time: '14:40',
       card: {
         icon: 'pen',
         title: '小文写作中',
-        tag: '反诈脚本_v1 · 2/4 段 · 进行中',
+        tag: '短视频脚本_v1 · 2/4 段 · 进行中',
         tag_status: 'running',
         items: [
-          '第 1 段:引入 / "老张今年 68 岁,退休工程师,独居……"',
-          '第 2 段:事件,收益数字漂漂亮亮地涨着,半年里被投入 80 万……',
+          '第 1 段:引入 / "清晨七点,城市刚刚醒来……"',
+          '第 2 段:路线,从老街走到滨江步道,沿途经过三处小店……',
         ],
         word_count: '156 / 380 字',
         progress: 41,
       },
     } as Message,
-    {
-      id: 'm7',
-      conversation_id: 'anti-fraud',
-      kind: 'interaction',
-      role: 'ceo_assistant',
-      time: '14:42',
-      text: '小研先把脚本整完,小图去备 8 张老人特写,小影准备 BGM 池。',
-    },
-    {
-      id: 'm8',
-      conversation_id: 'anti-fraud',
-      kind: 'hitl_script',
-      role: 'agent_1',
-      time: '14:44',
-      task_id: 'task-anti-fraud-001',
-      gate_id: 'gate-script-1',
-      versions: [
-        {
-          label: 'v1 · 故事感',
-          content:
-            '老张今年 68 岁,退休工程师……\n半年内损失 80 万——一个看似正经的"AI 投顾"。',
-        },
-        {
-          label: 'v2 · 数据感',
-          content:
-            '2026 上半年,涉老金融诈骗举报 +127%。\n本期 8 个案例,平均损失 64 万。',
-        },
-      ],
-    } as Message,
   ],
 };
-
-export type ExecActionType =
-  | 'terminal'
-  | 'read'
-  | 'create'
-  | 'thinking'
-  | 'search'
-  | 'generate';
-
-export interface ExecStep {
-  id: string;
-  label: string;
-  status: 'done' | 'running' | 'pending';
-  /** v4 §22 #197-202:6 种动作类型 */
-  action?: ExecActionType;
-  /** 操作对象(文件名 / 关键词 / 产物类型)*/
-  target?: string;
-  detail?: string;
-  word_count?: string;
-  progress?: number;
-  /** 三层抽屉:展开看终端输出 / 文件内容 / 思考过程 / 产物预览 */
-  expanded_detail?: {
-    kind: 'terminal' | 'text' | 'thinking' | 'preview';
-    content: string;
-  };
-}
-
-export interface ExecGroup {
-  id: string;
-  agent: 'ceo_assistant' | 'agent_1' | 'agent_2' | 'agent_3' | 'agent_4';
-  title: string;
-  time_label: string;
-  steps: ExecStep[];
-}
-
-export const MOCK_EXEC_GROUPS: ExecGroup[] = [
-  {
-    id: 'g1',
-    agent: 'agent_1',
-    title: '调研反诈视频 2026 案例',
-    time_label: "调研 4'12\"",
-    steps: [
-      { id: 's1', label: '阅读素材', status: 'done', detail: '读取 3 个参考文档' },
-      { id: 's2', label: '搜索案例', status: 'done', detail: '找到 8 个真实案例' },
-      { id: 's3', label: '整理特征', status: 'done', detail: '4 个共性特征 · 2 个新型手法' },
-      { id: 's4', label: '输出报告', status: 'done', detail: '2,140 字', word_count: '2,140 字' },
-    ],
-  },
-  {
-    id: 'g2',
-    agent: 'agent_1',
-    title: '小文写作中 · 写第 2 段',
-    time_label: "写作 4'38\"",
-    steps: [
-      { id: 's1', label: '引入', status: 'done', detail: '32 字', word_count: '32 字' },
-      {
-        id: 's2',
-        label: '第 2 段',
-        status: 'running',
-        detail: '收益数字漂漂亮亮地涨着,半年里被',
-        word_count: '156 / 380 字',
-        progress: 41,
-      },
-      { id: 's3', label: '第 3 段', status: 'pending' },
-      { id: 's4', label: '收尾', status: 'pending' },
-    ],
-  },
-];

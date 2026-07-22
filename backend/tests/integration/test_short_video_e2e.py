@@ -18,14 +18,14 @@ from app.services.skill_loader import load_skill_by_id
 
 
 @pytest.mark.asyncio
-async def test_anti_fraud_video_compile() -> None:
-    skill = load_skill_by_id("anti_fraud_video")
+async def test_short_video_compile() -> None:
+    skill = load_skill_by_id("short_video")
 
     # 模拟用户已澄清的字段
     collected = {
-        "年份": 2026,
-        "骗局类型": "电信诈骗",
-        "受众": "城市老人",
+        "主题": "城市漫游",
+        "风格": "治愈向",
+        "受众": "都市白领",
         "时长": "60s",
     }
 
@@ -47,7 +47,7 @@ async def test_anti_fraud_video_compile() -> None:
 
     # ADR-001-rev 编号正确
     queue_map = {at.agent_id for at in agent_tasks}
-    assert queue_map == {"agent_1", "agent_3", "agent_4"}  # 反诈视频不需要 agent_2
+    assert queue_map == {"agent_1", "agent_3", "agent_4"}  # 短视频不需要 agent_2
 
     # research step 没有 depends_on,是入口
     research = next(s for s in steps if s.step_id == "research")

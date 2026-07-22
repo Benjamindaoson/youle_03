@@ -149,3 +149,31 @@ async def test_unknown_task_type_goes_dlq(monkeypatch, fake_redis) -> None:
 
     dlq_len = await redis.xlen("agent_dlq:agent_1")
     assert dlq_len == 1
+
+
+@pytest.mark.asyncio
+async def test_idempotent_duplicate_replays_cached_result(fake_redis) -> None:
+    """A LangGraph resume may re-enter an interrupted node and needs its result again."""
+    consumer = AgentConsumer(
+        agent_id="agent_1",
+        handlers={"web_search": lambda _task: None},  # type: ignore[dict-item]
+        consumer_name="test-idempotency",
+    )
+    redis = await consumer._r()
+    task = _build_task().model_copy(update={"idempotency_key": "stable-step-key"})
+    cached = AgentResult(
+        task_id=task.task_id,
+        step_id=task.step_id,
+        status="completed",
+    )
+    await redis.set(
+        "agent:idempotent_done:stable-step-key",
+        cached.model_dump_json(),
+    )
+    msg_id = await redis.xadd(consumer.queue, {"data": task.model_dump_json()})
+
+    await consumer._dispatch(redis, msg_id, {"data": task.model_dump_json()})
+
+    messages = await redis.xrange(f"agent_results:{task.task_id}")
+    assert len(messages) == 1
+    assert AgentResult.model_validate_json(messages[0][1]["data"]) == cached

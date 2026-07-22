@@ -30,13 +30,13 @@ def _seed_dir(tmp_path: Path) -> Path:
         "---\n# Body\n",
         encoding="utf-8",
     )
-    (tmp_path / "anti_fraud.yaml").write_text(
-        "skill_id: anti_fraud_video\n"
-        "name: 反诈短视频\n"
-        "description: 制作反诈短视频\n"
+    (tmp_path / "short_video.yaml").write_text(
+        "skill_id: short_video\n"
+        "name: 城市漫游短视频\n"
+        "description: 制作城市漫游短视频\n"
         "domain: video\n"
-        "scenario: anti_fraud\n"
-        "keywords: [反诈, 短视频]\n"
+        "scenario: short_video\n"
+        "keywords: [短视频, 短视频]\n"
         "workflow:\n"
         "  - step_id: a\n"
         "    agent: agent_1\n"
@@ -68,16 +68,16 @@ def test_format_md_skills_includes_when_to_use() -> None:
 def test_format_playbooks_includes_keywords() -> None:
     pb = [
         {
-            "skill_id": "anti_fraud_video",
-            "name": "反诈",
-            "description": "制作反诈短视频",
-            "keywords": ["反诈", "短视频"],
+            "skill_id": "short_video",
+            "name": "短视频",
+            "description": "制作城市漫游短视频",
+            "keywords": ["短视频", "短视频"],
             "kind": "playbook",
         }
     ]
     out = _format_playbooks_for_prompt(pb)
-    assert "anti_fraud_video" in out
-    assert "[反诈,短视频]" in out
+    assert "short_video" in out
+    assert "[短视频,短视频]" in out
 
 
 def test_format_returns_empty_for_empty_lists() -> None:
@@ -88,7 +88,7 @@ def test_format_returns_empty_for_empty_lists() -> None:
 # ─── Prompt 渲染 ───
 def test_render_planner_prompt_includes_md_block() -> None:
     out = render_planner_user_prompt(
-        user_request="给我做一个反诈视频",
+        user_request="给我做一个短视频",
         available_skills_summary="- pb: playbook desc",
         similar_episodes="",
         available_mcp_tools_summary="- mcp://x",

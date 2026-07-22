@@ -139,8 +139,15 @@ async def test_replay_is_scoped_and_ordered_after_last_event_id() -> None:
 
 
 @pytest.mark.asyncio
-async def test_unknown_or_foreign_cursor_never_replays_another_stream() -> None:
-    session = _FakeSession(cursor=None)
+async def test_unknown_or_foreign_cursor_replays_only_the_requested_stream() -> None:
+    own_rows = [
+        _record(
+            user_id=uuid4(),
+            conversation_id=uuid4(),
+            created_at=datetime.now(UTC),
+        )
+    ]
+    session = _FakeSession(cursor=None, rows=own_rows)
 
     rows = await UserEventRepository(session).replay(  # type: ignore[arg-type]
         user_id=uuid4(),
@@ -148,8 +155,15 @@ async def test_unknown_or_foreign_cursor_never_replays_another_stream() -> None:
         after_event_id=uuid4(),
     )
 
-    assert rows == []
-    assert len(session.statements) == 1
+    assert rows == own_rows
+    assert len(session.statements) == 2
+    sql = str(
+        session.statements[-1].compile(
+            dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}
+        )
+    )
+    assert "user_events.user_id =" in sql
+    assert "user_events.conversation_id =" in sql
 
 
 @pytest.mark.asyncio

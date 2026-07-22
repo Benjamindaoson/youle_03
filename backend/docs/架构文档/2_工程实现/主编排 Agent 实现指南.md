@@ -63,7 +63,7 @@
 {
   "intent_type": "create_task | modify_task | query | feedback | chitchat | meta | back_to_discuss | ready_to_work",
   "domain": "text | image | video | document | mixed | null",
-  "scenario": "anti_fraud | ecommerce_detail | ... | null",
+  "scenario": "short_video | ecommerce_detail | ... | null",
   "entities": {"字段名": "字段值或 null"},
   "confidence": 0.0
 }
@@ -77,7 +77,7 @@
 输出字段:
 - intent_type: create_task / modify_task / query / feedback / chitchat / meta / back_to_discuss / ready_to_work
 - domain: text / image / video / document / mixed
-- scenario: 从给定列表选(如 anti_fraud / ecommerce_detail)
+- scenario: 从给定列表选(如 short_video / ecommerce_detail)
 - entities: 从消息中提取的字段值(JSON 对象)
 - confidence: 0.0-1.0
 
@@ -144,9 +144,9 @@ async def understand_intent(state: TaskState) -> Intent:
 
 | 用户消息 | 期望输出 |
 |----------|---------|
-| "做反诈视频,2026 投资理财案例" | `intent_type=create_task, scenario=anti_fraud, entities={year:2026, fraud_type:investment}, confidence=0.95` |
+| "做短视频,2026 投资理财案例" | `intent_type=create_task, scenario=short_video, entities={year:2026, content_type:investment}, confidence=0.95` |
 | "我想做点东西" | `intent_type=create_task, domain=null, scenario=null, confidence=0.4` |
-| "等等,案例换成电信诈骗"(任务进行中)| `intent_type=modify_task, entities={fraud_type:telecom}, confidence=0.93` |
+| "等等,案例换成城市漫游"(任务进行中)| `intent_type=modify_task, entities={content_type:telecom}, confidence=0.93` |
 | "今天天气真好" | `intent_type=chitchat, confidence=0.95` |
 | "等下,我觉得方向不对要重新想"(工作群)| `intent_type=back_to_discuss, confidence=0.92` |
 | "差不多了开始做吧"(讨论群)| `intent_type=ready_to_work, confidence=0.90` |
@@ -279,13 +279,13 @@ async def ask_user_to_pick_skill(state):
 
 ### 4.4 群内 Skill 限制
 
-如果用户在"反诈视频群"里说"做小红书笔记"——这个群没装备小红书 Skill。
+如果用户在"短视频群"里说"做小红书笔记"——这个群没装备小红书 Skill。
 
 ```python
 if matched_skill.id not in state.conversation.equipped_skills:
     await emit_message({
-        "content": "这个群是反诈视频专用,你想做小红书笔记的话,我帮你新建一个群?",
-        "options": ["新建小红书群", "继续在这个群做反诈视频", "取消"]
+        "content": "这个群是短视频专用,你想做小红书笔记的话,我帮你新建一个群?",
+        "options": ["新建小红书群", "继续在这个群做短视频", "取消"]
     })
 ```
 
@@ -607,9 +607,9 @@ workflow:
 {
   "category": "C",
   "confidence": 0.88,
-  "affected_fields": ["fraud_type"],
+  "affected_fields": ["content_type"],
   "affected_steps": ["research", "script", "image_process"],
-  "intent_summary": "用户想把骗局类型从投资理财改成电信诈骗"
+  "intent_summary": "用户想把内容类型从投资理财改成城市漫游"
 }
 ```
 
@@ -1176,17 +1176,17 @@ async def _handle_main_session_team_management(message, conversation):
 
 ## 十、整体流程示例
 
-用户在反诈视频群说:"做反诈视频,2026 投资理财"
+用户在短视频群说:"做短视频,2026 投资理财"
 
 ```
 T+0       用户发消息
 T+0.1     [意图理解] deepseek-v4-flash,300ms,1500 tokens,$0.0002
-          输出:intent_type=create_task, scenario=anti_fraud, 
-                entities={year:2026, fraud_type:investment}, confidence=0.95
+          输出:intent_type=create_task, scenario=short_video,
+                entities={year:2026, content_type:investment}, confidence=0.95
 T+0.4     [Skill 匹配] L1 关键词命中,5ms,0 tokens
-          输出:skill_id=anti_fraud_video, confidence=0.95
+          输出:skill_id=short_video, confidence=0.95
 T+0.41    [输入校验] 纯程序,1ms
-          输出:filled={年份, 骗局类型, 时长}, missing=[受众]
+          输出:filled={年份, 内容类型, 时长}, missing=[受众]
 T+0.42    [澄清生成] 纯程序(单字段单选)
           输出:选择题"受众? [城市老人] [农村老人] [都覆盖]"
 T+0.5     推送给前端

@@ -12,14 +12,14 @@ from app.services.skill_loader import (
 
 def test_list_includes_v1_heroes() -> None:
     skills = list_available_skills()
-    assert "anti_fraud_video" in skills
+    assert "short_video" in skills
     assert "ecommerce_detail_image" in skills
 
 
-def test_load_anti_fraud_video_shape() -> None:
-    skill = load_skill_by_id("anti_fraud_video")
-    assert skill["skill_id"] == "anti_fraud_video"
-    assert skill["scenario"] == "anti_fraud"
+def test_load_short_video_shape() -> None:
+    skill = load_skill_by_id("short_video")
+    assert skill["skill_id"] == "short_video"
+    assert skill["scenario"] == "short_video"
 
     # workflow 5 个 step,Agent 编号符合 ADR-001-rev
     workflow = skill["workflow"]
@@ -49,12 +49,12 @@ def test_canonical_skill_rows_are_validated_database_records() -> None:
     rows = canonical_skill_rows()
     by_id = {row["skill_id"]: row for row in rows}
 
-    assert set(by_id) >= {"anti_fraud_video", "ecommerce_detail_image"}
-    assert by_id["anti_fraud_video"]["creator_type"] == "platform"
-    assert by_id["anti_fraud_video"]["status"] == "published"
-    assert by_id["anti_fraud_video"]["inputs_schema"]
-    assert by_id["anti_fraud_video"]["workflow_steps"]
-    assert "skill_id: anti_fraud_video" in by_id["anti_fraud_video"]["yaml_content"]
+    assert set(by_id) >= {"short_video", "ecommerce_detail_image"}
+    assert by_id["short_video"]["creator_type"] == "platform"
+    assert by_id["short_video"]["status"] == "published"
+    assert by_id["short_video"]["inputs_schema"]
+    assert by_id["short_video"]["workflow_steps"]
+    assert "skill_id: short_video" in by_id["short_video"]["yaml_content"]
 
 
 async def test_sync_builtin_skills_is_one_idempotent_upsert() -> None:

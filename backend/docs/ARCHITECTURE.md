@@ -518,7 +518,7 @@ CI 强制:PR 修改 `schemas/` 必须重跑 `pnpm gen:api` 并 commit。
 ### Sprint 0(1 周):基础设施
 
 - 仓库目录骨架(参考本文 §1)
-- `infrastructure/docker-compose.yml`
+- `../deploy/production/docker-compose.yml`
 - `backend/alembic` + 18 张表 migration
 - `backend/app/config/{settings,prompts,templates}.py`
 - `backend/app/router.py`(LiteLLM 客户端)
@@ -548,7 +548,7 @@ CI 强制:PR 修改 `schemas/` 必须重跑 `pnpm gen:api` 并 commit。
 
 ### Sprint 4(1 周):Skill + HITL + 飞轮
 
-- `skills/anti_fraud_video.yaml`(v3.0 V1 hero)
+- `skills/short_video.yaml`(v3.0 V1 hero)
 - `skills/ecommerce_detail_image.yaml`
 - Skill 编译器
 - HITL 网关后端 + 中断 C 回滚

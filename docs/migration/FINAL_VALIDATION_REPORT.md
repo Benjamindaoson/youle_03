@@ -6,7 +6,7 @@
 
 ## 验证结论
 
-代码、无外部依赖测试、前端生产构建、真实 Chrome 浏览器场景、跨语言契约和静态基础设施配置已验证。后端 297 个测试通过、Agent/handler 219 个测试通过、前端 16 个单元测试通过；启用的 4 个 Playwright 场景通过，真实反诈视频长链路场景保持显式跳过。
+代码、无外部依赖测试、前端生产构建、真实 Chrome 浏览器场景、跨语言契约和静态基础设施配置已验证。后端 297 个测试通过、Agent/handler 219 个测试通过、前端 16 个单元测试通过；启用的 4 个 Playwright 场景通过，真实短视频长链路场景保持显式跳过。
 
 本机 Docker Desktop Linux daemon 不可用，因此无法在本机证明空 PostgreSQL 实际升级、readiness 依赖和完整 5 容器/12 Python 进程联调。相关命令已执行并记录为环境阻塞；Draft PR 的 [CI run 29856012696](https://github.com/Benjamindaoson/youle_03/actions/runs/29856012696) 已在 PostgreSQL 16/Redis 7.2 service 上通过 migration、Skill bootstrap、后端、Agent、前端、Playwright 和契约检查，[Security run 29856013088](https://github.com/Benjamindaoson/youle_03/actions/runs/29856013088) 也已通过。
 
@@ -42,7 +42,7 @@
 ```text
 dev OTP → 一次性消费 → JWT
 → group Conversation + 5 个 Agent member
-→ anti_fraud_video Skill 匹配与输入校验
+→ short_video Skill 匹配与输入校验
 → Task + AgentTask 编译
 → Redis Stream dispatch
 → mock AgentResult 回传
@@ -86,7 +86,7 @@ alembic current / alembic upgrade head
 
 - Docker Compose 完整启动、`/ready` 的 PostgreSQL/Redis/LiteLLM 联通、Worker heartbeat、七个 MCP 服务联调。
 - 真实 LLM、真实短信、云 OSS、TTS/视频合成和外部发布。
-- Playwright 真实反诈视频长任务（场景保留，但默认 skip）。
+- Playwright 真实短视频长任务（场景保留，但默认 skip）。
 - 四个来源仓库的项目级许可证授权；来源提交没有根许可证。
 
 ## 意图对齐

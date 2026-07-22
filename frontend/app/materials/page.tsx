@@ -1,9 +1,9 @@
 'use client';
 
 // 素材库二级页(v4 §31 §274-280)
-// 支持类型筛选 / 文件夹分组 / 拖拽上传(占位)/ URL 抓取 / 删除
+// 支持类型筛选、文件夹分组、添加链接和删除。
 import { useState } from 'react';
-import { File, FolderOpen, Image, Music, Trash2, Upload, Video } from 'lucide-react';
+import { File, FolderOpen, Image, Link, Music, Trash2, Video } from 'lucide-react';
 import clsx from 'clsx';
 import {
   useMaterials,
@@ -42,28 +42,10 @@ export default function MaterialsPage() {
     return prefix ? it.mime?.startsWith(prefix) : true;
   });
 
-  function handleUploadClick() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.multiple = true;
-    input.onchange = (e) => {
-      const files = (e.target as HTMLInputElement).files;
-      if (!files) return;
-      Array.from(files).forEach((f) => {
-        create.mutate({
-          name: f.name,
-          mime: f.type,
-          folder: folder ?? undefined,
-        });
-      });
-    };
-    input.click();
-  }
-
   function handleAddUrl() {
     if (!urlInput.trim()) return;
     const name = urlInput.split('/').pop() || urlInput;
-    create.mutate({ name, url: urlInput, folder: folder ?? undefined });
+    create.mutate({ name, url: urlInput, folder: folder ?? undefined, source: 'url' });
     setUrlInput('');
     setShowAddUrl(false);
   }
@@ -78,17 +60,10 @@ export default function MaterialsPage() {
           <div className="flex items-center gap-1.5">
             <button
               type="button"
-              onClick={handleUploadClick}
+              onClick={() => setShowAddUrl((v) => !v)}
               className="flex items-center gap-1 rounded-sm border border-wechat-line bg-white px-3 py-1 text-[12px] text-wechat-fg hover:bg-neutral-50"
             >
-              <Upload size={12} /> 上传
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowAddUrl((v) => !v)}
-              className="rounded-sm border border-wechat-line bg-white px-3 py-1 text-[12px] text-wechat-fg hover:bg-neutral-50"
-            >
-              链接抓取
+              <Link size={12} /> 添加链接
             </button>
           </div>
         </header>
@@ -106,7 +81,7 @@ export default function MaterialsPage() {
               onClick={handleAddUrl}
               className="rounded-sm bg-wechat-green px-3 py-1 text-[12px] text-white"
             >
-              抓取
+              添加
             </button>
           </div>
         )}
@@ -170,25 +145,12 @@ export default function MaterialsPage() {
             )}
           </aside>
 
-          <main
-            className="flex-1 overflow-y-auto p-5"
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={(e) => {
-              e.preventDefault();
-              Array.from(e.dataTransfer.files).forEach((f) =>
-                create.mutate({
-                  name: f.name,
-                  mime: f.type,
-                  folder: folder ?? undefined,
-                }),
-              );
-            }}
-          >
+          <main className="flex-1 overflow-y-auto p-5">
             {filtered.length === 0 ? (
               <div className="grid h-full place-items-center text-[13px] text-wechat-mute">
                 <div className="text-center">
-                  <Upload size={32} className="mx-auto text-wechat-mute" />
-                  <p className="mt-2">拖拽文件到此处,或点击右上角上传</p>
+                  <Link size={32} className="mx-auto text-wechat-mute" />
+                  <p className="mt-2">点击右上角添加一个可访问的素材链接</p>
                 </div>
               </div>
             ) : (

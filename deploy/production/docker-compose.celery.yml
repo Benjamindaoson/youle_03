@@ -11,6 +11,8 @@ x-agent-env: &agent-env
   LITELLM_URL: ${LITELLM_URL:-http://litellm-mock:4010}
   LITELLM_API_KEY: ${LITELLM_API_KEY:-sk-mock-1234}
   LITELLM_MOCK: ${LITELLM_MOCK:-true}
+  STEP_PERSONA_MAX_BUDGET_TOKENS: ${STEP_PERSONA_MAX_BUDGET_TOKENS:-8000}
+  AGENT_REACT_MAX_STEPS: ${AGENT_REACT_MAX_STEPS:-6}
   OPENROUTER_API_BASE: ${OPENROUTER_API_BASE:-https://openrouter.ai/api/v1}
   OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
   DEEPSEEK_API_BASE: ${DEEPSEEK_API_BASE:-https://api.deepseek.com/v1}
@@ -35,7 +37,7 @@ services:
   agent-1:
     build:
       context: ../..
-      dockerfile: backend/infrastructure/Dockerfile.agent
+      dockerfile: deploy/production/Dockerfile.agent
       args:
         AGENT_KIND: text
     image: youle-agent-text:latest
@@ -54,7 +56,7 @@ services:
   agent-2:
     build:
       context: ../..
-      dockerfile: backend/infrastructure/Dockerfile.agent
+      dockerfile: deploy/production/Dockerfile.agent
       args:
         AGENT_KIND: document
     image: youle-agent-document:latest
@@ -73,7 +75,7 @@ services:
   agent-3:
     build:
       context: ../..
-      dockerfile: backend/infrastructure/Dockerfile.agent
+      dockerfile: deploy/production/Dockerfile.agent
       args:
         AGENT_KIND: image
     image: youle-agent-image:latest
@@ -91,7 +93,7 @@ services:
   celery-worker-video:
     build:
       context: ../..
-      dockerfile: backend/infrastructure/Dockerfile.celery
+      dockerfile: deploy/production/Dockerfile.celery
     image: youle-celery-worker:latest
     container_name: youle-celery-worker-video
     restart: unless-stopped
@@ -131,7 +133,7 @@ services:
   mcp-search:
     build:
       context: ../..
-      dockerfile: backend/infrastructure/Dockerfile.mcp
+      dockerfile: deploy/production/Dockerfile.mcp
       args:
         MCP_KIND: search
     image: youle-mcp-search:latest
@@ -146,7 +148,7 @@ services:
   mcp-image-tools:
     build:
       context: ../..
-      dockerfile: backend/infrastructure/Dockerfile.mcp
+      dockerfile: deploy/production/Dockerfile.mcp
       args:
         MCP_KIND: image_tools
     image: youle-mcp-image-tools:latest
@@ -167,7 +169,7 @@ services:
   mcp-document-tools:
     build:
       context: ../..
-      dockerfile: backend/infrastructure/Dockerfile.mcp
+      dockerfile: deploy/production/Dockerfile.mcp
       args:
         MCP_KIND: document_tools
     image: youle-mcp-document-tools:latest
@@ -188,7 +190,7 @@ services:
   mcp-oss:
     build:
       context: ../..
-      dockerfile: backend/infrastructure/Dockerfile.mcp
+      dockerfile: deploy/production/Dockerfile.mcp
       args:
         MCP_KIND: oss
     image: youle-mcp-oss:latest

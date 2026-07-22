@@ -190,7 +190,7 @@ tts_generate  audio_to_text
 | IN-010 | mcp-oss | 7006 | `MCP_OSS_URL` | `upload_bytes`, `download_bytes`, `sign_url` |
 | IN-011 | mcp-platform-publish | 7007 | `MCP_PLATFORM_PUBLISH_URL` | `douyin_publish`, `xhs_publish`, `wechat_publish`, `check_publish_status` |
 | IN-012 | mcp-browser-use | 7008 | `PORT` | `navigate`, `click`, `fill`, `extract_text`, `extract_links`, `screenshot`, `wait_for`, `close` |
-| IN-013 | mcp-code-executor | 7009 | `PORT` | `python_exec`, `shell_exec`, `write_file`, `read_file`, `list_dir`, `install_package` |
+| IN-013 | mcp-code-executor | 7009 | `PORT` | `python_exec`, `shell_exec`, `write_file`, `read_file`, `list_dir`, `install_package`, `close_session`（均需 `task_id`） |
 
 #### 关键 Tool 参数清单
 
@@ -427,7 +427,7 @@ user_id:   <最近用户 ID;空字符串表示无>
 ```json
 {
   "task_id": "<UUID>",
-  "prompt_name": "anti_fraud_video::step_script::long_writing",
+  "prompt_name": "short_video::step_script::long_writing",
   "failure_reason": "[critic_low_score] score=0.35 < threshold=0.70 ...",
   "trace_excerpt": "...",
   "source": "step_failed | critic_low_score",
@@ -843,8 +843,8 @@ async def main():
         "task_type": "web_search",
         "user_id": "11111111-1111-1111-1111-111111111111",
         "conversation_id": "22222222-2222-2222-2222-222222222222",
-        "inputs": {"_prompt": "搜索 2026 年电信诈骗案例 5 条"},
-        "parameters": {"source_profile": "anti_fraud_video"},
+        "inputs": {"_prompt": "搜索 2026 年城市漫游案例 5 条"},
+        "parameters": {"source_profile": "short_video"},
         "mcp_tools": ["mcp://search/web_search"],
         "timeout_seconds": 120,
     }

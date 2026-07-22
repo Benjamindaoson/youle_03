@@ -31,14 +31,14 @@ ADR-027 提供这套度量基建。
 ### 1. Golden Suite + 加权打分
 
 ```yaml
-case_id: anti_fraud_video_basic
-description: 反诈视频 happy path
-tags: [video, hero, anti_fraud]
+case_id: short_video_basic
+description: 短视频 happy path
+tags: [video, hero, short_video]
 input:
-  user_request: 给我做一个反诈短视频
+  user_request: 给我做一个城市夜景短视频
   collected_fields:
     年份: 2026
-    骗局类型: 电信诈骗
+    主题: 城市夜景
     受众: 城市老人
     时长: 60s
 expected:
@@ -116,7 +116,7 @@ agents/agents/eval/
 ├── metrics.py             # score_case + aggregate_report + CaseResult + SuiteReport
 ├── runner.py              # run_case + run_suite + _make_mock_executor
 └── golden/                # YAML fixtures(用户/团队维护)
-    ├── anti_fraud_video_basic.yaml
+    ├── short_video_basic.yaml
     └── xhs_note_basic.yaml
 ```
 

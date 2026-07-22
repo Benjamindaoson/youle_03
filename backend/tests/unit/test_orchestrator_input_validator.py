@@ -17,12 +17,12 @@ def test_all_filled() -> None:
 
 def test_missing_required() -> None:
     schema = [
-        {"name": "骗局类型", "type": "enum", "required": True, "options": ["电信诈骗", "投资理财"]},
+        {"name": "主题", "type": "enum", "required": True, "options": ["城市漫游", "投资理财"]},
     ]
     res = validate_inputs(inputs_schema=schema, collected_fields={})
     assert not res.is_complete
     assert len(res.missing_fields) == 1
-    assert res.missing_fields[0]["name"] == "骗局类型"
+    assert res.missing_fields[0]["name"] == "主题"
 
 
 def test_use_default_for_optional() -> None:

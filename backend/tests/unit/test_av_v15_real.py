@@ -72,7 +72,7 @@ async def test_text_to_video_normalize_renames_to_mp4(monkeypatch) -> None:
         "agents.image_agent.handlers.extras._normalize_image_artifact", fake_norm
     )
 
-    task = _make_task("text_to_video", inputs={"_prompt": "做一段 6s 反诈视频"})
+    task = _make_task("text_to_video", inputs={"_prompt": "做一段 6s 短视频"})
     r = await v15_real.text_to_video_handler(task)
     assert r.status == "completed"
     assert r.output.type == "video"

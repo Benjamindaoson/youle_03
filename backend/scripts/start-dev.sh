@@ -6,8 +6,8 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
 echo "▸ docker compose up..."
-docker compose -f backend/infrastructure/docker-compose.yml \
-  -f backend/infrastructure/docker-compose.mock.yml up -d
+docker compose -f deploy/production/docker-compose.yml \
+  -f deploy/production/docker-compose.mock.yml up -d
 
 echo "▸ alembic upgrade head..."
 (cd backend && uv run alembic upgrade head)

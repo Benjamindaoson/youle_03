@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 from typing import Any
+from uuid import UUID
 
 import pytest
 from agents.orchestrator_agent.langgraph_runner import compiler as lg_compiler
@@ -141,6 +142,18 @@ def test_compile_accepts_cache_parameter_smoke() -> None:
 def test_recursion_limit_constant_is_50() -> None:
     """runner.GRAPH_RECURSION_LIMIT 显式设到 50,防 V1.5 嵌套撞默认 25。"""
     assert lg_runner.GRAPH_RECURSION_LIMIT == 50
+
+
+def test_runner_places_recursion_limit_in_runtime_config() -> None:
+    """LangGraph 1.x accepts recursion_limit at invoke time, not compile time."""
+    task_id = UUID("00000000-0000-0000-0000-000000000123")
+
+    config = lg_runner.LangGraphTaskRunner._config(task_id)
+
+    assert config == {
+        "configurable": {"thread_id": f"task:{task_id}"},
+        "recursion_limit": lg_runner.GRAPH_RECURSION_LIMIT,
+    }
 
 
 @pytest.mark.asyncio

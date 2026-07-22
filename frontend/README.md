@@ -24,6 +24,6 @@ pnpm gen:api
 - `lib/sse.ts`：frame、回放游标、去重、重连和 store 更新。
 - `stores/`：纯客户端展示状态；不执行 Agent 编排。
 - `app/market/`：Skill 搜索、详情、安装、启用和停用。
-- `e2e/`：无密钥浏览器场景；真实反诈长任务保留为显式 skip。
+- `e2e/`：无密钥浏览器场景；真实短视频长任务保留为显式 skip。
 
 视觉强调色为微信绿 `#07C160`，图标使用 `lucide-react`。HITL V1 提供接受/微调/取消，不提供回滚。

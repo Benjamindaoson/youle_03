@@ -198,9 +198,9 @@ def test_short_video_skill_loads() -> None:
     skill = load_skill_by_id("short_video")
     assert skill["skill_id"] == "short_video"
     assert skill["scenario"] == "short_video"
-    assert skill["visibility"] == "subscribed"  # V1.5 默认订阅可见
+    assert skill["visibility"] == "public"
 
-    # 与 anti_fraud_video 共享 5 步结构
+    # 通用视频保持 5 步结构
     workflow = skill["workflow"]
     step_ids = [s["step_id"] for s in workflow]
     assert step_ids == ["research", "script", "image_process", "bgm", "video_compose"]

@@ -98,7 +98,7 @@ async def test_search_parses_real_qdrant_shape(monkeypatch) -> None:
                         "score": 0.92,
                         "payload": {
                             "task_id": "t-1",
-                            "user_request": "做反诈视频",
+                            "user_request": "做短视频",
                             "plan_summary": "research → script → video",
                             "outcome": "success",
                             "user_rating": 0.95,

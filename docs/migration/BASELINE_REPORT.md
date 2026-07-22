@@ -44,14 +44,14 @@ uv pip install --python .\.venv\Scripts\python.exe -e '.\backend[dev]' -e '.\age
 | Alembic 迁移历史 | `cd backend; ..\.venv\Scripts\alembic.exe history` | 通过：`base -> 0001 -> 0002 -> 0003 -> 0004 (head)` | 已验证 |
 | Alembic 实际升级 | `cd backend; ..\.venv\Scripts\alembic.exe upgrade head` | 失败：PostgreSQL 连接被拒绝，`WinError 1225` | 环境阻塞；Docker 守护进程未运行 |
 | 根前端存在性 | `Test-Path frontend/package.json` | 失败：`frontend/` 不存在 | 主干缺失功能；README 与仓库不一致 |
-| Compose 静态配置 | `docker compose -f backend/infrastructure/docker-compose.yml -f backend/infrastructure/docker-compose.mock.yml config --quiet` | 通过 | 已验证 |
+| Compose 静态配置 | `docker compose -f deploy/production/docker-compose.yml -f deploy/production/docker-compose.mock.yml config --quiet` | 通过 | 已验证 |
 | Docker 守护进程 | `docker version` | 失败：Docker Desktop Linux engine named pipe 不存在 | 环境阻塞 |
 
 ## 后端失败明细
 
 | 失败组 | 数量 | 根因初判 | 处理原则 |
 | --- | ---: | --- | --- |
-| 反欺诈/电商 Skill 编译 | 2 | 编译阶段用 StrictUndefined 渲染了运行阶段才产生的 `research`/`style_analysis` 输出 | 修复编译器对步骤输出引用的处理并补回归测试 |
+| 视频/电商 Skill 编译 | 2 | 编译阶段用 StrictUndefined 渲染了运行阶段才产生的 `research`/`style_analysis` 输出 | 修复编译器对步骤输出引用的处理并补回归测试 |
 | Redis Consumer 超时测试 | 1 | 测试替换 `asyncio.wait_for` 后又递归调用已替换对象 | 修正测试夹具，不改变生产超时语义 |
 | 头像确认测试 | 2 | 测试 mock 目标与当前对象存储签名/调用位置漂移 | 按实际边界修复 mock 或实现，并验证上传流程 |
 | 配额服务测试 | 3 | 异步 `session.execute` 使用了不可 await 的 `MagicMock` | 改用异步 mock，保留生产查询语义 |

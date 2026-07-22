@@ -27,7 +27,7 @@
 | 2 个支持 Agent(常驻主会话)| HR(管团队)/ 财务经理(管账)|
 
 **V1 上线 2 个 Skill**:
-- 反诈视频制作(hero)
+- 短视频制作(hero)
 - 电商详情图制作
 
 ### 1.1 首次进入"专属 AI 工作团队"群(V1 必做)
@@ -71,7 +71,7 @@
 13. **MCP 是工具集成唯一标准**:工具走 MCP server,Agent 是 MCP client
 14. **Hero 交付有 HITL gate**:Auto 模式视频任务 3 道 gate(脚本审/画面审/终审);**V1 终审支持"接受/微调/取消",回滚到任意 step(中断 C)推迟 V2**
 15. **数据飞轮 4 类信号必沉淀**:工作流轨迹 / 偏好向量 / Reflexion / Skill 草稿
-16. **V1 hero 锁定**(ADR-012 已废)**:反诈视频 + 电商详情图**,其他场景 V1.5 通过 Skill 市场补齐
+16. **V1 hero 锁定**(ADR-012 已废)**:短视频 + 电商详情图**,其他场景 V1.5 通过 Skill 市场补齐
 17. **三模式同群内切换**(ADR-014):**不建讨论群/工作群两种独立群**;群内 work_mode 字段切 plan/ask/auto
 18. **HR / 财务经理仅在主会话**(ADR-013):不进入其他群;不消费 agent_tasks 队列
 19. **拟人化 V1 必做**(ADR-015):20 组表情 + 4 种工作状态 + Agent 互动消息(由主编排互动编排器统一编排);**严肃场景(金融/医疗/政务)关闭表情**
@@ -191,17 +191,17 @@ emoji 字符 / icon                       → 用 lucide-react
 - ✓ 中断处理器:7 类中断(A/B/E/F/G/H/I)分类 + handler;C/D 抛 NotImplementedError(V2)
 - ✓ `pytest tests/orchestrator/` 全绿,coverage > 60%
 
-### Sprint 3:Agent 框架 + 反诈视频 happy path(1.5 周)
+### Sprint 3:Agent 框架 + 短视频 happy path(1.5 周)
 
 - ✓ 4 个 Agent main.py 启动,消费各自队列(按 ADR-001-rev 映射:agent_2→document, agent_3→image, agent_4→av)
-- ✓ Agent 1 `web_search` + `long_writing` happy path(反诈视频调研 + 脚本)
+- ✓ Agent 1 `web_search` + `long_writing` happy path(短视频调研 + 脚本)
 - ✓ Agent 3 `image_download` happy path(从 xlsx 下载图片)
 - ✓ Agent 4 `tts_generate` + `bgm_select` happy path
 - ✓ 端到端:用户消息 → 主编排 → Agent 派活 → 拿到产物(全 mock)
 
 ### Sprint 4:Skill + HITL + 飞轮 + 三模式(1 周)
 
-- ✓ `skills/anti_fraud_video.yaml` 编译为 LangGraph,缓存到 Redis
+- ✓ `skills/short_video.yaml` 编译为 LangGraph,缓存到 Redis
 - ✓ `skills/ecommerce_detail_image.yaml` 同上
 - ✓ HITL gate 后端(任务编排器内实现):开 gate → 暂停 LangGraph → 等用户响应 → 推进
 - ✓ HITL 终审支持 V1 操作:[接受] / [微调当前](中断 B)/ [取消](中断 F);**[回到第 N 步重做] 推迟 V2**(中断 C)
@@ -225,14 +225,14 @@ emoji 字符 / icon                       → 用 lucide-react
 - ✓ 表情系统:每 Agent 20 组表情,关键节点出现;**严肃场景(金融/医疗)关闭表情**
 - ✓ Agent 互动消息样式:与正常消息一致(由互动编排器生成,V1 克制不每步演戏)
 - ✓ 3 个 HITL 审核组件(脚本审/画面审/终审)— V1 终审仅 [接受][微调][取消],**无回滚按钮**(中断 C 是 V2)
-- ✓ Playwright E2E:登录 → 主会话选模式 → 建反诈视频群 → HITL 全过 → 拿到 mp4
+- ✓ Playwright E2E:登录 → 主会话选模式 → 建短视频群 → HITL 全过 → 拿到 mp4
 
 ### Sprint 6:联调 + 上线(1 周)
 
 - ✓ 真实 LiteLLM + 真 Tavily / volcengine / 阿里云 OSS 跑通
 - ✓ K8s manifest 部署到 staging
 - ✓ Grafana 大盘上线:意图理解延迟 / Agent 队列积压 / 视频任务成功率 / Agent 状态分布
-- ✓ E2E 跑 10 次反诈视频任务 + 5 次电商详情图任务,全绿
+- ✓ E2E 跑 10 次短视频任务 + 5 次电商详情图任务,全绿
 
 **判定原则**:Sprint 不达成 acceptance,**不开始下个 Sprint**。
 
@@ -353,7 +353,7 @@ V1 不是一锅炖。先跑通 P0,再做 P1。
 - 主编排 **8 子模块**(意图理解 / 模式管理 / Skill 匹配 / 输入校验 / 澄清生成 / 任务编排 / 中断处理 / 互动编排器)
 - 4 个分任务 Agent + 各 1 个 happy path handler(按 ADR-001-rev 编号)
 - 2 个支持 Agent(HR / 财务经理)接入主会话
-- 反诈视频 Skill 端到端 + 3 个 HITL gate(V1 不含中断 C 回滚)
+- 短视频 Skill 端到端 + 3 个 HITL gate(V1 不含中断 C 回滚)
 - 电商详情图 Skill 端到端
 - 7 个 MCP server(可只是 happy path)
 - 数据飞轮 4 类信号沉淀
@@ -383,7 +383,7 @@ V1 不是一锅炖。先跑通 P0,再做 P1。
 ### V1.5 推迟范围(对齐 v4)
 
 - **PPT 整体能力**(Skill 与 Agent 2 PPT handler 复杂度高,V1.5 上线)
-- **视频生成模型**(Veo / Seedance / Kling-2,V1 反诈视频用 image-to-video 拼接,不调文生视频)
+- **视频生成模型**(Veo / Seedance / Kling-2,V1 短视频用 image-to-video 拼接,不调文生视频)
 - **Agent 3 高级图像编辑**(局部重绘 / 扩图 / 抠图 / 画质增强)
 - **PDF 高级功能**(PDF 生成 / 加水印 / 扫描 OCR 全套)
 - **Agent 1 长文写作**(公众号长文 / 报告)

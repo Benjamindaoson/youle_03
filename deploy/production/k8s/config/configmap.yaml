@@ -6,6 +6,9 @@ metadata:
 data:
   ENV: "staging"
   LITELLM_URL: "http://litellm-proxy:4000"
+  LITELLM_MOCK: "false"
+  STEP_PERSONA_MAX_BUDGET_TOKENS: "8000"
+  AGENT_REACT_MAX_STEPS: "6"
   REDIS_URL: "redis://redis:6379/0"
   DATABASE_URL: "postgresql+asyncpg://youle:youle@postgres:5432/youle"
   OSS_ENDPOINT: "http://minio:9000"
