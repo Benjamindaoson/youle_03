@@ -80,14 +80,12 @@ async def test_ecommerce_detail_image_compile() -> None:
         user_id=uuid4(),
         conversation_id=uuid4(),
     )
-    # 5 步:style_analysis / copy_writing / segment_images / long_concat / quality_check
+    # 文案 → 用户确认图片数量 → 分段图 → 长图拼接
     step_ids = [s.step_id for s in steps]
     assert step_ids == [
-        "style_analysis",
         "copy_writing",
         "segment_images",
         "long_concat",
-        "quality_check",
     ]
     # long_concat 是 Agent 2(文档专员)处理(ADR-001-rev)
     long_concat = next(s for s in steps if s.step_id == "long_concat")

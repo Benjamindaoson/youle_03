@@ -1,7 +1,7 @@
 skill_id: ecommerce_detail_image
 name: 电商详情图制作
-version: "1.1"
-description: 基于商品图 + 卖点 + 风格,生成 1 张精美的电商详情长图
+version: "2.0"
+description: 在专业群中基于商品图和卖点生成经用户确认的电商详情长图
 domain: image
 scenario: ecommerce_detail
 creator: platform
@@ -21,115 +21,79 @@ inputs_schema:
     type: image_ref
     required: true
     clarification_form: image_upload
-
   - name: 卖点
     type: text
     required: true
-
   - name: 受众
     type: enum
     required: true
     options: [城市妈妈, 都市白领, Z 世代, 银发族, 都覆盖]
     clarification_form: single_select
-
   - name: 风格
     type: enum
     required: true
     options: [自然质朴, 简约现代, 暖色家居, 科技感, 朴朴风, 自定义]
     clarification_form: image_compare
-    preview_images:
-      - oss://samples/style_natural.jpg
-      - oss://samples/style_minimal.jpg
-      - oss://samples/style_warm.jpg
-      - oss://samples/style_tech.jpg
-      - oss://samples/style_pupu.jpg
 
 workflow:
-  - step_id: style_analysis
-    agent: agent_3
-    task_type: style_extract
-    timeout: 30
-    inputs:
-      reference: "{{商品图}}"
-    prompt_template: |
-      分析这个商品图的视觉特征,
-      结合用户偏好风格 "{{风格}}" 输出风格指引。
-      包含:配色、构图、字体、氛围。
-    output_format:
-      type: structured
-
   - step_id: copy_writing
     agent: agent_1
     task_type: long_writing
-    depends_on: [style_analysis]
     timeout: 30
     prompt_template: |
-      基于风格指引 {{style_analysis.output}}
-      和商品卖点 {{卖点}},
-      为 {{受众}} 写 5 段电商详情图文案,每段 30-50 字。
-      要求:第 1 段是主标题(吸引点),后 4 段层层递进。
+      根据商品卖点 "{{卖点}}"、目标受众 "{{受众}}" 和风格 "{{风格}}"，
+      为电商详情图写 5 段中文图文文案。第一段为主标题与利益点，
+      后四段依次说明核心卖点、使用场景、品质证明和行动引导。
+      每段 30-50 字，避免未经提供的功效承诺。
     output_format:
       type: structured
     routing_hints:
       primary: deepseek-v4-pro
-      fallback: [kimi-k2]
+      no_fallback: true
 
   - step_id: segment_images
     agent: agent_3
     task_type: batch_generate
-    depends_on: [style_analysis, copy_writing]
-    timeout: 90
+    depends_on: [copy_writing]
+    timeout: 120
+    inputs:
+      reference_images: ["{{商品图}}"]
     parameters:
+      count: 5
+      image_set_type: ecommerce
       image_specs:
-        - {prompt: "{{copy_writing.output[0]}}", size: "1080x720"}
-        - {prompt: "{{copy_writing.output[1]}}", size: "1080x720"}
-        - {prompt: "{{copy_writing.output[2]}}", size: "1080x720"}
-        - {prompt: "{{copy_writing.output[3]}}", size: "1080x720"}
-        - {prompt: "{{copy_writing.output[4]}}", size: "1080x720"}
-      style_strength: 0.7
+        - {prompt: "{{copy_writing.output[0]}}", size: "2K"}
+        - {prompt: "{{copy_writing.output[1]}}", size: "2K"}
+        - {prompt: "{{copy_writing.output[2]}}", size: "2K"}
+        - {prompt: "{{copy_writing.output[3]}}", size: "2K"}
+        - {prompt: "{{copy_writing.output[4]}}", size: "2K"}
+      confirmation:
+        model: doubao-seedream-4-0-250828
+        provider: 火山方舟
+        estimated_cost_cny_per_image: 0.20
+    routing_hints:
+      provider: ark_seedream
+      model: doubao-seedream-4-0-250828
+      no_retry: true
+      no_fallback: true
     output_format:
       type: image_collection
     hitl_gate:
-      type: quality_review
-      actions: [approve, regenerate_single]
+      type: image_generation_confirmation
+      phase: before_dispatch
+      actions: [approve, cancel]
 
   - step_id: long_concat
     agent: agent_2
     task_type: image_concat_long
     depends_on: [segment_images]
-    timeout: 30
+    timeout: 60
     inputs:
       images: "{{segment_images.output}}"
     output_format:
       type: image
 
-  # ━━━ 质检步骤:未注册 task_type → ReAct 自动调 image_tools/quality_check,不合格重标记 ━━━
-  - step_id: quality_check
-    agent: agent_3
-    task_type: image_quality_react      # 未注册 → consumer fallback 到 ReAct runner
-    depends_on: [long_concat]
-    timeout: 60
-    mcp_tools:
-      - mcp://image_tools/quality_check
-    inputs:
-      reference: "{{long_concat.output}}"
-    prompt_template: |
-      对长图 {{long_concat.output}} 进行质检。
-      调用 quality_check 工具评分,若整体分 < 0.7 则在 agent_finish 的 structured_payload
-      中标注 quality_pass=false 和具体问题,否则标注 quality_pass=true。
-    output_format:
-      type: quality_report
-    quality_check:
-      min_overall_score: 0.7
-    parameters:
-      react_max_steps: 4
-
-failure_handling:
-  segment_images:
-    on_failure: retry_with_different_anchor
-  quality_check:
-    on_quality_failure: regenerate_segments
-
 delivery:
   primary_artifact: long_concat
   bundled_artifacts: [copy_writing, segment_images]
+

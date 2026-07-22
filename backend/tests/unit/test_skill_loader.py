@@ -45,6 +45,18 @@ def test_load_ecommerce_detail_image() -> None:
     assert by_id["segment_images"]["agent"] == "agent_3"
 
 
+def test_ecommerce_image_step_requires_exact_pre_dispatch_confirmation() -> None:
+    skill = load_skill_by_id("ecommerce_detail_image")
+    step = {item["step_id"]: item for item in skill["workflow"]}["segment_images"]
+
+    assert step["hitl_gate"]["phase"] == "before_dispatch"
+    assert step["hitl_gate"]["type"] == "image_generation_confirmation"
+    assert step["parameters"]["count"] == 5
+    assert step["routing_hints"]["provider"] == "ark_seedream"
+    assert step["routing_hints"]["no_retry"] is True
+    assert step["routing_hints"]["no_fallback"] is True
+
+
 def test_canonical_skill_rows_are_validated_database_records() -> None:
     rows = canonical_skill_rows()
     by_id = {row["skill_id"]: row for row in rows}
