@@ -119,6 +119,14 @@ async def concat_long(arguments: dict[str, Any]) -> dict[str, Any]:
         return {"error": str(e), "_mock": True, "oss_ref": f"oss://{OSS_BUCKET}/mock-concat.png"}
 
 
+async def concat_long_local(images: list[str], direction: str = "vertical") -> str:
+    """Run the existing Pillow composition locally without an MCP HTTP request."""
+    result = await concat_long({"images": images, "direction": direction})
+    if result.get("error") or result.get("_mock"):
+        raise RuntimeError(str(result.get("error") or "image concat failed"))
+    return str(result["oss_ref"])
+
+
 async def download_batch(arguments: dict[str, Any]) -> dict[str, Any]:
     """从 URL 列表下载图片 → 落 OSS,可选质检过滤。"""
     urls = arguments.get("urls", [])
