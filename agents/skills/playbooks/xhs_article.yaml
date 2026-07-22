@@ -163,7 +163,7 @@ workflow:
           color: "#666666"
           position: bottom-center
         - type: watermark
-          text: "由 youle 生成"
+          text: "由 haole 生成"
           font_size: 24
           color: "#cccccc"
           position: bottom-right

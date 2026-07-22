@@ -20,7 +20,7 @@ ERR_COUNT=0
 WARN_COUNT=0
 
 echo "═══════════════════════════════════════════"
-echo "  「有了」上线预检 — 环境: ${ENV}"
+echo "  「haole」上线预检 — 环境: ${ENV}"
 echo "═══════════════════════════════════════════"
 
 # ── 1. 必需 secret(prod / staging 全要)──
@@ -166,7 +166,7 @@ done
 # ── 8. 监控 ──
 echo ""
 echo "[8/8] 可观测性"
-[[ -f "${ROOT}/infrastructure/grafana/youle-dashboard.json" ]] && ok "Grafana dashboard JSON 存在" || warn "Grafana dashboard 未生成"
+[[ -f "${ROOT}/infrastructure/grafana/haole-dashboard.json" ]] && ok "Grafana dashboard JSON 存在" || warn "Grafana dashboard 未生成"
 [[ -f "${ROOT}/infrastructure/prometheus/rules.yaml" ]] && ok "Prometheus rules 存在" || warn "Prometheus rules 未生成"
 
 echo ""

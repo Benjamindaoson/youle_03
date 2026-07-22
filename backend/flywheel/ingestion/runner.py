@@ -24,7 +24,7 @@ from app.models.workflow_trace import WorkflowTrace
 
 log = structlog.get_logger(__name__)
 
-OSS_BUCKET = os.getenv("OSS_BUCKET", "youle-dev")
+OSS_BUCKET = os.getenv("OSS_BUCKET", "haole-dev")
 
 
 async def _write_oss(payload: dict[str, Any]) -> str:

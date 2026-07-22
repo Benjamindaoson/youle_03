@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: qdrant
-  namespace: youle
+  namespace: haole
 spec:
   serviceName: qdrant
   replicas: 1
@@ -33,7 +33,7 @@ spec:
 ---
 apiVersion: v1
 kind: Service
-metadata: { name: qdrant, namespace: youle }
+metadata: { name: qdrant, namespace: haole }
 spec:
   selector: { app: qdrant }
   ports:

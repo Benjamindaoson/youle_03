@@ -1,6 +1,6 @@
 ## Context
 
-`youle_03` 是唯一主干，当前有 474 个文件、完整 Python 后端/Agent/MCP/Alembic 和 61 个 backend/agents 测试文件，但 README 所述前端目录实际不存在。`oye-mas` 的群成员、@Agent、Skill 详情已经被主干吸收；`youle01` 提供产品 UI；`youle-agno` 提供经过测试的 EventBus/SSE/OTP 增量，但其 Agno 编排、根 `src/` 模型和启动 `create_all` 与主干冲突。
+`haole_03` 是唯一主干，当前有 474 个文件、完整 Python 后端/Agent/MCP/Alembic 和 61 个 backend/agents 测试文件，但 README 所述前端目录实际不存在。`oye-mas` 的群成员、@Agent、Skill 详情已经被主干吸收；`haole01` 提供产品 UI；`haole-agno` 提供经过测试的 EventBus/SSE/OTP 增量，但其 Agno 编排、根 `src/` 模型和启动 `create_all` 与主干冲突。
 
 实现必须保留单一 LangGraph 调度者、Redis Streams AgentTask/AgentResult、LiteLLM、MCP 和已有 Alembic 历史。所有新行为先写失败测试；数据库变更只追加 revision。Docker 当前安装但 daemon 未运行，需在最终验证报告中区分代码失败与环境阻塞。
 
@@ -28,11 +28,11 @@
 
 ### 1. 主干和目录边界
 
-正式目录固定为 `backend/`、`agents/`、`frontend/`。`youle01/backend`、`oye-mas/youle/backend`、`youle-agno/src` 都只作参考。备选的“直接复制四仓”会保留重复路由和模型；“从零重写”会丢失主干 61 个测试文件和已验证架构，因此均排除。
+正式目录固定为 `backend/`、`agents/`、`frontend/`。`haole01/backend`、`oye-mas/haole/backend`、`haole-agno/src` 都只作参考。备选的“直接复制四仓”会保留重复路由和模型；“从零重写”会丢失主干 61 个测试文件和已验证架构，因此均排除。
 
 ### 2. 前端底座
 
-使用 `oye-mas/youle/frontend` 作为工程底座，因为它已经按主干 REST 模型实现登录、群聊、HITL、市场、素材/成果和 Playwright；从 `youle01` 迁入落地页以及群聊/私聊中不重复且质量更高的产品交互。所有数据请求集中到 `frontend/lib/api.ts`，服务端状态由查询/API 管理，Zustand 只保存会话选择、临时输入、连接和 HITL UI 状态。生产不回退 mock；`NEXT_PUBLIC_MOCK_MODE=true` 才启用 mock。
+使用 `oye-mas/haole/frontend` 作为工程底座，因为它已经按主干 REST 模型实现登录、群聊、HITL、市场、素材/成果和 Playwright；从 `haole01` 迁入落地页以及群聊/私聊中不重复且质量更高的产品交互。所有数据请求集中到 `frontend/lib/api.ts`，服务端状态由查询/API 管理，Zustand 只保存会话选择、临时输入、连接和 HITL UI 状态。生产不回退 mock；`NEXT_PUBLIC_MOCK_MODE=true` 才启用 mock。
 
 ### 3. 统一事件模型
 
@@ -54,7 +54,7 @@ await event_publisher.publish_user_event(
 
 ### 4. 事件投递与回放
 
-发布顺序为：构造稳定事件 ID → 写 PostgreSQL `user_events` → Redis `youle:events:{user_id}` → 每个 backend 进程本地 fan-out。Redis 不可用时直接本地投递；持久化失败记录结构化错误并停止发布，避免在线客户端看到一个刷新后永久丢失的幽灵状态。每个订阅队列固定上限，满时丢最旧事件保留最新状态。
+发布顺序为：构造稳定事件 ID → 写 PostgreSQL `user_events` → Redis `haole:events:{user_id}` → 每个 backend 进程本地 fan-out。Redis 不可用时直接本地投递；持久化失败记录结构化错误并停止发布，避免在线客户端看到一个刷新后永久丢失的幽灵状态。每个订阅队列固定上限，满时丢最旧事件保留最新状态。
 
 SSE 路由为 `GET /api/conversations/{conversation_id}/events`：Bearer JWT 鉴权并校验 `Conversation.user_id`；先按 `Last-Event-ID` 从 PostgreSQL 回放，再消费实时队列；定时发送 heartbeat comment；客户端断开时取消等待并 unsubscribe。WebSocket 端点使用相同本地订阅，不再维护第二条 Redis channel。
 

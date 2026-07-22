@@ -15,7 +15,7 @@ PR #6 已经接入了 LangGraph 1.1 的 **Tier-1 韧性能力**:节点级 RetryP
 
 | 能力 | 当前替代实现 | Tier-2 改造价值 |
 |------|------------|----------------|
-| `BaseStore` + `AsyncPostgresStore` | 手写飞轮(`youle/flywheel`) + Qdrant 集成 | 砍掉一套自研代码,获得标准 namespace 检索 + TTL + 向量索引 |
+| `BaseStore` + `AsyncPostgresStore` | 手写飞轮(`haole/flywheel`) + Qdrant 集成 | 砍掉一套自研代码,获得标准 namespace 检索 + TTL + 向量索引 |
 | `Runtime.context` 注入 | step 节点 closure 捕获 `dispatcher` / `result_waiter` | 可测试性大幅提升,mock 不用 rebuild graph |
 | per-task_type `CachePolicy` + 自定义 `key_func` | PR #6 只接了 cache backend,没具体 cache_policy | 真正吃到 web_search / image_describe 等幂等调用红利 |
 
@@ -29,8 +29,8 @@ PR #6 已经接入了 LangGraph 1.1 的 **Tier-1 韧性能力**:节点级 RetryP
 
 铁律 #15 要求 4 类飞轮信号沉淀:**工作流轨迹 / 偏好向量 / Reflexion / Skill 草稿**。当前实现:
 
-- `youle/flywheel/` 自写一套 dispatcher
-- `youle/backend/app/services/flywheel.py` 内部用 Redis Streams `flywheel:signals` 落事件
+- `haole/flywheel/` 自写一套 dispatcher
+- `haole/backend/app/services/flywheel.py` 内部用 Redis Streams `flywheel:signals` 落事件
 - 偏好向量目前**没有**真正的向量检索(只是落事件,不能按相似度查"这个用户喜欢什么风格的 BGM")
 
 ### 2.2 LangGraph 1.1 提供的 Store
@@ -100,7 +100,7 @@ async def _bgm_select_node(state):
 #### Step 3:撤掉双写 + 删旧 Qdrant 集成
 
 - 监控指标 1 周稳定(命中率、相似度分布、TTL 失效)后切单写
-- 删 `youle/flywheel/qdrant_client.py` 等老代码
+- 删 `haole/flywheel/qdrant_client.py` 等老代码
 
 ### 2.5 风险
 

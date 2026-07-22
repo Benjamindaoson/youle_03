@@ -1,4 +1,4 @@
-# youle-mas frontend
+# haole-mas frontend
 
 Next.js 15 / React 19 正式前端。生产路径连接 FastAPI typed API，并通过 Bearer SSE 消费 canonical `UserEvent`；mock 只有在 `NEXT_PUBLIC_MOCK_MODE=true` 时启用。
 

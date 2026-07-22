@@ -14,7 +14,7 @@ import os
 import sys
 from pathlib import Path
 
-# agents 包目录(F:\youle_mas-dev\agents),其 src 布局是 agents/agents/...
+# agents 包目录(F:\haole_mas-dev\agents),其 src 布局是 agents/agents/...
 AGENTS_ROOT = Path(__file__).resolve().parents[1]
 REPO_ROOT = AGENTS_ROOT.parent
 BACKEND_ROOT = REPO_ROOT / "backend"

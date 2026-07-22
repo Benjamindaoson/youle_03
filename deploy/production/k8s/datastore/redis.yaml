@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: redis
-  namespace: youle
+  namespace: haole
 spec:
   serviceName: redis
   replicas: 1
@@ -35,7 +35,7 @@ spec:
 ---
 apiVersion: v1
 kind: Service
-metadata: { name: redis, namespace: youle }
+metadata: { name: redis, namespace: haole }
 spec:
   selector: { app: redis }
   ports: [{ port: 6379, targetPort: 6379 }]

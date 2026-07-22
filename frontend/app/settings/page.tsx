@@ -30,7 +30,7 @@ export default function SettingsPage() {
             查看本地启动、低成本模式、API 配置和部署说明。
           </p>
           <a
-            href="https://github.com/Benjamindaoson/youle-mas#readme"
+            href="https://github.com/Benjamindaoson/haole-mas#readme"
             target="_blank"
             rel="noreferrer"
             className="mt-3 inline-block text-[12px] text-wechat-green hover:underline"

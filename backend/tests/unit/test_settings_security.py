@@ -13,7 +13,7 @@ def _production_settings(**overrides: object) -> dict[str, object]:
         "SMS_DEV_MODE": False,
         "ALIYUN_ACCESS_KEY": "access-key",
         "ALIYUN_SECRET_KEY": "secret-key",
-        "ALIYUN_SMS_SIGN_NAME": "Youle",
+        "ALIYUN_SMS_SIGN_NAME": "haole",
         "ALIYUN_SMS_TEMPLATE_CODE": "SMS_123",
     }
     values.update(overrides)

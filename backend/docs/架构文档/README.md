@@ -1,4 +1,4 @@
-# 「有了」历史架构资料索引
+# 「haole」历史架构资料索引
 
 > 本目录是迁移时保留的历史产品/架构资料，不是当前运行契约。当前实现以仓库根 `README.md`、`GETTING_STARTED.md`、`backend/docs/ARCHITECTURE.md`、OpenSpec 和自动化测试为准。已退休的业务定位及其四份决策文档已经删除，因此历史文件中的旧交叉链接可能不可用。
 
@@ -7,7 +7,7 @@
 
 ---
 
-## v3.0 重大变更(2026-05-05 用户拍板,以「有了」产品描述.md 为准)
+## v3.0 重大变更(2026-05-05 用户拍板,以「haole」产品描述.md 为准)
 
 | 变更 | ADR | 影响 |
 |------|-----|------|
@@ -77,13 +77,13 @@
 
 ```bash
 # 1. 复制 3 份到目标仓库
-mkdir -p /path/to/youle-repo/docs
-cp "新的  有了  架构文档/Claude Code 启动总提示词.md" /path/to/youle-repo/CLAUDE.md
-cp "新的  有了  架构文档/启动配套/ARCHITECTURE.md" /path/to/youle-repo/docs/ARCHITECTURE.md
-cp "新的  有了  架构文档/启动配套/CONSTITUTION.md" /path/to/youle-repo/docs/CONSTITUTION.md
+mkdir -p /path/to/haole-repo/docs
+cp "新的  haole  架构文档/Claude Code 启动总提示词.md" /path/to/haole-repo/CLAUDE.md
+cp "新的  haole  架构文档/启动配套/ARCHITECTURE.md" /path/to/haole-repo/docs/ARCHITECTURE.md
+cp "新的  haole  架构文档/启动配套/CONSTITUTION.md" /path/to/haole-repo/docs/CONSTITUTION.md
 
 # 2. 在仓库下启动 Claude Code
-cd /path/to/youle-repo && claude
+cd /path/to/haole-repo && claude
 
 # 3. 第一句话告诉 Claude:"按 CLAUDE.md 的 Sprint 0 起骨架"
 ```
@@ -106,7 +106,7 @@ Claude Code 默认读 CLAUDE.md;遇到具体技术问题它会查 ARCHITECTURE.m
 ## 文档结构
 
 ```
-新的  有了  架构文档/
+新的  haole  架构文档/
 ├─ Claude Code 启动总提示词.md     ← ⭐ Claude Code 默认读这份(操作指令,16K)
 ├─ 启动配套/
 │  ├─ ARCHITECTURE.md               ← 📐 技术细节(24K)
@@ -227,13 +227,13 @@ Claude Code 默认读 CLAUDE.md;遇到具体技术问题它会查 ARCHITECTURE.m
 
 | 旧文件 | 新位置 |
 |--------|--------|
-| `「有了」产品功能与交互文档.md` | `0_总览/产品功能与交互文档.md` |
-| `youle_产品功能清单_v2.xlsx` | 被 `0_总览/功能清单_v3.xlsx` 替代 |
+| `「haole」产品功能与交互文档.md` | `0_总览/产品功能与交互文档.md` |
+| `haole_产品功能清单_v2.xlsx` | 被 `0_总览/功能清单_v3.xlsx` 替代 |
 | `意图理解与任务编排.md` | `1_原理篇/主编排原理与流程.md` |
 | `「两种模式」实现技术文档.md` | 拆为 `1_原理篇/两种模式产品定义.md` + `2_工程实现/两种模式技术实现.md` |
 | `主编排 Agent 实现指南.md` + `主编排 Agent 实现指南2.md` | 合并为 `2_工程实现/主编排 Agent 实现指南.md` |
 | `4 个分任务 Agent 实现指南.md` | `2_工程实现/4 个分任务 Agent 实现指南.md`(按 ADR-001/002/009 重写)|
-| `youle_技术架构文档_v1.md` | 内容已分散到各章 |
+| `haole_技术架构文档_v1.md` | 内容已分散到各章 |
 
 待团队统一确认后,可由文档负责人清理。
 

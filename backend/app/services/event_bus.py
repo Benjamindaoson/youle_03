@@ -16,7 +16,7 @@ import structlog
 
 log = structlog.get_logger(__name__)
 
-_CHANNEL_PREFIX = "youle:events:"
+_CHANNEL_PREFIX = "haole:events:"
 _CHANNEL_PATTERN = f"{_CHANNEL_PREFIX}*"
 _DEFAULT_QUEUE_MAXSIZE = 1000
 
@@ -57,7 +57,7 @@ class EventBus:
         if self._listener_task is not None and not self._listener_task.done():
             return
         self._listener_task = asyncio.create_task(
-            self._listen_forever(), name="youle-event-bus"
+            self._listen_forever(), name="haole-event-bus"
         )
         try:
             await asyncio.wait_for(self._listener_ready.wait(), timeout=2.0)

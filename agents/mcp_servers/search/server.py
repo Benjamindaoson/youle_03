@@ -136,7 +136,7 @@ async def web_fetch(arguments: dict[str, Any]) -> dict[str, Any]:
         return {"error": "missing_url"}
     try:
         async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
-            resp = await client.get(url, headers={"User-Agent": "youle/1.0"})
+            resp = await client.get(url, headers={"User-Agent": "haole/1.0"})
             return {
                 "url": url,
                 "status": resp.status_code,

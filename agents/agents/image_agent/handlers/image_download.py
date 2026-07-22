@@ -239,7 +239,7 @@ async def image_download_handler(task: AgentTask) -> AgentResult:
         if fallback_generated:
             out["downloaded_count"] = len(image_refs)
             out["image_refs"] = image_refs
-            out["oss_ref"] = f"oss://youle-dev/artifacts/{task.task_id}/{task.step_id}/"
+            out["oss_ref"] = f"oss://haole-dev/artifacts/{task.task_id}/{task.step_id}/"
     await emit(
         signal_type="trace",
         payload={

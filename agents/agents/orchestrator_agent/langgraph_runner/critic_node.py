@@ -149,7 +149,7 @@ def get_max_retries(step_def: dict[str, Any]) -> int:
 # ─────────────────────────────────────────────────────────────────
 # 评审主入口
 # ─────────────────────────────────────────────────────────────────
-CRITIC_SYSTEM_PROMPT = """你是 Youle 多智能体平台的质量评审员(Critic)。
+CRITIC_SYSTEM_PROMPT = """你是 haole 多智能体平台的质量评审员(Critic)。
 
 # 你的工作
 读完一个 step 的产物 + 该 step 的 prompt 与上下文 → 给出结构化 JSON 评审:

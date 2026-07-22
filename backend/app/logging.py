@@ -78,7 +78,7 @@ def _redact_full_event(
     放在 `_scrub_sensitive_values` 之后,只处理依然是字符串的字段;长度阈值
     放宽到 8 以兼容 ``sk-xxxx``(前缀 3 + tail 5 即可触发某些短 token 规则)。
 
-    `force=True` 让该 processor 即便部署关闭了 ``YOULE_REDACT_SECRETS`` 也
+    `force=True` 让该 processor 即便部署关闭了 ``HAOLE_REDACT_SECRETS`` 也
     保持工作 —— 日志是安全边界,绝不允许漏密钥。
     """
     for k, v in list(event_dict.items()):

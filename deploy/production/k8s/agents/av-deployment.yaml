@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: agent-av
-  namespace: youle
+  namespace: haole
   labels: { app: agent-av, agent: av }
 spec:
   replicas: 1
@@ -11,16 +11,16 @@ spec:
     metadata:
       labels: { app: agent-av, agent: av }
     spec:
-      serviceAccountName: youle-app
+      serviceAccountName: haole-app
       # Av 短任务在 agent 进程跑;长视频合成由 celery-worker-video 跑(下面单独 deployment)
       containers:
         - name: agent
-          image: ghcr.io/your-org/youle-agent:0.1.0
+          image: ghcr.io/your-org/haole-agent:0.1.0
           env:
             - { name: AGENT_KIND, value: av }
           envFrom:
-            - configMapRef: { name: youle-config }
-            - secretRef: { name: youle-secrets }
+            - configMapRef: { name: haole-config }
+            - secretRef: { name: haole-secrets }
           resources:
             requests: { cpu: "200m", memory: "512Mi" }
             limits:   { cpu: "1000m", memory: "1Gi" }
@@ -30,7 +30,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: celery-worker-video
-  namespace: youle
+  namespace: haole
   labels: { app: celery-worker-video }
 spec:
   replicas: 1
@@ -39,13 +39,13 @@ spec:
     metadata:
       labels: { app: celery-worker-video }
     spec:
-      serviceAccountName: youle-app
+      serviceAccountName: haole-app
       containers:
         - name: celery
-          image: ghcr.io/your-org/youle-celery-video:0.1.0
+          image: ghcr.io/your-org/haole-celery-video:0.1.0
           envFrom:
-            - configMapRef: { name: youle-config }
-            - secretRef: { name: youle-secrets }
+            - configMapRef: { name: haole-config }
+            - secretRef: { name: haole-secrets }
           resources:
             requests:
               cpu: "1000m"
@@ -58,7 +58,7 @@ spec:
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
-metadata: { name: agent-av-hpa, namespace: youle }
+metadata: { name: agent-av-hpa, namespace: haole }
 spec:
   scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: agent-av }
   minReplicas: 1

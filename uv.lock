@@ -13,10 +13,10 @@ resolution-markers = [
 
 [manifest]
 members = [
-    "youle-agents",
-    "youle-backend",
-    "youle-mas",
-    "youle-mcp-servers",
+    "haole-agents",
+    "haole-backend",
+    "haole-mas",
+    "haole-mcp-servers",
 ]
 
 [[package]]
@@ -3596,7 +3596,7 @@ wheels = [
 ]
 
 [[package]]
-name = "youle-agents"
+name = "haole-agents"
 version = "0.1.0"
 source = { editable = "agents" }
 dependencies = [
@@ -3656,7 +3656,7 @@ requires-dist = [
 provides-extras = ["dev"]
 
 [[package]]
-name = "youle-backend"
+name = "haole-backend"
 version = "0.1.0"
 source = { editable = "backend" }
 dependencies = [
@@ -3754,12 +3754,12 @@ requires-dist = [
 provides-extras = ["dev"]
 
 [[package]]
-name = "youle-mas"
+name = "haole-mas"
 version = "0.1.0"
 source = { virtual = "." }
 
 [[package]]
-name = "youle-mcp-servers"
+name = "haole-mcp-servers"
 version = "0.1.0"
 source = { editable = "agents/mcp_servers" }
 dependencies = [

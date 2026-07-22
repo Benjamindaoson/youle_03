@@ -30,7 +30,7 @@ async def test_checkpointer_inmemory_setting_skips_postgres_import(monkeypatch: 
     monkeypatch.setattr(builtins, "__import__", guarded_import)
 
     saver = await checkpointer.init_postgres_checkpointer(
-        "postgresql+asyncpg://youle:youle_dev@localhost:5432/youle"
+        "postgresql+asyncpg://haole:haole_dev@localhost:5432/haole"
     )
 
     assert saver.__class__.__name__ == "InMemorySaver"
@@ -66,7 +66,7 @@ async def test_checkpointer_falls_back_to_memory_when_postgres_fails_in_dev(
     monkeypatch.setattr(psycopg_pool, "AsyncConnectionPool", FailingPool)
 
     saver = await checkpointer.init_postgres_checkpointer(
-        "postgresql+asyncpg://youle:youle_dev@localhost:5432/youle"
+        "postgresql+asyncpg://haole:haole_dev@localhost:5432/haole"
     )
 
     assert saver.__class__.__name__ == "InMemorySaver"

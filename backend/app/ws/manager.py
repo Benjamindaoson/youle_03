@@ -30,7 +30,7 @@ class WSManager:
                 self._queues[user_id] = queue
                 self._forwarders[user_id] = asyncio.create_task(
                     self._forward_user(user_id, queue),
-                    name=f"youle-ws-{user_id}",
+                    name=f"haole-ws-{user_id}",
                 )
 
     async def unregister(self, user_id: str, ws: WebSocket) -> None:

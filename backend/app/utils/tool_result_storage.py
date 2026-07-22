@@ -1,7 +1,7 @@
 """Spill oversized tool / agent results to OSS instead of context.
 
 Adapted from hermes-agent (MIT) © Nous Research — ``tools/tool_result_storage.py``.
-Rewritten around youle_mas's OSS service (instead of upstream's
+Rewritten around haole_mas's OSS service (instead of upstream's
 ``env.execute()`` shell heredoc) so the spilled file lives in the same
 storage tier as other artefacts and can be re-read via the standard
 presigned-URL flow.

@@ -9,10 +9,10 @@ Short tokens (< 18 chars) are fully masked.  Longer tokens preserve the
 first 6 and last 4 characters for debuggability.
 
 Configuration:
-    YOULE_REDACT_SECRETS=true|false   (default: true; secure default)
+    HAOLE_REDACT_SECRETS=true|false   (default: true; secure default)
 
 The toggle is **read once at import time** so a runtime mutation
-(``os.environ["YOULE_REDACT_SECRETS"] = "false"``) cannot disable
+(``os.environ["HAOLE_REDACT_SECRETS"] = "false"``) cannot disable
 redaction mid-session.
 """
 
@@ -38,7 +38,7 @@ _SENSITIVE_BODY_KEYS = frozenset({
     "authorization", "key",
 })
 
-_REDACT_ENABLED = os.getenv("YOULE_REDACT_SECRETS", "true").lower() in (
+_REDACT_ENABLED = os.getenv("HAOLE_REDACT_SECRETS", "true").lower() in (
     "1", "true", "yes", "on",
 )
 
@@ -208,7 +208,7 @@ def redact_sensitive_text(
 
     Args:
         text: input string (None / non-str pass through coerced to str).
-        force: if True, redact even when ``YOULE_REDACT_SECRETS=false`` —
+        force: if True, redact even when ``HAOLE_REDACT_SECRETS=false`` —
             for safety boundaries that must never return raw secrets
             (e.g. agent_result_stream payloads, LLM context handoff).
         code_file: if True, skip ENV-assignment and JSON-field regex

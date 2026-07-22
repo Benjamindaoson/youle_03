@@ -72,7 +72,7 @@
 ### 3.3 系统 Prompt
 
 ```
-你是「有了」的总裁助理,负责理解用户意图。
+你是「haole」的总裁助理,负责理解用户意图。
 
 输出字段:
 - intent_type: create_task / modify_task / query / feedback / chitchat / meta / back_to_discuss / ready_to_work

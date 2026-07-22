@@ -102,7 +102,7 @@ interface StepCompleted {
   "artifact": {
     "artifact_id": "8b2f1c4e-5d6a-4f23-9e7c-3a8b9d2f1c4e",
     "type": "structured",
-    "reference": "oss://youle-prod/artifacts/550e8400/research.json",
+    "reference": "oss://haole-prod/artifacts/550e8400/research.json",
     "metadata": {"row_count": 10, "source_profile": "short_video"}
   }
 }
@@ -125,7 +125,7 @@ interface TaskCompleted {
   "type": "task_completed",
   "task_id": "550e8400-...",
   "primary_artifact": {
-    "reference": "oss://youle-prod/artifacts/550e8400/video_compose.mp4"
+    "reference": "oss://haole-prod/artifacts/550e8400/video_compose.mp4"
   }
 }
 ```
@@ -199,7 +199,7 @@ interface HITLGateOpened {
   "preview_artifact": {
     "artifact_id": null,
     "type": "text",
-    "reference": "oss://youle-prod/artifacts/550e8400/script.txt",
+    "reference": "oss://haole-prod/artifacts/550e8400/script.txt",
     "metadata": {"version_count": 3}
   }
 }
@@ -337,7 +337,7 @@ interface ArtifactRef {
 {
   "artifact_id": "8b2f1c4e-...",
   "type": "video",
-  "reference": "oss://youle-prod/artifacts/.../video_compose.mp4",
+  "reference": "oss://haole-prod/artifacts/.../video_compose.mp4",
   "extra_metadata": {
     "duration_s": 60,
     "resolution": [1080, 1920],
@@ -375,7 +375,7 @@ interface StepResult {
   "agent_id": "agent_1",
   "task_type": "long_writing",
   "status": "completed",
-  "artifact_ref": "oss://youle-prod/.../script.txt",
+  "artifact_ref": "oss://haole-prod/.../script.txt",
   "artifact_type": "text",
   "artifact_metadata": {"version_count": 3},
   "duration_ms": 4230,

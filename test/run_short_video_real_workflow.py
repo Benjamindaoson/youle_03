@@ -34,7 +34,7 @@ def load_env(path: Path) -> None:
 load_env(ROOT / ".env")
 load_env(AGENTS_ROOT / ".env")
 os.environ["DEBUG"] = "false"
-os.environ["YOULE_AUTO_APPROVE_HITL"] = "true"
+os.environ["HAOLE_AUTO_APPROVE_HITL"] = "true"
 os.environ.setdefault("NO_PROXY", "localhost,127.0.0.1,::1")
 os.environ.setdefault("no_proxy", "localhost,127.0.0.1,::1")
 

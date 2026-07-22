@@ -1,17 +1,17 @@
-# youle-mas 整合报告
+# haole-mas 整合报告
 
 日期：2026-07-21
-整合分支：`codex/youle-mas-consolidation`
-历史基线：`Benjamindaoson/youle_03@14815ee`
-最终仓库：`Benjamindaoson/youle-mas`（`main`）
+整合分支：`codex/haole-mas-consolidation`
+历史基线：`Benjamindaoson/haole_03@14815ee`
+最终仓库：`Benjamindaoson/haole-mas`（`main`）
 
 ## 结论
 
-四个仓库没有被机械拼接。最终工程只保留 `backend/`、`agents/`、`frontend/` 三个正式应用根目录，以现已重命名为 `youle-mas` 的原 `youle_03` 代码线为事实来源。其他仓库只迁移了不重复且能接入该边界的产品、事件和安全增量；`youle01`、`oye-mas`、`youle-agno` 已在最终验证后删除。
+四个仓库没有被机械拼接。最终工程只保留 `backend/`、`agents/`、`frontend/` 三个正式应用根目录，以现已重命名为 `haole-mas` 的原 `haole_03` 代码线为事实来源。其他仓库只迁移了不重复且能接入该边界的产品、事件和安全增量；`haole01`、`oye-mas`、`haole-agno` 已在最终验证后删除。
 
 ## 各来源迁移内容
 
-### youle_03
+### haole_03
 
 保留并扩展：
 
@@ -23,7 +23,7 @@
 
 整合前的 Ruff、测试收集、Skill 编译、头像/配额测试等基线缺陷先用独立提交修复，再开始功能迁移。
 
-### youle01
+### haole01
 
 选择性迁移：
 
@@ -55,9 +55,9 @@
 - Skill 从“订阅/取消”改为内置、未安装、已安装启用、已安装停用生命周期。
 - 清理页面重复 `AppShell`，新增认证 hydration 门禁，支持受保护页面刷新。
 
-未迁移来源中的旧 `youle/backend` 和 `youle/agents`，因为它们是主干的较早副本。
+未迁移来源中的旧 `haole/backend` 和 `haole/agents`，因为它们是主干的较早副本。
 
-### youle-agno
+### haole-agno
 
 迁移的是设计与行为，不是 Agno 架构：
 
@@ -72,8 +72,8 @@
 
 ## 删除或拒绝的重复架构
 
-- 没有引入 `src/backend/`、`youle/backend/`、`legacy_backend/`。
-- 没有引入 Agno 主编排、youle01 conductor 或第二套任务总线。
+- 没有引入 `src/backend/`、`haole/backend/`、`legacy_backend/`。
+- 没有引入 Agno 主编排、haole01 conductor 或第二套任务总线。
 - 没有保留第二套前端 store、消息模型、默认 mock API 或手写 EventType 联合类型。
 - 没有让 Agent 跨模块直接调用，也没有新增 OpenAI/Anthropic 直连。
 - 没有创建新的默认 SQLite 数据库或启动时建表路径。

@@ -41,7 +41,7 @@
 - [x] 5.5 Add failing SSE client tests for delta aggregation, duplicate event IDs, reconnect, `Last-Event-ID`, and visible connection errors.
 - [x] 5.6 Implement the SSE client/store integration and HITL/task/artifact updates.
 - [x] 5.7 Add failing Skill marketplace tests and connect list/detail/install/enable/disable/search to real APIs.
-- [x] 5.8 Migrate the non-duplicated `youle01` product landing page and useful group/private chat presentation details without importing its backend, conductor, or duplicate stores.
+- [x] 5.8 Migrate the non-duplicated `haole01` product landing page and useful group/private chat presentation details without importing its backend, conductor, or duplicate stores.
 - [x] 5.9 Run frontend lint, typecheck, unit tests, build, and existing Playwright scenarios; repair failures.
 
 ## 6. End-to-end and data verification
@@ -58,7 +58,7 @@
 - [x] 7.3 Complete `MIGRATION_REPORT.md` and `docs/migration/FINAL_VALIDATION_REPORT.md` with exact migrated/skipped modules, schema/API/UI changes, commands, results, failures, risks, and unverified items.
 - [x] 7.4 Run the full Ruff, pytest, compileall, frontend, Alembic, Docker Compose, health, E2E, secret, dependency, and ship-readiness checks; repair any in-scope failure.
 - [x] 7.5 Review the final diff for duplicate architectures, imports, secrets, env documentation, unnecessary dependencies, attribution, and intent alignment.
-- [x] 7.6 Commit each verified phase, push `codex/youle-mas-consolidation`, and open a Draft PR targeting the default branch without merging it.
+- [x] 7.6 Commit each verified phase, push `codex/haole-mas-consolidation`, and open a Draft PR targeting the default branch without merging it.
 
 ## 8. Full-stack parity and debt cleanup
 

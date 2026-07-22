@@ -89,7 +89,7 @@ agents/agents/_common/sandbox/
 | 环境变量 | 默认 | 含义 |
 |---|---|---|
 | `SANDBOX_PROVIDER` | `local` | provider 选择:`local` / `e2b` |
-| `LOCAL_SANDBOX_ROOT` | `${TMPDIR}/youle-sandbox` | 本地 sandbox 工作目录 |
+| `LOCAL_SANDBOX_ROOT` | `${TMPDIR}/haole-sandbox` | 本地 sandbox 工作目录 |
 | `LOCAL_SANDBOX_PYTHON` | `python` | 本地 python 解释器路径 |
 | `E2B_API_KEY` | - | e2b SaaS API key |
 

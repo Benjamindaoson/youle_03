@@ -18,7 +18,7 @@
 ## 1. 仓库结构骨架
 
 ```
-youle/
+haole/
 ├── CLAUDE.md                     # Claude Code 必读,操作指令
 ├── README.md                     # 团队 onboarding 入口
 │

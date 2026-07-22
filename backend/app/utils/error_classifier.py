@@ -10,7 +10,7 @@ LLM call fails:
 Pattern catalogue covers OpenAI / Anthropic / OpenRouter / DeepSeek /
 Google / Bedrock / Alibaba / vLLM / llama.cpp / Ollama.  Hermes-specific
 patterns (Codex subscription, Nous Portal beta gates) have been trimmed —
-add domain-specific patterns to the lists below if/when they hit youle_mas.
+add domain-specific patterns to the lists below if/when they hit haole_mas.
 
 Usage::
 

@@ -171,7 +171,7 @@ def _check_single_architecture() -> list[str]:
     for relative in required:
         if not (ROOT / relative).is_dir():
             errors.append(f"required architecture root is missing: {relative}")
-    forbidden = ("src/backend", "youle/backend", "backend/src/backend", "legacy_backend")
+    forbidden = ("src/backend", "haole/backend", "backend/src/backend", "legacy_backend")
     for relative in forbidden:
         if (ROOT / relative).exists():
             errors.append(f"duplicate backend architecture found: {relative}")

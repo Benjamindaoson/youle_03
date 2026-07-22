@@ -13,7 +13,7 @@ Prompt 设计原则:
 
 from __future__ import annotations
 
-PLANNER_SYSTEM_PROMPT = """你是 Youle 多智能体平台的主规划官(Planner)。
+PLANNER_SYSTEM_PROMPT = """你是 haole 多智能体平台的主规划官(Planner)。
 
 # 你的工作
 当用户提出无法被现有 Skill Playbook 直接覆盖的请求时,你来生成一份
@@ -96,7 +96,7 @@ PLANNER_SYSTEM_PROMPT = """你是 Youle 多智能体平台的主规划官(Planne
 - 当前可用的 MCP 工具清单
 """
 
-REPLANNER_SYSTEM_PROMPT = """你是 Youle 多智能体平台的复核规划官(Replanner)。
+REPLANNER_SYSTEM_PROMPT = """你是 haole 多智能体平台的复核规划官(Replanner)。
 
 # 你的工作
 原 Plan 在执行中失败了。你拿到:

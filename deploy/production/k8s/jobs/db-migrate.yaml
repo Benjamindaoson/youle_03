@@ -3,7 +3,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: db-migrate
-  namespace: youle
+  namespace: haole
   annotations:
     argocd.argoproj.io/hook: PreSync
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
@@ -12,15 +12,15 @@ spec:
   backoffLimit: 2
   template:
     spec:
-      serviceAccountName: youle-app
+      serviceAccountName: haole-app
       restartPolicy: Never
       containers:
         - name: migrate
-          image: ghcr.io/your-org/youle-backend:0.1.0
+          image: ghcr.io/your-org/haole-backend:0.1.0
           command: ["alembic", "upgrade", "head"]
           envFrom:
-            - configMapRef: { name: youle-config }
-            - secretRef:    { name: youle-secrets }
+            - configMapRef: { name: haole-config }
+            - secretRef:    { name: haole-secrets }
           resources:
             requests: { cpu: "100m", memory: "256Mi" }
             limits:   { cpu: "500m", memory: "512Mi" }

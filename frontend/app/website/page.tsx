@@ -58,7 +58,7 @@ export default function WebsitePage() {
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
           <Link href="/website" className="flex items-center gap-2 font-semibold">
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-wechat-green text-sm">有</span>
-            有了
+            haole
           </Link>
           <div className="hidden items-center gap-7 text-sm text-white/60 md:flex">
             <a href="#features" className="hover:text-white">产品能力</a>
@@ -82,7 +82,7 @@ export default function WebsitePage() {
             <span className="block text-[#77e9ad]">而是把 AI 组织成团队。</span>
           </h1>
           <p className="mx-auto mt-7 max-w-2xl text-base leading-8 text-white/55 md:text-lg">
-            有了把群聊、任务编排、专业 Agent、Skill、MCP 工具与人工审核放进同一个工作台。
+            haole把群聊、任务编排、专业 Agent、Skill、MCP 工具与人工审核放进同一个工作台。
             你负责目标和判断，系统负责协调执行。
           </p>
           <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
@@ -148,7 +148,7 @@ export default function WebsitePage() {
       </section>
 
       <footer className="px-6 py-8 text-center text-xs text-white/30">
-        有了 · Unified multi-agent workspace
+        haole · Unified multi-agent workspace
       </footer>
     </main>
   );

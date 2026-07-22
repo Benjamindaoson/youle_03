@@ -275,7 +275,7 @@ async function consumeStream(
       const event = JSON.parse(frame.data) as UserEvent;
       useWsStore.getState().setLastEventId(frame.id);
       if (typeof sessionStorage !== 'undefined') {
-        sessionStorage.setItem(`youle.sse.${conversationId}.last_event_id`, frame.id);
+        sessionStorage.setItem(`haole.sse.${conversationId}.last_event_id`, frame.id);
       }
       applyUserEvent(event, onArtifactAdded);
     }
@@ -299,7 +299,7 @@ export function useConversationEvents(
       while (!stopped) {
         const lastEventId = typeof sessionStorage === 'undefined'
           ? null
-          : sessionStorage.getItem(`youle.sse.${conversationId}.last_event_id`);
+          : sessionStorage.getItem(`haole.sse.${conversationId}.last_event_id`);
         try {
           await consumeStream(
             conversationId,

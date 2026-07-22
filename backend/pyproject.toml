@@ -1,7 +1,7 @@
 [project]
-name = "youle-backend"
+name = "haole-backend"
 version = "0.1.0"
-description = "「有了」后端 — 主编排 + REST/WS API + Celery"
+description = "「haole」后端 — 主编排 + REST/WS API + Celery"
 requires-python = ">=3.12"
 readme = "README.md"
 

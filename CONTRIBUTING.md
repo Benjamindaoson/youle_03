@@ -1,6 +1,6 @@
 # 贡献指南
 
-`youle-mas` 只维护一套正式后端、编排器、任务契约和前端。贡献的首要目标是保持这些边界清晰，而不是把来源仓库的旧实现重新复制进来。
+`haole-mas` 只维护一套正式后端、编排器、任务契约和前端。贡献的首要目标是保持这些边界清晰，而不是把来源仓库的旧实现重新复制进来。
 
 ## 开发环境
 
@@ -16,7 +16,7 @@ Python 项目依赖必须安装在仓库根 `.venv`，不要写入全局 Python�
 
 ## 架构边界
 
-- 后端入口只在 `backend/app`；不要新增 `src/backend`、`youle/backend` 或运行时 `create_all`。
+- 后端入口只在 `backend/app`；不要新增 `src/backend`、`haole/backend` 或运行时 `create_all`。
 - 主编排只使用 `agents/agents/orchestrator_agent` 的 LangGraph 路径。
 - Worker 之间不直接调用；任务通过 Redis Streams 和 `AgentTask`/`AgentResult` 传递。
 - Agent 不直接导入 OpenAI、Anthropic 等供应商 SDK；模型请求通过统一 Router/LiteLLM。

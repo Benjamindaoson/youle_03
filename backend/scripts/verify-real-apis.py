@@ -189,7 +189,7 @@ async def check_sentry() -> None:
         import sentry_sdk
 
         sentry_sdk.init(dsn=dsn, environment="preflight", traces_sample_rate=0)
-        sentry_sdk.capture_message("youle preflight ping", level="info")
+        sentry_sdk.capture_message("haole preflight ping", level="info")
         client = sentry_sdk.get_client()
         if client and client.transport:
             ok("Sentry SDK 初始化 + capture_message 已发送")
@@ -210,7 +210,7 @@ async def main() -> int:
     args = parser.parse_args()
 
     print("═══════════════════════════════════════════")
-    print("  「有了」真 API 验证(Sprint 6 切换检查)")
+    print("  「haole」真 API 验证(Sprint 6 切换检查)")
     print("═══════════════════════════════════════════")
 
     checks: list[tuple[str, Awaitable[None]]] = []

@@ -6,24 +6,24 @@
 
 在本次整合锁定的四个来源提交中，仓库根目录均未发现 `LICENSE`、`COPYING` 或 `NOTICE`：
 
-- `Benjamindaoson/youle_03@14815ee`
-- `Benjamindaoson/youle01@d5f84ab`
+- `Benjamindaoson/haole_03@14815ee`
+- `Benjamindaoson/haole01@d5f84ab`
 - `Benjamindaoson/oye-mas@6ff181a`
-- `Benjamindaoson/youle-agno@43f86e2`
+- `Benjamindaoson/haole-agno@43f86e2`
 
-本文件不替仓库所有者授予 `youle-mas` 整体许可证，也不应被解释为四个来源仓库的许可声明。项目所有者需要另行确认并添加根许可证。
+本文件不替仓库所有者授予 `haole-mas` 整体许可证，也不应被解释为四个来源仓库的许可声明。项目所有者需要另行确认并添加根许可证。
 
-### Benjamindaoson/youle_03
+### Benjamindaoson/haole_03
 
-- 来源：https://github.com/Benjamindaoson/youle_03/tree/14815ee
+- 来源：https://github.com/Benjamindaoson/haole_03/tree/14815ee
 - 许可证：来源提交未提供项目级许可证。
 - 使用位置：本项目 Git 主干，以及 `backend/`、`agents/`、`test/`、基础设施和工程脚本的原始基线。
 - 是否修改：是。
 - 修改范围：修复基线缺陷；扩展事件、OTP、Skill、API、迁移、测试与 CI。旧 migration 保持追加式历史，未改为第二套架构。
 
-### Benjamindaoson/youle01
+### Benjamindaoson/haole01
 
-- 来源：https://github.com/Benjamindaoson/youle01/tree/d5f84ab
+- 来源：https://github.com/Benjamindaoson/haole01/tree/d5f84ab
 - 许可证：来源提交未提供项目级许可证。
 - 使用位置：`frontend/app/website/` 的产品页面方向，以及根前端中的群聊、员工私聊和团队化展示细节。
 - 是否修改：是。
@@ -37,12 +37,12 @@
 - 是否修改：是。
 - 修改范围：迁移后改为真实 API 默认、显式 mock、统一消息状态、SSE/UserEvent、Skill 生命周期和 OpenAPI 类型；没有迁移其旧后端/Agent 副本。
 
-### Benjamindaoson/youle-agno
+### Benjamindaoson/haole-agno
 
-- 来源：https://github.com/Benjamindaoson/youle-agno/tree/43f86e2
+- 来源：https://github.com/Benjamindaoson/haole-agno/tree/43f86e2
 - 许可证：来源提交未提供项目级许可证。
 - 使用位置：`backend/app/services/event_bus.py`、SSE/事件测试和 OTP 增量行为的设计参考。
-- 是否修改：是，按 `youle_03` 模型与任务边界重新实现。
+- 是否修改：是，按 `haole_03` 模型与任务边界重新实现。
 - 修改范围：采用每用户队列、Redis 分发、本地 fallback、heartbeat/replay 和一次性 OTP 的经过测试思路；没有复制 Agno Team、第二套鉴权、第二套模型或 `src/backend`。
 
 ## hermes-agent

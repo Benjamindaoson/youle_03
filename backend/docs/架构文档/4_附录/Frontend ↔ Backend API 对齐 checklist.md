@@ -2,7 +2,7 @@
 
 > 用法:frontend 入仓后,逐项核对自己的 `lib/api.ts` / `lib/ws-events.ts` / `stores/*` 是否与本表一致。**不一致时改 frontend**(backend 是 V1 RC1 契约)。
 >
-> 来源:`youle/backend/app/main.py` route 注册 + `youle/backend/app/api/*.py` 实际声明 + `youle/backend/app/schemas/ws.py`。
+> 来源:`haole/backend/app/main.py` route 注册 + `haole/backend/app/api/*.py` 实际声明 + `haole/backend/app/schemas/ws.py`。
 
 ---
 
@@ -134,15 +134,15 @@ frontend `lib/ws-events.ts` 必须与本表对齐(手写,因为 OpenAPI 不覆�
 后端是源,前端自动生成:
 
 ```
-youle/backend/app/schemas/*.py  (Pydantic v2)
+haole/backend/app/schemas/*.py  (Pydantic v2)
         │
         │ FastAPI 自动 /openapi.json
         ▼
-youle/scripts/gen-frontend-types.sh
+haole/scripts/gen-frontend-types.sh
         │
         │ openapi-typescript /openapi.json -o lib/api-types.ts
         ▼
-youle/frontend/lib/api-types.ts  (auto-generated)
+haole/frontend/lib/api-types.ts  (auto-generated)
 ```
 
 **WS event 不走 OpenAPI**,frontend `lib/ws-events.ts` 手写,与本文档同步维护。修 `schemas/ws.py` 必须同步本文档。
@@ -151,9 +151,9 @@ youle/frontend/lib/api-types.ts  (auto-generated)
 
 ## CI 强制规则
 
-PR 修改 `youle/backend/app/schemas/**` 必须:
+PR 修改 `haole/backend/app/schemas/**` 必须:
 
-1. 在 `youle/frontend/` 跑 `pnpm gen:api` 重新生成 `lib/api-types.ts`
+1. 在 `haole/frontend/` 跑 `pnpm gen:api` 重新生成 `lib/api-types.ts`
 2. 把生成产物 commit 入 PR
 
 CI 会 grep `git diff` 检查:如果 `schemas/` 改了但 `lib/api-types.ts` 没改 → fail。

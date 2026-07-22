@@ -20,7 +20,7 @@ log = structlog.get_logger(__name__)
 OSS_ENDPOINT = os.getenv("OSS_ENDPOINT", "http://localhost:9000")
 OSS_ACCESS_KEY = os.getenv("OSS_ACCESS_KEY", "minioadmin")
 OSS_SECRET_KEY = os.getenv("OSS_SECRET_KEY", "minioadmin")
-OSS_BUCKET = os.getenv("OSS_BUCKET", "youle-dev")
+OSS_BUCKET = os.getenv("OSS_BUCKET", "haole-dev")
 
 ORCH_HYDRATE_MAX_BYTES = int(os.getenv("ORCH_HYDRATE_MAX_BYTES", str(384 * 1024)))
 ORCH_HYDRATE_ENABLED = os.getenv("ORCH_HYDRATE_ENABLED", "true").lower() in {"1", "true", "yes"}

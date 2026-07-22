@@ -1,12 +1,12 @@
-# Youle MAS 主干基线报告
+# haole MAS 主干基线报告
 
 审计日期：2026-07-21  
-唯一主干：`youle_03@14815ee`  
-审计分支：`codex/youle-mas-consolidation`
+唯一主干：`haole_03@14815ee`
+审计分支：`codex/haole-mas-consolidation`
 
 ## 结论
 
-`youle_03` 可以作为唯一主干，但当前提交不是全绿基线。Python 模块可以完整编译，Docker Compose 配置和 Alembic 迁移链有效；后端已有 243 个测试通过。阻塞项是主干自带的 8 个后端测试失败、Agent 测试包导入错误、203 个 Ruff 问题，以及仓库根目录缺少 README 所描述的 `frontend/`。这些问题都发生在业务迁移之前，后续将用独立的“基线修复”提交处理，避免把既有缺陷误归因于四库整合。
+`haole_03` 可以作为唯一主干，但当前提交不是全绿基线。Python 模块可以完整编译，Docker Compose 配置和 Alembic 迁移链有效；后端已有 243 个测试通过。阻塞项是主干自带的 8 个后端测试失败、Agent 测试包导入错误、203 个 Ruff 问题，以及仓库根目录缺少 README 所描述的 `frontend/`。这些问题都发生在业务迁移之前，后续将用独立的“基线修复”提交处理，避免把既有缺陷误归因于四库整合。
 
 本机 Docker Desktop 守护进程没有运行，所以 PostgreSQL/Redis 的容器内运行验证和 `alembic upgrade head` 实际执行暂时属于环境阻塞；迁移历史与 Compose 静态配置已验证。
 
@@ -79,4 +79,4 @@ uv pip install --python .\.venv\Scripts\python.exe -e '.\backend[dev]' -e '.\age
 | 根目录 Agent handler/Live 套件 | 31 通过、75 按显式 live 条件跳过；共 106 项 |
 | Python compileall | 通过 |
 
-根目录原有 `*live*.py` 和数据库工作流测试以前会在没有外部依赖时直接等待真实 LLM、Redis 或 PostgreSQL。它们现在保留原测试体，仅增加 `YOULE_RUN_LIVE_TESTS=1` 的显式 opt-in 门禁；默认执行的 31 个无外部依赖 handler 契约测试仍全部运行。后续新增的无 Key mock E2E 不使用该 live 门禁。
+根目录原有 `*live*.py` 和数据库工作流测试以前会在没有外部依赖时直接等待真实 LLM、Redis 或 PostgreSQL。它们现在保留原测试体，仅增加 `HAOLE_RUN_LIVE_TESTS=1` 的显式 opt-in 门禁；默认执行的 31 个无外部依赖 handler 契约测试仍全部运行。后续新增的无 Key mock E2E 不使用该 live 门禁。

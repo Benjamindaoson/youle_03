@@ -1,4 +1,4 @@
-name: youle-dev
+name: haole-dev
 
 services:
   postgres:

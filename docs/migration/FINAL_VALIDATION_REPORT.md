@@ -1,25 +1,25 @@
-# youle-mas 最终验证报告
+# haole-mas 最终验证报告
 
 ## 2026-07-22 最终状态（覆盖下方历史阶段记录）
 
-- 最终仓库：`https://github.com/Benjamindaoson/youle-mas`，默认分支 `main`。
+- 最终仓库：`https://github.com/Benjamindaoson/haole-mas`，默认分支 `main`。
 - PR #2（全栈清理）与 PR #3（pnpm 9/11 frozen-install 兼容）均在全部阻断检查通过后合并。
 - 全量结果：Ruff 通过；Backend **313 passed, 2 skipped**；Agents/root **228 passed, 77 skipped**；Frontend lint/typecheck、**20 tests**、13 路由 production build 通过。
 - 本机核心运行已验证：PostgreSQL + Redis 两个容器，FastAPI + combined LangGraph worker + Next.js 三个应用进程；`/ready` 为 db/redis `ok`、LiteLLM `mock`，前端页面 200，真实浏览器 HITL 长流程通过。
-- 从最终 `main` fresh clone 到 `D:\Codex\youle-mas-final` 后，Python 安装、Alembic、后端、Agent 和 6 个代表性 E2E/worker 测试通过。由于 D: 剩余空间为 0 GB，前端从同一提交导出到 C 盘运行副本完成安装、lint、typecheck、20 tests 和页面 200 验证；Chromium runtime 的再次下载在 5 分钟网络超时，浏览器证据沿用合并前同一代码的完整实测。
-- 已完成账号级 Youle 代码搜索：`youle01`、`oye-mas`、`youle-agno`、`youle_beifen` 和私有仓库 `youle-agno_claude` 均已退休；原 `youle_03` 已重命名为 `youle-mas`。`youle_beifen` 是不可从仓库根运行的一次性双目录备份；`youle-agno_claude` 是已放弃的 Agno 实现，包含旧反诈工作流和仅作参考的 LangGraph 副本，未合并以避免重新引入重复架构与技术债。现在仅保留 `youle-mas`。
+- 从最终 `main` fresh clone 到 `D:\Codex\haole-mas-final` 后，Python 安装、Alembic、后端、Agent 和 6 个代表性 E2E/worker 测试通过。由于 D: 剩余空间为 0 GB，前端从同一提交导出到 C 盘运行副本完成安装、lint、typecheck、20 tests 和页面 200 验证；Chromium runtime 的再次下载在 5 分钟网络超时，浏览器证据沿用合并前同一代码的完整实测。
+- 已完成账号级 haole 代码搜索：`haole01`、`oye-mas`、`haole-agno`、`haole_beifen` 和私有仓库 `haole-agno_claude` 均已退休；原 `haole_03` 已重命名为 `haole-mas`。`haole_beifen` 是不可从仓库根运行的一次性双目录备份；`haole-agno_claude` 是已放弃的 Agno 实现，包含旧反诈工作流和仅作参考的 LangGraph 副本，未合并以避免重新引入重复架构与技术债。现在仅保留 `haole-mas`。
 
 以下内容保留为 2026-07-21 整合阶段的历史验证记录。
 
 验证日期：2026-07-21
-分支：`codex/youle-mas-consolidation`
-基线：`youle_03@14815ee`
+分支：`codex/haole-mas-consolidation`
+基线：`haole_03@14815ee`
 
 ## 验证结论
 
 代码、无外部依赖测试、前端生产构建、真实 Chrome 浏览器场景、跨语言契约和静态基础设施配置已验证。后端 297 个测试通过、Agent/handler 219 个测试通过、前端 16 个单元测试通过；启用的 4 个 Playwright 场景通过，真实短视频长链路场景保持显式跳过。
 
-本机 Docker Desktop Linux daemon 不可用，因此无法在本机证明空 PostgreSQL 实际升级、readiness 依赖和完整 5 容器/12 Python 进程联调。相关命令已执行并记录为环境阻塞；Draft PR 的 [CI run 29856012696](https://github.com/Benjamindaoson/youle_03/actions/runs/29856012696) 已在 PostgreSQL 16/Redis 7.2 service 上通过 migration、Skill bootstrap、后端、Agent、前端、Playwright 和契约检查，[Security run 29856013088](https://github.com/Benjamindaoson/youle_03/actions/runs/29856013088) 也已通过。
+本机 Docker Desktop Linux daemon 不可用，因此无法在本机证明空 PostgreSQL 实际升级、readiness 依赖和完整 5 容器/12 Python 进程联调。相关命令已执行并记录为环境阻塞；Draft PR 的 [CI run 29856012696](https://github.com/Benjamindaoson/haole_03/actions/runs/29856012696) 已在 PostgreSQL 16/Redis 7.2 service 上通过 migration、Skill bootstrap、后端、Agent、前端、Playwright 和契约检查，[Security run 29856013088](https://github.com/Benjamindaoson/haole_03/actions/runs/29856013088) 也已通过。
 
 ## 最终检查结果
 
@@ -104,7 +104,7 @@ alembic current / alembic upgrade head
 
 | 需求 | 状态 | 说明 |
 | --- | --- | --- |
-| `youle_03` 唯一主干 | Done | 无第二后端/编排/任务系统 |
+| `haole_03` 唯一主干 | Done | 无第二后端/编排/任务系统 |
 | 正式根前端 | Done | Next.js 15，真实 API 默认路径 |
 | 群聊、私聊、@Agent | Done | 共用消息模型和后端路由 |
 | Skill 生命周期/详情 | Done | 内置、安装、启停、版本、Agent/MCP/权限 |
@@ -119,4 +119,4 @@ alembic current / alembic upgrade head
 
 ## 交付门槛
 
-Draft PR [#1](https://github.com/Benjamindaoson/youle_03/pull/1) 已创建且未合并。提交 `680a9b4` 的 GitHub Actions backend、agents、frontend、contract 和 security jobs 已全部通过，包括 Linux/PostgreSQL 的 `alembic upgrade head`、Skill bootstrap 与 Playwright Chromium；PR 继续保持 Draft，等待所有者处理剩余未验证项和许可证决定。
+Draft PR [#1](https://github.com/Benjamindaoson/haole_03/pull/1) 已创建且未合并。提交 `680a9b4` 的 GitHub Actions backend、agents、frontend、contract 和 security jobs 已全部通过，包括 Linux/PostgreSQL 的 `alembic upgrade head`、Skill bootstrap 与 Playwright Chromium；PR 继续保持 Draft，等待所有者处理剩余未验证项和许可证决定。

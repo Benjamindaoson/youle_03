@@ -22,7 +22,7 @@ from mcp_servers._shared.http_app import make_app
 log = structlog.get_logger(__name__)
 
 OSS_ENDPOINT = os.getenv("OSS_ENDPOINT", "http://minio:9000")
-OSS_BUCKET = os.getenv("OSS_BUCKET", "youle-dev")
+OSS_BUCKET = os.getenv("OSS_BUCKET", "haole-dev")
 LITELLM_URL = os.getenv("LITELLM_URL", "http://litellm-proxy:4000")
 LITELLM_API_KEY = os.getenv("LITELLM_API_KEY", "")
 

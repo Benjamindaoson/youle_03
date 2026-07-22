@@ -163,7 +163,7 @@ async def bgm_select_handler(task: AgentTask) -> AgentResult:
     script_ref = (task.inputs.get("_upstream") or {}).get("script")
     script_text = _read_oss_text(script_ref)
 
-    db_url = os.getenv("DATABASE_URL", "postgresql+asyncpg://youle:youle_dev@postgres:5432/youle")
+    db_url = os.getenv("DATABASE_URL", "postgresql+asyncpg://haole:haole_dev@postgres:5432/haole")
     engine = create_async_engine(db_url, pool_pre_ping=True)
     Session = async_sessionmaker(bind=engine, expire_on_commit=False)
 

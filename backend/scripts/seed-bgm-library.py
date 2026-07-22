@@ -128,7 +128,7 @@ async def _upsert_row(row: dict[str, Any]) -> str:
     bpm = int(row["bpm"]) if row.get("bpm") not in (None, "") else None
     license_name = str(row.get("license") or "internal")
 
-    bucket = os.getenv("OSS_BUCKET", "youle-dev")
+    bucket = os.getenv("OSS_BUCKET", "haole-dev")
     key = f"bgm/{mood}/{path.name}"
     content_type = mimetypes.guess_type(path.name)[0] or "audio/mpeg"
     body = path.read_bytes()

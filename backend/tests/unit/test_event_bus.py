@@ -83,7 +83,7 @@ async def test_redis_payload_is_json_safe(monkeypatch: pytest.MonkeyPatch) -> No
     )
 
     channel, raw = recorder.messages[0]
-    assert channel == "youle:events:user-1"
+    assert channel == "haole:events:user-1"
     assert json.loads(raw) == {
         "type": "message_added",
         "id": str(event_id),

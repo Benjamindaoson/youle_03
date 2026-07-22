@@ -2,7 +2,7 @@
 ---
 apiVersion: apps/v1
 kind: Deployment
-metadata: { name: mcp-search, namespace: youle, labels: { app: mcp-search } }
+metadata: { name: mcp-search, namespace: haole, labels: { app: mcp-search } }
 spec:
   replicas: 1
   selector: { matchLabels: { app: mcp-search } }
@@ -11,11 +11,11 @@ spec:
     spec:
       containers:
         - name: server
-          image: ghcr.io/your-org/youle-mcp:0.1.0
+          image: ghcr.io/your-org/haole-mcp:0.1.0
           env: [{ name: MCP_KIND, value: search }, { name: PORT, value: "7001" }]
           envFrom:
-            - configMapRef: { name: youle-config }
-            - secretRef:    { name: youle-secrets }
+            - configMapRef: { name: haole-config }
+            - secretRef:    { name: haole-secrets }
           ports: [{ containerPort: 7001 }]
           resources:
             requests: { cpu: "100m", memory: "256Mi" }
@@ -25,14 +25,14 @@ spec:
 ---
 apiVersion: v1
 kind: Service
-metadata: { name: mcp-search, namespace: youle }
+metadata: { name: mcp-search, namespace: haole }
 spec:
   selector: { app: mcp-search }
   ports: [{ port: 7001, targetPort: 7001 }]
 ---
 apiVersion: apps/v1
 kind: Deployment
-metadata: { name: mcp-image-tools, namespace: youle, labels: { app: mcp-image-tools } }
+metadata: { name: mcp-image-tools, namespace: haole, labels: { app: mcp-image-tools } }
 spec:
   replicas: 1
   selector: { matchLabels: { app: mcp-image-tools } }
@@ -41,11 +41,11 @@ spec:
     spec:
       containers:
         - name: server
-          image: ghcr.io/your-org/youle-mcp:0.1.0
+          image: ghcr.io/your-org/haole-mcp:0.1.0
           env: [{ name: MCP_KIND, value: image_tools }, { name: PORT, value: "7002" }]
           envFrom:
-            - configMapRef: { name: youle-config }
-            - secretRef:    { name: youle-secrets }
+            - configMapRef: { name: haole-config }
+            - secretRef:    { name: haole-secrets }
           ports: [{ containerPort: 7002 }]
           resources:
             requests: { cpu: "300m", memory: "768Mi" }
@@ -54,14 +54,14 @@ spec:
 ---
 apiVersion: v1
 kind: Service
-metadata: { name: mcp-image-tools, namespace: youle }
+metadata: { name: mcp-image-tools, namespace: haole }
 spec:
   selector: { app: mcp-image-tools }
   ports: [{ port: 7002, targetPort: 7002 }]
 ---
 apiVersion: apps/v1
 kind: Deployment
-metadata: { name: mcp-video-tools, namespace: youle, labels: { app: mcp-video-tools } }
+metadata: { name: mcp-video-tools, namespace: haole, labels: { app: mcp-video-tools } }
 spec:
   replicas: 1
   selector: { matchLabels: { app: mcp-video-tools } }
@@ -70,11 +70,11 @@ spec:
     spec:
       containers:
         - name: server
-          image: ghcr.io/your-org/youle-mcp:0.1.0
+          image: ghcr.io/your-org/haole-mcp:0.1.0
           env: [{ name: MCP_KIND, value: video_tools }, { name: PORT, value: "7003" }]
           envFrom:
-            - configMapRef: { name: youle-config }
-            - secretRef:    { name: youle-secrets }
+            - configMapRef: { name: haole-config }
+            - secretRef:    { name: haole-secrets }
           ports: [{ containerPort: 7003 }]
           resources:
             requests: { cpu: "500m", memory: "1Gi" }
@@ -83,14 +83,14 @@ spec:
 ---
 apiVersion: v1
 kind: Service
-metadata: { name: mcp-video-tools, namespace: youle }
+metadata: { name: mcp-video-tools, namespace: haole }
 spec:
   selector: { app: mcp-video-tools }
   ports: [{ port: 7003, targetPort: 7003 }]
 ---
 apiVersion: apps/v1
 kind: Deployment
-metadata: { name: mcp-audio-tools, namespace: youle, labels: { app: mcp-audio-tools } }
+metadata: { name: mcp-audio-tools, namespace: haole, labels: { app: mcp-audio-tools } }
 spec:
   replicas: 1
   selector: { matchLabels: { app: mcp-audio-tools } }
@@ -99,11 +99,11 @@ spec:
     spec:
       containers:
         - name: server
-          image: ghcr.io/your-org/youle-mcp:0.1.0
+          image: ghcr.io/your-org/haole-mcp:0.1.0
           env: [{ name: MCP_KIND, value: audio_tools }, { name: PORT, value: "7004" }]
           envFrom:
-            - configMapRef: { name: youle-config }
-            - secretRef:    { name: youle-secrets }
+            - configMapRef: { name: haole-config }
+            - secretRef:    { name: haole-secrets }
           ports: [{ containerPort: 7004 }]
           resources:
             requests: { cpu: "200m", memory: "512Mi" }
@@ -112,14 +112,14 @@ spec:
 ---
 apiVersion: v1
 kind: Service
-metadata: { name: mcp-audio-tools, namespace: youle }
+metadata: { name: mcp-audio-tools, namespace: haole }
 spec:
   selector: { app: mcp-audio-tools }
   ports: [{ port: 7004, targetPort: 7004 }]
 ---
 apiVersion: apps/v1
 kind: Deployment
-metadata: { name: mcp-document-tools, namespace: youle, labels: { app: mcp-document-tools } }
+metadata: { name: mcp-document-tools, namespace: haole, labels: { app: mcp-document-tools } }
 spec:
   replicas: 1
   selector: { matchLabels: { app: mcp-document-tools } }
@@ -128,11 +128,11 @@ spec:
     spec:
       containers:
         - name: server
-          image: ghcr.io/your-org/youle-mcp:0.1.0
+          image: ghcr.io/your-org/haole-mcp:0.1.0
           env: [{ name: MCP_KIND, value: document_tools }, { name: PORT, value: "7005" }]
           envFrom:
-            - configMapRef: { name: youle-config }
-            - secretRef:    { name: youle-secrets }
+            - configMapRef: { name: haole-config }
+            - secretRef:    { name: haole-secrets }
           ports: [{ containerPort: 7005 }]
           resources:
             requests: { cpu: "200m", memory: "512Mi" }
@@ -141,14 +141,14 @@ spec:
 ---
 apiVersion: v1
 kind: Service
-metadata: { name: mcp-document-tools, namespace: youle }
+metadata: { name: mcp-document-tools, namespace: haole }
 spec:
   selector: { app: mcp-document-tools }
   ports: [{ port: 7005, targetPort: 7005 }]
 ---
 apiVersion: apps/v1
 kind: Deployment
-metadata: { name: mcp-oss, namespace: youle, labels: { app: mcp-oss } }
+metadata: { name: mcp-oss, namespace: haole, labels: { app: mcp-oss } }
 spec:
   replicas: 1
   selector: { matchLabels: { app: mcp-oss } }
@@ -157,11 +157,11 @@ spec:
     spec:
       containers:
         - name: server
-          image: ghcr.io/your-org/youle-mcp:0.1.0
+          image: ghcr.io/your-org/haole-mcp:0.1.0
           env: [{ name: MCP_KIND, value: oss }, { name: PORT, value: "7006" }]
           envFrom:
-            - configMapRef: { name: youle-config }
-            - secretRef:    { name: youle-secrets }
+            - configMapRef: { name: haole-config }
+            - secretRef:    { name: haole-secrets }
           ports: [{ containerPort: 7006 }]
           resources:
             requests: { cpu: "100m", memory: "256Mi" }
@@ -170,14 +170,14 @@ spec:
 ---
 apiVersion: v1
 kind: Service
-metadata: { name: mcp-oss, namespace: youle }
+metadata: { name: mcp-oss, namespace: haole }
 spec:
   selector: { app: mcp-oss }
   ports: [{ port: 7006, targetPort: 7006 }]
 ---
 apiVersion: apps/v1
 kind: Deployment
-metadata: { name: mcp-platform-publish, namespace: youle, labels: { app: mcp-platform-publish } }
+metadata: { name: mcp-platform-publish, namespace: haole, labels: { app: mcp-platform-publish } }
 spec:
   replicas: 1
   selector: { matchLabels: { app: mcp-platform-publish } }
@@ -186,11 +186,11 @@ spec:
     spec:
       containers:
         - name: server
-          image: ghcr.io/your-org/youle-mcp:0.1.0
+          image: ghcr.io/your-org/haole-mcp:0.1.0
           env: [{ name: MCP_KIND, value: platform_publish }, { name: PORT, value: "7007" }]
           envFrom:
-            - configMapRef: { name: youle-config }
-            - secretRef:    { name: youle-secrets }
+            - configMapRef: { name: haole-config }
+            - secretRef:    { name: haole-secrets }
           ports: [{ containerPort: 7007 }]
           resources:
             requests: { cpu: "100m", memory: "256Mi" }
@@ -199,7 +199,7 @@ spec:
 ---
 apiVersion: v1
 kind: Service
-metadata: { name: mcp-platform-publish, namespace: youle }
+metadata: { name: mcp-platform-publish, namespace: haole }
 spec:
   selector: { app: mcp-platform-publish }
   ports: [{ port: 7007, targetPort: 7007 }]

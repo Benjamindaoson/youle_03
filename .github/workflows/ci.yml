@@ -18,9 +18,9 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: youle
-          POSTGRES_PASSWORD: youle_dev
-          POSTGRES_DB: youle
+          POSTGRES_USER: haole
+          POSTGRES_PASSWORD: haole_dev
+          POSTGRES_DB: haole
         ports: ["5432:5432"]
         options: >-
           --health-cmd pg_isready
@@ -36,7 +36,7 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     env:
-      DATABASE_URL: postgresql+asyncpg://youle:youle_dev@localhost:5432/youle
+      DATABASE_URL: postgresql+asyncpg://haole:haole_dev@localhost:5432/haole
       REDIS_URL: redis://localhost:6379/0
       LITELLM_MOCK: "true"
       ENV: test

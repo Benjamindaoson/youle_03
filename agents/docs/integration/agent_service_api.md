@@ -665,37 +665,37 @@ async def process_reflexion_event(payload: dict) -> dict:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: youle-agent-text
-  namespace: youle
+  name: haole-agent-text
+  namespace: haole
 spec:
   replicas: 4
   selector:
-    matchLabels: {app: youle-agent-text}
+    matchLabels: {app: haole-agent-text}
   template:
     metadata:
-      labels: {app: youle-agent-text}
+      labels: {app: haole-agent-text}
     spec:
       containers:
       - name: agent
-        image: youle/agent:<tag>
+        image: haole/agent:<tag>
         command: ["python", "-m", "agents.text_agent.main"]
         env:
-        - {name: REDIS_URL,            value: "redis://redis.youle.svc:6379/0"}
-        - {name: LITELLM_URL,          value: "http://litellm-proxy.youle.svc:4000"}
+        - {name: REDIS_URL,            value: "redis://redis.haole.svc:6379/0"}
+        - {name: LITELLM_URL,          value: "http://litellm-proxy.haole.svc:4000"}
         - {name: LITELLM_API_KEY,      valueFrom: {secretKeyRef: {name: litellm-key, key: token}}}
         - {name: OSS_ENDPOINT,         value: "https://oss-cn-shanghai.aliyuncs.com"}
         - {name: OSS_ACCESS_KEY,       valueFrom: {secretKeyRef: {name: oss, key: ak}}}
         - {name: OSS_SECRET_KEY,       valueFrom: {secretKeyRef: {name: oss, key: sk}}}
-        - {name: OSS_BUCKET,           value: "youle-prod"}
+        - {name: OSS_BUCKET,           value: "haole-prod"}
         - {name: AGENT_MAX_RETRIES,    value: "2"}
         - {name: AGENT_HEARTBEAT_INTERVAL, value: "20"}
         # MCP endpoints
-        - {name: MCP_SEARCH_URL,        value: "http://mcp-search.youle.svc:7001"}
-        - {name: MCP_IMAGE_TOOLS_URL,   value: "http://mcp-image-tools.youle.svc:7002"}
-        - {name: MCP_VIDEO_TOOLS_URL,   value: "http://mcp-video-tools.youle.svc:7003"}
-        - {name: MCP_AUDIO_TOOLS_URL,   value: "http://mcp-audio-tools.youle.svc:7004"}
-        - {name: MCP_DOCUMENT_TOOLS_URL,value: "http://mcp-document-tools.youle.svc:7005"}
-        - {name: MCP_OSS_URL,           value: "http://mcp-oss.youle.svc:7006"}
+        - {name: MCP_SEARCH_URL,        value: "http://mcp-search.haole.svc:7001"}
+        - {name: MCP_IMAGE_TOOLS_URL,   value: "http://mcp-image-tools.haole.svc:7002"}
+        - {name: MCP_VIDEO_TOOLS_URL,   value: "http://mcp-video-tools.haole.svc:7003"}
+        - {name: MCP_AUDIO_TOOLS_URL,   value: "http://mcp-audio-tools.haole.svc:7004"}
+        - {name: MCP_DOCUMENT_TOOLS_URL,value: "http://mcp-document-tools.haole.svc:7005"}
+        - {name: MCP_OSS_URL,           value: "http://mcp-oss.haole.svc:7006"}
         resources:
           requests: {cpu: "1", memory: "2Gi"}
           limits:   {cpu: "2", memory: "4Gi"}
@@ -710,7 +710,7 @@ spec:
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
-metadata: {name: mcp-search, namespace: youle}
+metadata: {name: mcp-search, namespace: haole}
 spec:
   replicas: 2
   selector: {matchLabels: {app: mcp-search}}
@@ -719,7 +719,7 @@ spec:
     spec:
       containers:
       - name: mcp
-        image: youle/mcp-search:<tag>
+        image: haole/mcp-search:<tag>
         command: ["python", "-m", "mcp_servers.search.server"]
         ports: [{containerPort: 7001}]
         env:
@@ -727,7 +727,7 @@ spec:
 ---
 apiVersion: v1
 kind: Service
-metadata: {name: mcp-search, namespace: youle}
+metadata: {name: mcp-search, namespace: haole}
 spec:
   selector: {app: mcp-search}
   ports: [{port: 7001, targetPort: 7001}]
@@ -740,7 +740,7 @@ spec:
 ```yaml
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
-metadata: {name: mcp-internal-only, namespace: youle}
+metadata: {name: mcp-internal-only, namespace: haole}
 spec:
   podSelector:
     matchLabels: {role: mcp}
@@ -765,7 +765,7 @@ spec:
 | `LITELLM_MOCK` | `true` | dev/CI 用 mock LLM,**production 必须 false** |
 | `OSS_ENDPOINT` | `http://localhost:9000` | OSS / S3 endpoint |
 | `OSS_ACCESS_KEY` / `OSS_SECRET_KEY` | - | OSS 凭证 |
-| `OSS_BUCKET` | `youle-dev` | OSS bucket |
+| `OSS_BUCKET` | `haole-dev` | OSS bucket |
 | `AGENT_MAX_RETRIES` | `2` | 单任务最多重试次数 |
 | `AGENT_RETRY_BASE_SLEEP` | `1.0` | 重试退避基数(秒)|
 | `AGENT_HEARTBEAT_INTERVAL` | `20` | 心跳间隔(秒)|
@@ -788,7 +788,7 @@ MCP_PLATFORM_PUBLISH_URL http://mcp-platform-publish:7007
 ```
 SANDBOX_PROVIDER         local | e2b           # production = e2b
 APP_ENV                  production            # local provider 在 production 下拒绝运行
-LOCAL_SANDBOX_ROOT       /tmp/youle-sandbox    # dev 用
+LOCAL_SANDBOX_ROOT       /tmp/haole-sandbox    # dev 用
 E2B_API_KEY              <secret>              # production 必填
 CODE_EXECUTOR_DEFAULT_TIMEOUT_S   60
 CODE_EXECUTOR_ALLOW_PIP  false                 # 默认禁,白名单包除外
@@ -799,7 +799,7 @@ CODE_EXECUTOR_ALLOW_PIP  false                 # 默认禁,白名单包除外
 ```
 BROWSER_HEADLESS              true
 BROWSER_DEFAULT_TIMEOUT_MS    15000
-BROWSER_USER_AGENT            "Mozilla/5.0 (compatible; YouleAgent/1.0)"
+BROWSER_USER_AGENT            "Mozilla/5.0 (compatible; haoleAgent/1.0)"
 ```
 
 #### Tavily / Search
@@ -881,7 +881,7 @@ services:
 
   postgres:
     image: postgres:16
-    environment: {POSTGRES_DB: youle, POSTGRES_PASSWORD: dev}
+    environment: {POSTGRES_DB: haole, POSTGRES_PASSWORD: dev}
 
   minio:
     image: minio/minio
@@ -897,7 +897,7 @@ services:
       OSS_ENDPOINT: http://minio:9000
       OSS_ACCESS_KEY: minioadmin
       OSS_SECRET_KEY: minioadmin
-      OSS_BUCKET: youle-dev
+      OSS_BUCKET: haole-dev
       MCP_SEARCH_URL: http://mcp-search:7001
       # ... 其他 MCP_*_URL
     depends_on: [redis, minio, mcp-search]

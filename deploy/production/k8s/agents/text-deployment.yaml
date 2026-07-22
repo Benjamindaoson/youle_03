@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: agent-text
-  namespace: youle
+  namespace: haole
   labels: { app: agent-text, agent: text }
 spec:
   replicas: 2
@@ -11,15 +11,15 @@ spec:
     metadata:
       labels: { app: agent-text, agent: text }
     spec:
-      serviceAccountName: youle-app
+      serviceAccountName: haole-app
       containers:
         - name: agent
-          image: ghcr.io/your-org/youle-agent:0.1.0
+          image: ghcr.io/your-org/haole-agent:0.1.0
           env:
             - { name: AGENT_KIND, value: text }
           envFrom:
-            - configMapRef: { name: youle-config }
-            - secretRef: { name: youle-secrets }
+            - configMapRef: { name: haole-config }
+            - secretRef: { name: haole-secrets }
           resources:
             requests: { cpu: "200m", memory: "512Mi" }
             limits:   { cpu: "1500m", memory: "1Gi" }
@@ -33,7 +33,7 @@ spec:
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
-metadata: { name: agent-text-hpa, namespace: youle }
+metadata: { name: agent-text-hpa, namespace: haole }
 spec:
   scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: agent-text }
   minReplicas: 2
