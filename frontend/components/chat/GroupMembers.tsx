@@ -38,8 +38,9 @@ export function GroupMembers({ conversationId }: { conversationId: string }) {
     ? stored
     : expectedRoles.map((r) => ({ id: r, status: 'idle' as const }));
 
-  const memberMap = new Map(members.map((m) => [m.id, m] as const));
-  const roles = expectedRoles.map((r) => memberMap.get(r) ?? { id: r, status: 'idle' as const });
+  // A specialist group (such as e-commerce) has a server-defined roster. Do
+  // not fill it with generic roles after the authoritative list has arrived.
+  const roles = stored?.length ? stored : members;
 
   function showCard(role: RoleKey, rect: DOMRect | null) {
     setActiveRole(role);

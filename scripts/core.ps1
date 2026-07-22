@@ -103,8 +103,18 @@ function Start-Core {
     New-Item -ItemType Directory -Force $RuntimeDir | Out-Null
 
     $Existing = Read-CoreProcesses
-    if ($Existing -and (Test-OwnedProcess ([int]$Existing.backend) 'backend')) {
-        throw 'Core is already running. Use status or stop first.'
+    if ($Existing) {
+        $Owned = @('backend', 'agent', 'frontend') | Where-Object {
+            Test-OwnedProcess ([int]$Existing.$_) $_
+        }
+        if ($Owned.Count -eq 3) {
+            throw 'Core is already running. Use status or stop first.'
+        }
+        # A build or a crashed dev server can leave only part of the core
+        # alive. Restart the owned remainder instead of leaving users with an
+        # unusable state and a misleading "already running" error.
+        if ($Owned.Count -gt 0) { Stop-Core }
+        else { Remove-Item $PidFile -ErrorAction SilentlyContinue }
     }
 
     $BackendPort = Find-FreePort $BackendPort

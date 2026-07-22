@@ -30,6 +30,7 @@ import httpx
 BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
 JWT = os.getenv("JWT_TOKEN", "")
 TIMEOUT_S = int(os.getenv("SMOKE_TIMEOUT", "600"))
+RUN_LIVE_ECOMMERCE_SMOKE = os.getenv("RUN_LIVE_ECOMMERCE_SMOKE", "false").lower() == "true"
 
 
 def auth_headers() -> dict[str, str]:
@@ -78,6 +79,9 @@ async def _approve_pending_gates(
     n = 0
     for gate in r.json():
         if gate.get("closed_at"):
+            continue
+        if gate.get("gate_type") == "image_generation_confirmation":
+            # Paid image generation is always a human decision, including smoke runs.
             continue
         gid = gate["id"]
         await client.post(
@@ -130,11 +134,17 @@ async def run_one(
 async def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--short-video", type=int, default=10)
-    parser.add_argument("--detail", type=int, default=5)
+    parser.add_argument("--detail", type=int, default=0)
     args = parser.parse_args()
 
     if not JWT:
         print("⚠ JWT_TOKEN 未设;请先登录获取 token", file=sys.stderr)
+        return 2
+    if args.detail and not RUN_LIVE_ECOMMERCE_SMOKE:
+        print(
+            "Refusing ecommerce image smoke: set RUN_LIVE_ECOMMERCE_SMOKE=true and confirm each image gate manually.",
+            file=sys.stderr,
+        )
         return 2
 
     async with httpx.AsyncClient(base_url=BASE_URL, timeout=30) as client:

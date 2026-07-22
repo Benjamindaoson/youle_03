@@ -21,6 +21,7 @@ export function Composer({ conversationId }: { conversationId: string }) {
   const [text, setText] = useState('');
   const [mention, setMention] = useState<MentionState | null>(null);
   const conv = useConversationStore((s) => s.list.find((c) => c.id === conversationId));
+  const members = useConversationStore((s) => s.members[conversationId]);
   const quoted = useConversationStore((s) => s.quoted[conversationId] ?? null);
   const setQuoted = useConversationStore((s) => s.setQuoted);
   const send = useSendMessage(conversationId);
@@ -116,6 +117,7 @@ export function Composer({ conversationId }: { conversationId: string }) {
     return (
       <MentionPopover
         conversationKind={conv.kind}
+        agentRoles={members?.map((member) => member.id)}
         query={mention.query}
         materials={materials}
         prompts={prompts}
@@ -124,7 +126,7 @@ export function Composer({ conversationId }: { conversationId: string }) {
       />
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mention, conv, materials, prompts]);
+  }, [mention, conv, members, materials, prompts]);
 
   return (
     <div className="relative flex-shrink-0 border-t border-wechat-line bg-white">

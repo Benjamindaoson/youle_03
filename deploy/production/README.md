@@ -24,3 +24,15 @@ docker compose -f deploy/production/docker-compose.yml \
 Live mode is never enabled by the core script. Configure provider credentials server-side, set
 `LITELLM_MOCK=false` explicitly, and keep `STEP_PERSONA_MAX_BUDGET_TOKENS` at a cost-appropriate
 hard ceiling before starting production workers.
+
+## E-commerce live delivery
+
+Copy `.env.ecommerce.example` to a private server-side environment file and provide only
+`DEEPSEEK_API_KEY` and `ARK_API_KEY`. The e-commerce group uses DeepSeek for copy, Volcengine Ark
+Seedream for images, and local Pillow for long-image composition. Seedream calls are one-shot:
+there is no automatic retry and no fallback to overseas models.
+
+Every image invocation pauses with the exact requested count and price estimate. A person must
+approve that count in the existing group chat before the request is sent. `scripts/core.ps1 start`
+is still the no-key mock demo; it cannot spend provider credits. Production smoke tests also skip
+e-commerce images by default, and never auto-approve an image confirmation.

@@ -20,6 +20,8 @@ export type MentionItem =
 
 interface Props {
   conversationKind: ConversationKind;
+  /** Members returned by the server are authoritative for specialist groups. */
+  agentRoles?: RoleKey[];
   query: string;
   materials: { id: string; name: string; mime?: string }[];
   prompts: { id: string; name: string; content: string }[];
@@ -35,6 +37,7 @@ const TAB_LABEL: Record<MentionItem['kind'], string> = {
 
 export function MentionPopover({
   conversationKind,
+  agentRoles,
   query,
   materials,
   prompts,
@@ -47,8 +50,8 @@ export function MentionPopover({
 
   const items = useMemo<MentionItem[]>(() => {
     const q = query.trim().toLowerCase();
-    const roles =
-      conversationKind === 'main_session' ? MAIN_SESSION_ROLES : GROUP_ROLES;
+    const roles = agentRoles ??
+      (conversationKind === 'main_session' ? MAIN_SESSION_ROLES : GROUP_ROLES);
     if (tab === 'agent') {
       return roles
         .map((r): MentionItem => ({
@@ -82,7 +85,7 @@ export function MentionPopover({
         content: p.content,
         subtitle: p.content.slice(0, 36),
       }));
-  }, [tab, query, materials, prompts, conversationKind]);
+  }, [tab, query, materials, prompts, conversationKind, agentRoles]);
 
   // 选择项随过滤变化重置
   useEffect(() => setActive(0), [tab, query]);

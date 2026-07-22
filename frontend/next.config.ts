@@ -3,6 +3,8 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   experimental: {
     serverActions: { bodySizeLimit: '10mb' },
+    // Keep local and low-cost deployments from spawning a worker per CPU.
+    cpus: 1,
   },
   async rewrites() {
     return [

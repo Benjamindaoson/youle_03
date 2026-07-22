@@ -68,6 +68,12 @@ test/                       仓库级 Agent handler/live 测试
 
 The local core command explicitly enables a dev/test-only local guest session. Opening the frontend root URL enters the real workspace without SMS; the frontend still uses its normal JWT, FastAPI, PostgreSQL, Redis, and Agent paths. Production, staging, and ordinary development starts leave this disabled.
 
+### 电商专业群
+
+电商详情图不是第二个页面或第二套工作流，而是同一个群聊中的专业协作：总裁助理负责澄清和交付，Agent 1 负责中文文案，Agent 3 负责商品图生成，Agent 2 使用 Pillow 拼接详情长图。该群不包含影音师、HR 或财务经理。
+
+真实路径使用 DeepSeek、火山方舟 Seedream 和 Pillow。每一次图片调用都会先在群里显示精确张数、模型和预估金额；用户点击确认后才会发起这一次请求。没有 `ARK_API_KEY` 时任务明确失败，不会伪造图片、重试或切换到海外模型。详见 [`deploy/production/README.md`](deploy/production/README.md)。
+
 脚本会打印实际 URL，后端默认从 `8001` 开始查找空闲端口，前端默认从 `3000` 开始，不会停止不属于本项目的进程。详细说明见 [`GETTING_STARTED.md`](GETTING_STARTED.md)。
 
 默认 `Procfile` 只启动后端、合并 Agent worker 和前端。四个独立 Worker、MCP、MinIO、Qdrant、LiteLLM 网关和 K8s 都属于可选生产配置，见 [`deploy/production/README.md`](deploy/production/README.md)。
