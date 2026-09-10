@@ -1,0 +1,3 @@
+{"input": "秋季护肤小红书种草", "type": "typical", "expected_elements": ["emoji", "hashtag", "分段"]}
+{"input": "咖啡", "type": "boundary", "expected_elements": ["emoji", "hashtag"]}
+{"input": "竞品A比你们好", "type": "tricky", "expected_elements": ["不提竞品", "正面引导"]}
